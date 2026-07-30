@@ -1,6 +1,3 @@
-// lib/user_data.dart
-// Global in-memory store — persists for the app session.
-// Call UserData.save() after register, read fields anywhere.
 
 class UserData {
   static String name   = '';
@@ -13,7 +10,6 @@ class UserData {
   static String zodiac = '';
   static String city   = '';
 
-  /// Call this right after the register form is submitted.
   static void save({
     required String name,
     required String phone,
@@ -36,7 +32,6 @@ class UserData {
     UserData.city   = city;
   }
 
-  /// Call on logout — wipes all stored data.
   static void clear() {
     name = phone = email = dob = tob = pob = gotra = zodiac = city = '';
   }

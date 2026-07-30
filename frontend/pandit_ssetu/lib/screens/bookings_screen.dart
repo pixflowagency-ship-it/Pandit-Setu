@@ -187,7 +187,7 @@ class _BookingsScreenState extends State<BookingsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Row
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -228,7 +228,6 @@ class _BookingsScreenState extends State<BookingsScreen>
           ),
           const SizedBox(height: 12),
 
-          // Title & Pandit
           Text(
             booking['poojaTitle'] ?? 'Vedic Ritual',
             style: GoogleFonts.lato(
@@ -290,7 +289,6 @@ class _BookingsScreenState extends State<BookingsScreen>
           const Divider(color: Color(0xFFE5E7EB), height: 1),
           const SizedBox(height: 12),
 
-          // Footer Row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

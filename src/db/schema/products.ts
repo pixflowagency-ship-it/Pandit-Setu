@@ -6,9 +6,9 @@ export const products = pgTable('products', {
   name: varchar('name', { length: 255 }).notNull(),
   description: text('description'),
   price: numeric('price', { precision: 10, scale: 2 }).notNull(),
-  category: varchar('category', { length: 100 }).notNull(), // e.g., 'pooja_kits', 'essentials'
-  badge: varchar('badge', { length: 100 }), // e.g., 'Bestseller'
-  samagri: text('samagri').array().notNull().default(sql`'{}'::text[]`), // array of strings
+  category: varchar('category', { length: 100 }).notNull(),
+  badge: varchar('badge', { length: 100 }),
+  samagri: text('samagri').array().notNull().default(sql`'{}'::text[]`),
   imageUrl: text('image_url'),
   isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

@@ -18,7 +18,6 @@ import 'screens/live_pooja_tracking_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'screens/support_screen.dart';
 
-// ── Router ──────────────────────────────────────────────────
 final _router = GoRouter(
   initialLocation: '/',
   routes: [
@@ -132,8 +131,6 @@ final _router = GoRouter(
   ],
 );
 
-
-// ── Entry point ─────────────────────────────────────────────
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const PanditSetuApp());

@@ -107,12 +107,11 @@ class _KundliScreenState extends State<KundliScreen>
     );
   }
 
-  // 1. Kundli Chart Tab
   Widget _buildKundliChartTab() {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        // Graphic chart card
+
         Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
@@ -137,7 +136,6 @@ class _KundliScreenState extends State<KundliScreen>
               ),
               const SizedBox(height: 14),
 
-              // Traditional Indian Astrology Chart (Custom Drawn Style)
               AspectRatio(
                 aspectRatio: 1,
                 child: Container(
@@ -188,7 +186,6 @@ class _KundliScreenState extends State<KundliScreen>
 
         const SizedBox(height: 16),
 
-        // Birth details form
         Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
@@ -296,7 +293,6 @@ class _KundliScreenState extends State<KundliScreen>
     );
   }
 
-  // 2. Dosha Analysis Tab
   Widget _buildDoshaAnalysisTab() {
     return ListView(
       padding: const EdgeInsets.all(20),
@@ -368,7 +364,6 @@ class _KundliScreenState extends State<KundliScreen>
     );
   }
 
-  // 3. Shubh Muhurat Tab
   Widget _buildShubhMuhuratTab() {
     return ListView(
       padding: const EdgeInsets.all(20),
@@ -462,21 +457,17 @@ class KundliChartPainter extends CustomPainter {
       ..color = const Color(0xFFFAF6EE)
       ..style = PaintingStyle.fill;
 
-    // Draw background
     final rect = Rect.fromLTWH(0, 0, size.width, size.height);
     canvas.drawRect(rect, fillPaint);
     canvas.drawRect(rect, paint);
 
-    // Draw secondary outer border for premium look
     final outerRect = Rect.fromLTWH(-4, -4, size.width + 8, size.height + 8);
     canvas.drawRect(outerRect, paint..strokeWidth = 1.0);
     paint.strokeWidth = 2.0;
 
-    // Diagonals
     canvas.drawLine(Offset.zero, Offset(size.width, size.height), paint);
     canvas.drawLine(Offset(size.width, 0), Offset(0, size.height), paint);
 
-    // Inner diamond
     final path = Path()
       ..moveTo(size.width / 2, 0)
       ..lineTo(size.width, size.height / 2)
@@ -485,7 +476,6 @@ class KundliChartPainter extends CustomPainter {
       ..close();
     canvas.drawPath(path, paint);
 
-    // Draw small traditional circle in the absolute center
     final centerCirclePaint = Paint()
       ..color = const Color(0xFFD97706)
       ..style = PaintingStyle.fill;

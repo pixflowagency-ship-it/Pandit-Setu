@@ -4,9 +4,8 @@ import { poojas } from '../db/schema/poojas.js';
 import { products } from '../db/schema/products.js';
 import { sql } from 'drizzle-orm';
 
-// Helper to run the seed script
 async function seed() {
-  // Seed Poojas
+
   const poojaEntries = [
     { title: 'Satyanarayan Pooja', slug: 'satyanarayan-pooja', description: 'Traditional Satyanarayan ritual', basePrice: '5000', durationMinutes: 120 },
     { title: 'Griha Pravesh', slug: 'griha-pravesh', description: 'Housewarming ceremony', basePrice: '8000', durationMinutes: 180 },
@@ -20,7 +19,6 @@ async function seed() {
 
   await db.insert(poojas).values(poojaEntries);
 
-  // Seed Products
   const productEntries = [
     {
       name: 'Satyanarayan Pooja Kit',

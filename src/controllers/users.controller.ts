@@ -6,10 +6,6 @@ import { AppError } from '../utils/api-error.js';
 import { validateBody } from '../middleware/async-handler.js';
 import { updateProfileSchema } from '../validators/users.validator.js';
 
-/**
- * GET /api/v1/users/profile
- * Returns the authenticated user's profile.
- */
 export const getProfileHandler = async (req: Request, res: Response) => {
   const userId = (req.user as any)?.id;
   if (!userId) {
@@ -23,10 +19,6 @@ export const getProfileHandler = async (req: Request, res: Response) => {
   return sendSuccess(res, { id, phone, fullName: name, role, dob, tob, pob, gotra, zodiac, city, email });
 };
 
-/**
- * PUT /api/v1/users/profile
- * Updates allowed profile fields for the authenticated user.
- */
 export const updateProfileHandler = async (req: Request, res: Response) => {
   const userId = (req.user as any)?.id;
   if (!userId) {

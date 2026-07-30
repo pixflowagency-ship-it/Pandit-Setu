@@ -82,17 +82,15 @@ class _SupportScreenState extends State<SupportScreen> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            // Help Search bar
+
             _buildSearchBar(),
 
             const SizedBox(height: 16),
 
-            // Help CTAs
             _buildSupportChannelsCard(),
 
             const SizedBox(height: 20),
 
-            // FAQs List Section
             Text(
               'Frequently Asked Questions',
               style: GoogleFonts.lato(
@@ -102,7 +100,7 @@ class _SupportScreenState extends State<SupportScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            
+
             if (filteredFaqs.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 24),

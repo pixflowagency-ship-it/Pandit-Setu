@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-// Using cors package for CORS handling
 
 import apiRouter from "./routes/index.js";
 import { errorHandler } from "./middleware/error-handler.js";

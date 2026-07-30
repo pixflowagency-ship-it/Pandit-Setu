@@ -27,7 +27,7 @@ export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 export interface SendOtpResponse {
   message: string;
   expiresInSeconds: number;
-  /** Included only in non-production mock mode for developer convenience */
+
   mockOtp?: string;
 }
 

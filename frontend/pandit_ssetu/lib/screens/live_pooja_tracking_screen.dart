@@ -10,7 +10,7 @@ class LivePoojaTrackingScreen extends StatefulWidget {
 }
 
 class _LivePoojaTrackingScreenState extends State<LivePoojaTrackingScreen> {
-  int _currentProgressStep = 2; // 0 to 4 steps representing status
+  int _currentProgressStep = 2;
 
   final List<Map<String, String>> _steps = [
     {
@@ -62,17 +62,15 @@ class _LivePoojaTrackingScreenState extends State<LivePoojaTrackingScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
-                  // 1. Dynamic Map / Location Status Placeholder
+
                   _buildLocationMapCard(),
 
                   const SizedBox(height: 16),
 
-                  // 2. Allocated Pandit Details Card
                   _buildPanditCard(),
 
                   const SizedBox(height: 16),
 
-                  // 3. Timeline Progress Widget
                   _buildTimelineWidget(),
                 ],
               ),
@@ -84,7 +82,6 @@ class _LivePoojaTrackingScreenState extends State<LivePoojaTrackingScreen> {
     );
   }
 
-  // Location / Arrival Map Card with dynamic positioning
   Widget _buildLocationMapCard() {
     double left = 40;
     double top = 50;
@@ -128,7 +125,7 @@ class _LivePoojaTrackingScreenState extends State<LivePoojaTrackingScreen> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Background placeholder grid
+
           ClipRRect(
             borderRadius: BorderRadius.circular(18),
             child: GridPaper(
@@ -139,12 +136,10 @@ class _LivePoojaTrackingScreenState extends State<LivePoojaTrackingScreen> {
             ),
           ),
 
-          // Stylized map markers and pathway
           CustomPaint(
             painter: MapTrackingPainter(_currentProgressStep),
           ),
 
-          // Pandit marker
           Positioned(
             left: left,
             top: top,
@@ -180,7 +175,6 @@ class _LivePoojaTrackingScreenState extends State<LivePoojaTrackingScreen> {
             ),
           ),
 
-          // Yajman Home marker
           Positioned(
             right: 40,
             bottom: 40,
@@ -216,7 +210,6 @@ class _LivePoojaTrackingScreenState extends State<LivePoojaTrackingScreen> {
             ),
           ),
 
-          // Estimated Arrival overlay
           Positioned(
             top: 12,
             right: 12,
@@ -247,7 +240,6 @@ class _LivePoojaTrackingScreenState extends State<LivePoojaTrackingScreen> {
     );
   }
 
-  // Allocated Pandit Card
   Widget _buildPanditCard() {
     return Container(
       padding: const EdgeInsets.all(18),
@@ -315,7 +307,7 @@ class _LivePoojaTrackingScreenState extends State<LivePoojaTrackingScreen> {
               ],
             ),
           ),
-          // Direct Action Buttons: Phone & Chat
+
           Row(
             children: [
               IconButton(
@@ -361,7 +353,6 @@ class _LivePoojaTrackingScreenState extends State<LivePoojaTrackingScreen> {
     );
   }
 
-  // Timeline Progress Widget with Interactive simulation controls
   Widget _buildTimelineWidget() {
     return Container(
       padding: const EdgeInsets.all(18),
@@ -389,7 +380,7 @@ class _LivePoojaTrackingScreenState extends State<LivePoojaTrackingScreen> {
                   color: const Color(0xFF1F2937),
                 ),
               ),
-              // Segmented controls for simulation
+
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
@@ -516,7 +507,6 @@ class _LivePoojaTrackingScreenState extends State<LivePoojaTrackingScreen> {
     );
   }
 
-  // Bottom action bar
   Widget _buildBottomActionBar() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -586,20 +576,17 @@ class MapTrackingPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
-    // Define the full path
     final path = Path()
       ..moveTo(40, 50)
       ..quadraticBezierTo(100, 100, 160, 60)
       ..quadraticBezierTo(220, 20, 270, 95)
       ..lineTo(315, 115);
 
-    // Draw full background route
     canvas.drawPath(path, dotPaint);
 
-    // Draw active portion depending on step
     final activePath = Path()..moveTo(40, 50);
     if (step == 0) {
-      // Draw static start point
+
     } else if (step == 1) {
       activePath.quadraticBezierTo(100, 100, 100, 70);
     } else if (step == 2) {

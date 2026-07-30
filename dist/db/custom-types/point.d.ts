@@ -2,9 +2,6 @@ export interface GeoPoint {
     lat: number;
     lng: number;
 }
-/**
- * PostGIS geometry(Point, 4326) mapped to { lat, lng } in application code.
- */
 export declare const geometryPoint: {
     (): import("drizzle-orm/pg-core").PgCustomColumnBuilder<{
         name: "";

@@ -43,7 +43,6 @@ class PanchangScreen extends StatelessWidget {
               ],
             ),
 
-            // Floating AI button
             Positioned(
               right: 20,
               bottom: 90,
@@ -81,7 +80,6 @@ class PanchangScreen extends StatelessWidget {
     );
   }
 
-  // ── Top Bar ────────────────────────────────────────────────────────
   Widget _buildTopBar() {
     return Stack(
       alignment: Alignment.center,
@@ -125,7 +123,6 @@ class PanchangScreen extends StatelessWidget {
     );
   }
 
-  // ── Panchang Title ─────────────────────────────────────────────────
   Widget _buildPanchangTitle() {
     return Column(
       children: [
@@ -153,7 +150,6 @@ class PanchangScreen extends StatelessWidget {
     );
   }
 
-  // ── Decorative Divider ─────────────────────────────────────────────
   Widget _buildDivider() {
     return Row(
       children: [
@@ -184,7 +180,7 @@ class PanchangScreen extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          // LEFT — SUNRISE tall card
+
           Expanded(
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 12),
@@ -226,11 +222,10 @@ class PanchangScreen extends StatelessWidget {
 
           const SizedBox(width: 12),
 
-          // RIGHT — SUNSET + MOONRISE stacked
           Expanded(
             child: Column(
               children: [
-                // SUNSET
+
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(14),
@@ -274,7 +269,6 @@ class PanchangScreen extends StatelessWidget {
 
                 const SizedBox(height: 10),
 
-                // MOONRISE
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(14),
@@ -323,7 +317,6 @@ class PanchangScreen extends StatelessWidget {
     );
   }
 
-  // ── Current Tithi Card ─────────────────────────────────────────────
   Widget _buildTithiCard() {
     return Container(
       width: double.infinity,
@@ -395,11 +388,10 @@ class PanchangScreen extends StatelessWidget {
     );
   }
 
-  // ── Nakshatra + Yoga Row ───────────────────────────────────────────
   Widget _buildNakshatraYogaRow() {
     return Row(
       children: [
-        // NAKSHATRA
+
         Expanded(
           child: Container(
             padding: const EdgeInsets.all(16),
@@ -449,7 +441,6 @@ class PanchangScreen extends StatelessWidget {
 
         const SizedBox(width: 12),
 
-        // YOGA
         Expanded(
           child: Container(
             padding: const EdgeInsets.all(16),
@@ -500,7 +491,6 @@ class PanchangScreen extends StatelessWidget {
     );
   }
 
-  // ── Nav Bar ────────────────────────────────────────────────────────
   Widget _buildNavBar(BuildContext context) {
     final items = [
       {'icon': Icons.home_outlined, 'activeIcon': Icons.home, 'label': 'Home'},
@@ -545,7 +535,7 @@ class PanchangScreen extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: List.generate(items.length, (i) {
-            final isActive = i == 2; // Panchang is index 2
+            final isActive = i == 2;
             return GestureDetector(
               onTap: () {
                 switch (i) {
@@ -556,7 +546,7 @@ class PanchangScreen extends StatelessWidget {
                     context.go('/book');
                     break;
                   case 2:
-                    break; // already on panchang
+                    break;
                   case 3:
                     context.go('/shop');
                     break;

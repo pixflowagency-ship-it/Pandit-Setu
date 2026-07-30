@@ -76,10 +76,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Filter Chips
+
             _buildFilterChips(),
 
-            // Notifications List
             Expanded(
               child: filteredList.isEmpty
                   ? _buildEmptyState()

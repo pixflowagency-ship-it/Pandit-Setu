@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
-import 'user_data.dart'; // your global UserData class
+import 'user_data.dart';
 
-// ── Same color palette as profile_screen.dart ────────────────────────
 class _C {
   static const parchmentBg = Color(0xFFFDFAF3);
   static const warmCream   = Color(0xFFFAF2DC);
@@ -23,7 +22,7 @@ class UserProfileDetailScreen extends StatefulWidget {
 }
 
 class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
-  // Edit mode buffers — pulled fresh from UserData each time edit opens
+
   bool _isEditing = false;
 
   late TextEditingController _nameCtrl;
@@ -92,7 +91,6 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
     );
   }
 
-  // ── Build initials avatar ────────────────────────────────────────
   String get _initials {
     final name = UserData.name;
     final parts = name.trim().split(' ');
@@ -140,13 +138,12 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
     );
   }
 
-  // ── Top Bar ──────────────────────────────────────────────────────
   Widget _buildTopBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          // Back arrow
+
           GestureDetector(
             onTap: () => context.go('/profile'),
             child: Container(
@@ -173,10 +170,10 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
             ),
           ),
           const Spacer(),
-          // Settings / Edit icon
+
           GestureDetector(
             onTap: () {
-              _initControllers(); // refresh from latest UserData
+              _initControllers();
               setState(() => _isEditing = !_isEditing);
             },
             child: Container(
@@ -200,7 +197,6 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
     );
   }
 
-  // ── Vedic Ornamental Divider ─────────────────────────────────────
   Widget _buildVedicDivider() {
     return Row(
       children: [
@@ -257,16 +253,15 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
     );
   }
 
-  // ── Avatar Section ───────────────────────────────────────────────
   Widget _buildAvatarSection() {
     return Column(
       children: [
         const SizedBox(height: 10),
-        // Mandala / sun-ray ring behind avatar
+
         Stack(
           alignment: Alignment.center,
           children: [
-            // Outer warm circle
+
             Container(
               width: 148,
               height: 148,
@@ -282,7 +277,7 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
                     color: _C.saffronGold.withValues(alpha: 0.25), width: 1.5),
               ),
             ),
-            // Inner avatar circle
+
             Container(
               width: 118,
               height: 118,
@@ -317,7 +312,7 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
           ],
         ),
         const SizedBox(height: 16),
-        // Name
+
         Text(
           UserData.name,
           style: GoogleFonts.lato(
@@ -327,7 +322,7 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
           ),
         ),
         const SizedBox(height: 6),
-        // Phone
+
         Text(
           UserData.phone,
           style: GoogleFonts.lato(
@@ -337,7 +332,7 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        // Email
+
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -352,7 +347,7 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
           ],
         ),
         const SizedBox(height: 6),
-        // Location
+
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -370,7 +365,6 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
     );
   }
 
-  // ── Info Pills (Gotra + Zodiac) ──────────────────────────────────
   Widget _buildInfoSection() {
     if (UserData.gotra.isEmpty && UserData.zodiac.isEmpty) {
       return const SizedBox.shrink();
@@ -428,7 +422,6 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
     );
   }
 
-  // ── Menu Items (Edit Profile, My Bookings, Payments, Notifications) ─
   Widget _buildMenuItems(BuildContext context) {
     final items = [
       {
@@ -542,7 +535,6 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
     );
   }
 
-  // ── Logout Button ────────────────────────────────────────────────
   Widget _buildLogoutButton(BuildContext context) {
     return Container(
       width: double.infinity,
@@ -568,7 +560,7 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
         child: InkWell(
           borderRadius: BorderRadius.circular(30),
           onTap: () {
-            // Clear user data on logout
+
             UserData.clear();
             context.go('/role-select');
           },
@@ -594,7 +586,6 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
     );
   }
 
-  // ── Edit Form ────────────────────────────────────────────────────
   Widget _buildEditForm() {
     return Container(
       decoration: BoxDecoration(
@@ -670,7 +661,7 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          // Save Button
+
           Container(
             width: double.infinity,
             height: 50,

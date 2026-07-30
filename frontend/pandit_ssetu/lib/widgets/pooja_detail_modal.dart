@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 
-/// Data model representing comprehensive information for a Pooja ritual.
 class PoojaDetail {
   final String id;
   final String title;
@@ -41,7 +40,6 @@ class PoojaDetail {
   double get totalPrice => standardPrice + samagriPrice;
 }
 
-/// Displays the styled BottomSheet for a given PoojaDetail.
 void showPoojaDetailBottomSheet(BuildContext context, PoojaDetail detail) {
   showModalBottomSheet(
     context: context,
@@ -52,7 +50,6 @@ void showPoojaDetailBottomSheet(BuildContext context, PoojaDetail detail) {
   );
 }
 
-/// Custom BottomSheet widget following Pandit Setu design language.
 class PoojaDetailBottomSheet extends StatelessWidget {
   final PoojaDetail detail;
 
@@ -80,7 +77,7 @@ class PoojaDetailBottomSheet extends StatelessWidget {
           ),
           child: Column(
             children: [
-              // Drag handle
+
               const SizedBox(height: 12),
               Center(
                 child: Container(
@@ -94,7 +91,6 @@ class PoojaDetailBottomSheet extends StatelessWidget {
               ),
               const SizedBox(height: 12),
 
-              // Modal Top Navigation / Close Button
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
@@ -151,33 +147,28 @@ class PoojaDetailBottomSheet extends StatelessWidget {
                 ),
               ),
 
-              // Scrollable Content
               Expanded(
                 child: ListView(
                   controller: scrollController,
                   padding: const EdgeInsets.all(20),
                   children: [
-                    // 1. Header Image & Graphic Container
+
                     _buildHeaderImageCard(),
 
                     const SizedBox(height: 16),
 
-                    // 2. Duration Banner
                     _buildDurationBanner(),
 
                     const SizedBox(height: 16),
 
-                    // 3. Description & Spiritual Significance Card
                     _buildDescriptionCard(),
 
                     const SizedBox(height: 16),
 
-                    // 4. Inclusions & Vedic Chanting Card
                     _buildInclusionsAndChantingCard(),
 
                     const SizedBox(height: 16),
 
-                    // 5. Price Breakdown Card
                     _buildPriceBreakdownCard(),
 
                     const SizedBox(height: 24),
@@ -185,7 +176,6 @@ class PoojaDetailBottomSheet extends StatelessWidget {
                 ),
               ),
 
-              // Sticky Bottom Primary CTA Button
               _buildBottomAction(context),
             ],
           ),
@@ -194,7 +184,6 @@ class PoojaDetailBottomSheet extends StatelessWidget {
     );
   }
 
-  // 1. Header Image Card
   Widget _buildHeaderImageCard() {
     return Container(
       decoration: BoxDecoration(
@@ -321,7 +310,6 @@ class PoojaDetailBottomSheet extends StatelessWidget {
     );
   }
 
-  // 2. Duration Banner
   Widget _buildDurationBanner() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -379,7 +367,6 @@ class PoojaDetailBottomSheet extends StatelessWidget {
     );
   }
 
-  // 3. Description & Spiritual Significance Card
   Widget _buildDescriptionCard() {
     return Container(
       padding: const EdgeInsets.all(18),
@@ -421,7 +408,6 @@ class PoojaDetailBottomSheet extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // Spiritual Significance Highlight Box
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
@@ -466,7 +452,6 @@ class PoojaDetailBottomSheet extends StatelessWidget {
     );
   }
 
-  // 4. Inclusions & Vedic Chanting Card
   Widget _buildInclusionsAndChantingCard() {
     return Container(
       padding: const EdgeInsets.all(18),
@@ -581,7 +566,6 @@ class PoojaDetailBottomSheet extends StatelessWidget {
     );
   }
 
-  // 5. Price Breakdown Card
   Widget _buildPriceBreakdownCard() {
     final double discountAmount = detail.originalPrice - detail.totalPrice;
 
@@ -637,18 +621,15 @@ class PoojaDetailBottomSheet extends StatelessWidget {
           ),
           const SizedBox(height: 14),
 
-          // Standard Price Row
           _priceRow('Standard Pandit Dakshina', '₹${detail.standardPrice.toInt()}'),
           const SizedBox(height: 8),
 
-          // Samagri Price Row
           _priceRow('Vedic Samagri Kit & Setup', '₹${detail.samagriPrice.toInt()}'),
           const SizedBox(height: 12),
 
           const Divider(color: Color(0xFFE8D5A3), height: 1),
           const SizedBox(height: 12),
 
-          // Total Price Row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -713,7 +694,6 @@ class PoojaDetailBottomSheet extends StatelessWidget {
     );
   }
 
-  // Sticky Bottom Primary Action Button
   Widget _buildBottomAction(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -733,10 +713,9 @@ class PoojaDetailBottomSheet extends StatelessWidget {
           height: 52,
           child: ElevatedButton(
             onPressed: () {
-              // Close bottom sheet modal first
+
               Navigator.of(context).pop();
 
-              // Trigger main Booking Flow via GoRouter passing PoojaDetail
               context.push('/book-flow', extra: detail);
             },
 

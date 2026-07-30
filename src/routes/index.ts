@@ -10,10 +10,9 @@ import { usersRouter } from "./users.routes.js";
 const apiRouter = Router();
 
 apiRouter.use("/auth", authRouter);
-apiRouter.use("/users", usersRouter); // mount users routes
-apiRouter.use("/products", productsRouter); // mount products routes
+apiRouter.use("/users", usersRouter);
+apiRouter.use("/products", productsRouter);
 
-// Example protected route demonstrating verifyToken + requireRole
 apiRouter.get(
   "/me",
   verifyToken,

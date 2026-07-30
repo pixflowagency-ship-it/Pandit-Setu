@@ -1,8 +1,4 @@
 import type { Request, Response } from 'express';
-/**
- * GET /api/v1/users/profile
- * Returns the authenticated user's profile.
- */
 export declare const getProfileHandler: (req: Request, res: Response) => Promise<Response<import("../types/auth.js").ApiErrorResponse, Record<string, any>> | Response<import("../types/auth.js").ApiSuccessResponse<{
     id: any;
     phone: any;
@@ -16,10 +12,6 @@ export declare const getProfileHandler: (req: Request, res: Response) => Promise
     city: any;
     email: any;
 }>, Record<string, any>>>;
-/**
- * PUT /api/v1/users/profile
- * Updates allowed profile fields for the authenticated user.
- */
 export declare const updateProfileHandler: (req: Request, res: Response) => Promise<Response<import("../types/auth.js").ApiErrorResponse, Record<string, any>> | Response<import("../types/auth.js").ApiSuccessResponse<{
     message: string;
     user: {

@@ -17,7 +17,6 @@ class _ShopScreenState extends State<ShopScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
-  // ── Demo Data ──────────────────────────────────────────────────────
   final List<Map<String, dynamic>> _allProducts = [
     {
       'id': 1,
@@ -106,12 +105,10 @@ class _ShopScreenState extends State<ShopScreen> {
   List<Map<String, dynamic>> get _filteredProducts {
     List<Map<String, dynamic>> list = _allProducts;
 
-    // Filter by category
     if (_selectedCategory != 'All') {
       list = list.where((p) => p['category'] == _selectedCategory).toList();
     }
 
-    // Filter by search
     if (_searchQuery.isNotEmpty) {
       list = list
           .where(
@@ -126,7 +123,6 @@ class _ShopScreenState extends State<ShopScreen> {
           .toList();
     }
 
-    // Sort
     if (_sortBy == 'Popularity') {
       list =
           list.where((p) => (p['badge'] as String) == 'BESTSELLER').toList() +
@@ -185,7 +181,7 @@ class _ShopScreenState extends State<ShopScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // LEFT — Menu icon + Pandit Setu text
+
         Row(
           children: [
             const Icon(Icons.menu, color: Color(0xFFE8920A), size: 24),
@@ -201,7 +197,6 @@ class _ShopScreenState extends State<ShopScreen> {
           ],
         ),
 
-        // RIGHT — Cart icon with count badge
         Stack(
           clipBehavior: Clip.none,
           children: [
@@ -239,7 +234,6 @@ class _ShopScreenState extends State<ShopScreen> {
     );
   }
 
-  // ── Search Bar ─────────────────────────────────────────────────────
   Widget _buildSearchBar() {
     return Container(
       decoration: BoxDecoration(
@@ -275,7 +269,6 @@ class _ShopScreenState extends State<ShopScreen> {
     );
   }
 
-  // ── Occasion Filter Row ────────────────────────────────────────────
   Widget _buildOccasionRow() {
     final categories = ['All', 'Marriage', 'Hawan'];
     return Column(
@@ -339,7 +332,6 @@ class _ShopScreenState extends State<ShopScreen> {
     );
   }
 
-  // ── Sort Row ───────────────────────────────────────────────────────
   Widget _buildSortRow() {
     return Row(
       children: [
@@ -410,7 +402,6 @@ class _ShopScreenState extends State<ShopScreen> {
     );
   }
 
-  // ── Product Cards ──────────────────────────────────────────────────
   List<Widget> _buildProductCards() {
     final products = _filteredProducts;
     if (products.isEmpty) {
@@ -477,7 +468,6 @@ class _ShopScreenState extends State<ShopScreen> {
         .toList();
   }
 
-  // ── Nav Bar ────────────────────────────────────────────────────────
   Widget _buildNavBar(BuildContext context) {
     final items = [
       {'icon': Icons.home_outlined, 'activeIcon': Icons.home, 'label': 'Home'},
@@ -522,7 +512,7 @@ class _ShopScreenState extends State<ShopScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: List.generate(items.length, (i) {
-            final isActive = i == 3; // Shop is index 3
+            final isActive = i == 3;
             return GestureDetector(
               onTap: () {
                 switch (i) {
@@ -536,7 +526,7 @@ class _ShopScreenState extends State<ShopScreen> {
                     context.go('/panchang');
                     break;
                   case 3:
-                    break; // already here
+                    break;
                   case 4:
                     context.go('/profile');
                     break;
@@ -585,7 +575,6 @@ class _ShopScreenState extends State<ShopScreen> {
   }
 }
 
-// ── Product Card Widget ────────────────────────────────────────────────
 class _ProductCard extends StatelessWidget {
   final Map<String, dynamic> product;
   final VoidCallback onAddToCart;
@@ -612,7 +601,7 @@ class _ProductCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image with badge
+
           Stack(
             children: [
               ClipRRect(
@@ -668,7 +657,6 @@ class _ProductCard extends StatelessWidget {
             ],
           ),
 
-          // Content
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -695,7 +683,6 @@ class _ProductCard extends StatelessWidget {
 
                 const SizedBox(height: 14),
 
-                // Included Samagri box
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
@@ -727,7 +714,6 @@ class _ProductCard extends StatelessWidget {
 
                 const SizedBox(height: 16),
 
-                // Price + Add to Cart
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [

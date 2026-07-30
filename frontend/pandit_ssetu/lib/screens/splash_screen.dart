@@ -53,13 +53,12 @@ class _SplashScreenState extends State<SplashScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // FULL SCREEN BACKGROUND
+
           Image.asset(
             'assets/images/splash_bg.png',
             fit: BoxFit.cover,
           ),
 
-          // TOP-LEFT MARIGOLD FLOWER
           Align(
             alignment: Alignment.topLeft,
             child: Padding(
@@ -68,7 +67,6 @@ class _SplashScreenState extends State<SplashScreen>
             ),
           ),
 
-          // BOTTOM-RIGHT MARIGOLD FLOWER
           Align(
             alignment: Alignment.bottomRight,
             child: Padding(
@@ -77,7 +75,6 @@ class _SplashScreenState extends State<SplashScreen>
             ),
           ),
 
-          // CENTER TEXT OVERLAY
           Center(
             child: FadeTransition(
               opacity: _fadeAnimation,
@@ -112,7 +109,6 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  /// Builds a marigold flower using layered petal rings
   Widget _buildMarigold(double diameter) {
     return SizedBox(
       width: diameter,
@@ -130,7 +126,6 @@ class _MarigoldPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
 
-    // ── OUTER PETALS (large, lighter orange) ──────────
     _drawPetalRing(
       canvas,
       center: center,
@@ -141,7 +136,6 @@ class _MarigoldPainter extends CustomPainter {
       rotationOffset: 0,
     );
 
-    // ── MIDDLE PETALS (medium, deeper orange) ─────────
     _drawPetalRing(
       canvas,
       center: center,
@@ -152,7 +146,6 @@ class _MarigoldPainter extends CustomPainter {
       rotationOffset: 0.15,
     );
 
-    // ── INNER PETALS (small, warm gold) ───────────────
     _drawPetalRing(
       canvas,
       center: center,
@@ -163,7 +156,6 @@ class _MarigoldPainter extends CustomPainter {
       rotationOffset: 0.3,
     );
 
-    // ── CENTER CIRCLE (dark core) ─────────────────────
     final corePaint = Paint()..color = const Color(0xFFC47000);
     canvas.drawCircle(center, radius * 0.15, corePaint);
 

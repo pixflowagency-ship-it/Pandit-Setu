@@ -18,7 +18,7 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // ─── BACKGROUND IMAGE ───────────────────────────────
+
           Image.asset(
             'assets/images/role_select_bg.png',
             fit: BoxFit.cover,
@@ -43,7 +43,6 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
                                 children: [
                                   const SizedBox(height: 24),
 
-                                  // ─── TOP LOGO ──────────────────────────────
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
@@ -74,7 +73,6 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
 
                                   const SizedBox(height: 16),
 
-                                  // ─── SELECT PROFILE LABEL ──────────────────
                                   Text(
                                     'SELECT PROFILE',
                                     style: GoogleFonts.lato(
@@ -88,7 +86,6 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
 
                                   const SizedBox(height: 8),
 
-                                  // ─── HEADING ───────────────────────────────
                                   RichText(
                                     textAlign: TextAlign.center,
                                     text: TextSpan(
@@ -110,7 +107,6 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
 
                                   const SizedBox(height: 28),
 
-                                  // ─── YAJMAN CARD ───────────────────────────
                                   _RoleCard(
                                     icon: Icons.device_hub,
                                     title: 'Yajman',
@@ -121,7 +117,6 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
 
                                   const SizedBox(height: 14),
 
-                                  // ─── PANDIT CARD ───────────────────────────
                                   _RoleCard(
                                     icon: Icons.temple_hindu,
                                     title: 'Pandit',
@@ -132,7 +127,6 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
 
                                   const SizedBox(height: 28),
 
-                                  // ─── SACRED BRIDGE DIVIDER (Decorative Dots Pattern) ───
                                   Column(
                                     children: [
                                       Text(
@@ -178,7 +172,6 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
 
                                   const SizedBox(height: 20),
 
-                                  // ─── CONTINUE BUTTON & TERMS GROUP ───────────────────
                                   Column(
                                     children: [
                                       SizedBox(
@@ -276,10 +269,6 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
   }
 }
 
-// ═══════════════════════════════════════════════════════════
-//  REUSABLE ROLE CARD WIDGET
-// ═══════════════════════════════════════════════════════════
-
 class _RoleCard extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -301,7 +290,7 @@ class _RoleCard extends StatelessWidget {
       onTap: onTap,
       child: Stack(
         children: [
-          // Base container containing layout/colors
+
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.all(16),
@@ -315,7 +304,7 @@ class _RoleCard extends StatelessWidget {
                       color: const Color(0xFFE8920A),
                       width: 2,
                     )
-                  : null, // Dashed border drawn separately when unselected
+                  : null,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.04),
@@ -327,7 +316,7 @@ class _RoleCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ICON BOX
+
                 Container(
                   width: 52,
                   height: 52,
@@ -348,7 +337,6 @@ class _RoleCard extends StatelessWidget {
 
                 const SizedBox(width: 16),
 
-                // TEXT COLUMN
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,7 +370,6 @@ class _RoleCard extends StatelessWidget {
                   ),
                 ),
 
-                // CHECKMARK (top-aligned, only when selected)
                 if (isSelected)
                   Container(
                     width: 26,
@@ -401,7 +388,6 @@ class _RoleCard extends StatelessWidget {
             ),
           ),
 
-          // Dashed border overlays base container when unselected
           if (!isSelected)
             Positioned.fill(
               child: IgnorePointer(
@@ -421,10 +407,6 @@ class _RoleCard extends StatelessWidget {
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════════
-//  CUSTOM PAINTER FOR DASHED BORDER
-// ═══════════════════════════════════════════════════════════
 
 class _DashedBorderPainter extends CustomPainter {
   final Color color;

@@ -16,7 +16,7 @@ class ApiService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      // Print detailed error for debugging
+
       debugPrint('Failed to send OTP: ${response.statusCode} ${response.body}');
       throw Exception('Failed to send OTP: ${response.statusCode} ${response.body}');
     }
@@ -63,7 +63,6 @@ class ApiService {
     }
   }
 
-  /// Fetches nearby certified Pandits with fallback data
   static Future<List<Map<String, dynamic>>> getNearbyPandits() async {
     try {
       final response = await http
@@ -77,7 +76,6 @@ class ApiService {
       debugPrint('Using fallback nearby pandits list: $e');
     }
 
-    // Fallback Pandit list for UI demonstration
     return [
       {
         'id': 'pandit_1',
@@ -115,7 +113,6 @@ class ApiService {
     ];
   }
 
-  /// Creates a booking with the backend
   static Future<Map<String, dynamic>> createBooking(
       Map<String, dynamic> bookingData) async {
     try {
@@ -139,7 +136,6 @@ class ApiService {
       debugPrint('Using local booking fallback: $e');
     }
 
-    // Local fallback booking record
     final String bookingId =
         'PS-BK-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
     final mockBooking = {
@@ -154,7 +150,6 @@ class ApiService {
       'createdAt': DateTime.now().toIso8601String(),
     };
 
-    // Store in SharedPreferences list
     try {
       final prefs = await SharedPreferences.getInstance();
       final existingBookingsStr = prefs.getString('user_bookings') ?? '[]';
@@ -170,7 +165,6 @@ class ApiService {
     };
   }
 
-  /// Fetches user bookings
   static Future<List<Map<String, dynamic>>> getUserBookings() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -183,7 +177,6 @@ class ApiService {
       debugPrint('Error reading user bookings: $e');
     }
 
-    // Default sample booking if none exist
     return [
       {
         'id': 'PS-BK-8921',
@@ -200,4 +193,3 @@ class ApiService {
     ];
   }
 }
-

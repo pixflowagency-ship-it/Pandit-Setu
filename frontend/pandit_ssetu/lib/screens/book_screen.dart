@@ -12,10 +12,10 @@ class BookScreen extends StatefulWidget {
 }
 
 class _BookScreenState extends State<BookScreen> {
-  // Selected category for the top cards
+
   late String selectedCategory;
-  // Selected index for the bottom navigation bar (floating pill style)
-  int _currentNavIndex = 1; // Book tab is index 1
+
+  int _currentNavIndex = 1;
 
   @override
   void initState() {
@@ -23,7 +23,6 @@ class _BookScreenState extends State<BookScreen> {
     selectedCategory = widget.initialCategory;
   }
 
-  // Demo data for each category mapped to typed PoojaDetail objects
   final Map<String, List<PoojaDetail>> _categoryRituals = {
     'wedding': [
       const PoojaDetail(
@@ -298,11 +297,10 @@ class _BookScreenState extends State<BookScreen> {
     }).toList();
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      //backgroundColor: const Color(0xFFFDF0DC),
+
       backgroundColor: const Color(0xFFFFF8EE),
       body: SafeArea(
         child: Column(
@@ -345,9 +343,6 @@ class _BookScreenState extends State<BookScreen> {
     );
   }
 
-  // ──────────────────────────────
-  // 1. TOP BAR
-  // ──────────────────────────────
   Widget _buildTopBar() {
     return Stack(
       alignment: Alignment.center,
@@ -391,9 +386,6 @@ class _BookScreenState extends State<BookScreen> {
     );
   }
 
-  // ──────────────────────────────
-  // 2. SELECT RITUAL SUBTITLE
-  // ──────────────────────────────
   Widget _buildSelectRitualSubtitle() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -420,9 +412,6 @@ class _BookScreenState extends State<BookScreen> {
     );
   }
 
-  // ──────────────────────────────
-  // 3. SELECT RITUAL TITLE (BIGGER)
-  // ──────────────────────────────
   Widget _buildSelectRitualTitle() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
@@ -448,9 +437,6 @@ class _BookScreenState extends State<BookScreen> {
     );
   }
 
-  // ──────────────────────────────
-  // 4. SEARCH BAR
-  // ──────────────────────────────
   Widget _buildSearchBar() {
     return TextField(
       decoration: InputDecoration(
@@ -475,9 +461,6 @@ class _BookScreenState extends State<BookScreen> {
     );
   }
 
-  // ──────────────────────────────
-  // 5. CATEGORIES HEADER
-  // ──────────────────────────────
   Widget _buildCategoriesHeader() {
     return Text(
       'CATEGORIES',
@@ -490,9 +473,6 @@ class _BookScreenState extends State<BookScreen> {
     );
   }
 
-  // ──────────────────────────────
-  // 6. CATEGORY CARDS ROW
-  // ──────────────────────────────
   Widget _buildCategoryCards() {
     return Row(
       children: [
@@ -572,9 +552,6 @@ class _BookScreenState extends State<BookScreen> {
     );
   }
 
-  // ──────────────────────────────
-  // 7. ORNAMENTAL DIVIDER
-  // ──────────────────────────────
   Widget _buildOrnamentalDivider() {
     return Row(
       children: [
@@ -605,9 +582,6 @@ class _BookScreenState extends State<BookScreen> {
     );
   }
 
-  // ──────────────────────────────
-  // 8. TRENDING RITUALS HEADER
-  // ──────────────────────────────
   Widget _buildTrendingRitualsHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -632,9 +606,6 @@ class _BookScreenState extends State<BookScreen> {
     );
   }
 
-  // ──────────────────────────────
-  // 9. RITUAL CARD
-  // ──────────────────────────────
   Widget _buildRitualCard(PoojaDetail detail) {
     return Container(
       decoration: BoxDecoration(
@@ -653,7 +624,7 @@ class _BookScreenState extends State<BookScreen> {
         children: [
           Row(
             children: [
-              // Image left
+
               ClipRRect(
                 borderRadius: BorderRadius.circular(14),
                 child: Image.network(
@@ -678,7 +649,6 @@ class _BookScreenState extends State<BookScreen> {
               ),
               const SizedBox(width: 16),
 
-              // Right side details
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -768,7 +738,6 @@ class _BookScreenState extends State<BookScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Action buttons
           Row(
             children: [
               Expanded(
@@ -838,10 +807,6 @@ class _BookScreenState extends State<BookScreen> {
     );
   }
 
-
-  // ──────────────────────────────
-  // 10. FLOATING PILL NAV BAR (Kartik's Style)
-  // ──────────────────────────────
   Widget _buildNavBar() {
     final items = [
       {'icon': Icons.home_outlined, 'activeIcon': Icons.home, 'label': 'Home'},

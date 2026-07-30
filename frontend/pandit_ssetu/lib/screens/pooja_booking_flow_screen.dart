@@ -18,7 +18,6 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
   final PageController _pageController = PageController();
   int _currentStep = 0;
 
-  // Step 1: Location & Date
   final _streetController =
       TextEditingController(text: 'Flat 402, Lotus Heights');
   final _cityController = TextEditingController(text: 'Mumbai');
@@ -35,7 +34,6 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
     '06:30 PM',
   ];
 
-  // Step 2: Samagri Add-on
   bool _includeSamagriKit = true;
   final List<String> _samagriItems = [
     'Pure Desi Cow Ghee (500g)',
@@ -46,14 +44,12 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
     'Turmeric, Kumkum & Aksata Grains',
   ];
 
-  // Step 3: Pandit Allocation
-  String _allocationMode = 'auto'; // 'auto' or 'manual'
+  String _allocationMode = 'auto';
   List<Map<String, dynamic>> _nearbyPandits = [];
   Map<String, dynamic>? _selectedPandit;
   bool _isLoadingPandits = false;
 
-  // Step 4: Payment
-  String _selectedPaymentMethod = 'upi'; // 'upi', 'card', 'pay_later'
+  String _selectedPaymentMethod = 'upi';
   bool _isSubmitting = false;
 
   @override
@@ -276,10 +272,9 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Top Progress Stepper
+
             _buildStepperHeader(),
 
-            // Step Content PageView
             Expanded(
               child: PageView(
                 controller: _pageController,
@@ -293,7 +288,6 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
               ),
             ),
 
-            // Bottom Sticky Price Summary & Actions
             _buildBottomBar(),
           ],
         ),
@@ -301,7 +295,6 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
     );
   }
 
-  // Top Stepper Header Widget
   Widget _buildStepperHeader() {
     final steps = ['Address', 'Samagri', 'Pandit', 'Payment'];
 
@@ -385,14 +378,11 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
     );
   }
 
-  // ----------------------------------------------------
-  // STEP 1: Location & Date Selection
-  // ----------------------------------------------------
   Widget _buildStep1LocationAndDate() {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        // Address Card
+
         Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
@@ -443,7 +433,6 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
 
         const SizedBox(height: 16),
 
-        // Date & Time Card
         Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
@@ -476,7 +465,6 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
               ),
               const SizedBox(height: 14),
 
-              // Date Picker Selector
               GestureDetector(
                 onTap: () async {
                   final picked = await showDatePicker(
@@ -551,7 +539,6 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
               ),
               const SizedBox(height: 10),
 
-              // Time Slot Chips
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -618,14 +605,11 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
     );
   }
 
-  // ----------------------------------------------------
-  // STEP 2: Samagri Add-on Toggle
-  // ----------------------------------------------------
   Widget _buildStep2SamagriToggle() {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        // Main Toggle Card
+
         Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
@@ -678,10 +662,10 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
                       ),
                     ],
                   ),
-                  // ignore: deprecated_member_use
+
                   Switch(
                     value: _includeSamagriKit,
-                    // ignore: deprecated_member_use
+
                     activeColor: const Color(0xFFD97706),
                     onChanged: (val) {
                       setState(() => _includeSamagriKit = val);
@@ -704,7 +688,6 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
 
         const SizedBox(height: 16),
 
-        // Kit Contents Checklist
         Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
@@ -764,9 +747,6 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
     );
   }
 
-  // ----------------------------------------------------
-  // STEP 3: Pandit Allocation Method
-  // ----------------------------------------------------
   Widget _buildStep3PanditAllocation() {
     return ListView(
       padding: const EdgeInsets.all(20),
@@ -781,7 +761,6 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
         ),
         const SizedBox(height: 12),
 
-        // Auto Option
         GestureDetector(
           onTap: () => setState(() => _allocationMode = 'auto'),
           child: Container(
@@ -798,13 +777,13 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
             ),
             child: Row(
               children: [
-                // ignore: deprecated_member_use
+
                 Radio<String>(
                   value: 'auto',
-                  // ignore: deprecated_member_use
+
                   groupValue: _allocationMode,
                   activeColor: const Color(0xFFD97706),
-                  // ignore: deprecated_member_use
+
                   onChanged: (val) =>
                       setState(() => _allocationMode = val!),
                 ),
@@ -860,7 +839,6 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
 
         const SizedBox(height: 14),
 
-        // Manual Option
         GestureDetector(
           onTap: () => setState(() => _allocationMode = 'manual'),
           child: Container(
@@ -877,13 +855,13 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
             ),
             child: Row(
               children: [
-                // ignore: deprecated_member_use
+
                 Radio<String>(
                   value: 'manual',
-                  // ignore: deprecated_member_use
+
                   groupValue: _allocationMode,
                   activeColor: const Color(0xFFD97706),
-                  // ignore: deprecated_member_use
+
                   onChanged: (val) =>
                       setState(() => _allocationMode = val!),
                 ),
@@ -916,7 +894,6 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
           ),
         ),
 
-        // Expanded Pandit Selection List
         if (_allocationMode == 'manual') ...[
           const SizedBox(height: 18),
           Text(
@@ -1018,14 +995,11 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
     );
   }
 
-  // ----------------------------------------------------
-  // STEP 4: Order Review & Payment Gateway
-  // ----------------------------------------------------
   Widget _buildStep4OrderReviewAndPayment() {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        // Summary Card
+
         Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
@@ -1065,7 +1039,6 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
 
         const SizedBox(height: 16),
 
-        // Price Breakdown Card
         Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
@@ -1122,7 +1095,6 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
 
         const SizedBox(height: 16),
 
-        // Payment Options Card
         Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
@@ -1239,13 +1211,13 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
                 ),
               ),
             ),
-            // ignore: deprecated_member_use
+
             Radio<String>(
               value: value,
-              // ignore: deprecated_member_use
+
               groupValue: _selectedPaymentMethod,
               activeColor: const Color(0xFFD97706),
-              // ignore: deprecated_member_use
+
               onChanged: (val) =>
                   setState(() => _selectedPaymentMethod = val!),
             ),
@@ -1255,7 +1227,6 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
     );
   }
 
-  // Dynamic Sticky Bottom Bar
   Widget _buildBottomBar() {
     return Container(
       padding: const EdgeInsets.all(16),

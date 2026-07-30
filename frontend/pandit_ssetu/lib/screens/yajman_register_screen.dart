@@ -63,10 +63,9 @@ class _YajmanRegisterScreenState extends State<YajmanRegisterScreen> {
     });
 
     try {
-      // Call send OTP API
+
       await ApiService.sendOtp(phone);
 
-      // Save registration info to UserData
       UserData.save(
         name: name,
         phone: phone,
@@ -74,7 +73,7 @@ class _YajmanRegisterScreenState extends State<YajmanRegisterScreen> {
       );
 
       if (mounted) {
-        // Navigate to OTP Screen
+
         context.go('/yajman-otp');
       }
     } catch (e) {
@@ -106,7 +105,7 @@ class _YajmanRegisterScreenState extends State<YajmanRegisterScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // ─── BACKGROUND IMAGE ───────────────────────────────
+
           Image.asset(
             'assets/images/role_select_bg.png',
             fit: BoxFit.cover,
@@ -128,7 +127,6 @@ class _YajmanRegisterScreenState extends State<YajmanRegisterScreen> {
                           children: [
                             const SizedBox(height: 12),
 
-                            // ─── TOP HEADER (Logo and Close) ─────────────────
                             Stack(
                               alignment: Alignment.center,
                               children: [
@@ -179,7 +177,6 @@ class _YajmanRegisterScreenState extends State<YajmanRegisterScreen> {
 
                             const SizedBox(height: 24),
 
-                            // ─── SPARKLING HERO BADGE ────────────────────────
                             Center(
                               child: Container(
                                 width: 64,
@@ -198,7 +195,6 @@ class _YajmanRegisterScreenState extends State<YajmanRegisterScreen> {
 
                             const SizedBox(height: 8),
 
-                            // ─── HERO TEXT ───────────────────────────────────
                             Text(
                               'Begin Your Journey',
                               textAlign: TextAlign.center,
@@ -221,7 +217,6 @@ class _YajmanRegisterScreenState extends State<YajmanRegisterScreen> {
 
                             const SizedBox(height: 28),
 
-                            // ─── FORM CARD ───────────────────────────────────
                             Container(
                               margin: const EdgeInsets.only(bottom: 32),
                               decoration: BoxDecoration(
@@ -239,7 +234,7 @@ class _YajmanRegisterScreenState extends State<YajmanRegisterScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  // FIELD 1 — FULL NAME
+
                                   Text(
                                     'FULL NAME',
                                     style: GoogleFonts.lato(
@@ -278,7 +273,6 @@ class _YajmanRegisterScreenState extends State<YajmanRegisterScreen> {
 
                                   const SizedBox(height: 20),
 
-                                  // FIELD 2 — PHONE NUMBER
                                   Text(
                                     'PHONE NUMBER',
                                     style: GoogleFonts.lato(
@@ -291,7 +285,7 @@ class _YajmanRegisterScreenState extends State<YajmanRegisterScreen> {
                                   const SizedBox(height: 8),
                                   Row(
                                     children: [
-                                      // Country code pill
+
                                       Container(
                                         height: 48,
                                         alignment: Alignment.center,
@@ -310,7 +304,7 @@ class _YajmanRegisterScreenState extends State<YajmanRegisterScreen> {
                                         ),
                                       ),
                                       const SizedBox(width: 12),
-                                      // Phone number textfield
+
                                       Expanded(
                                         child: TextField(
                                           controller: _phoneController,
@@ -345,7 +339,7 @@ class _YajmanRegisterScreenState extends State<YajmanRegisterScreen> {
                                     ],
                                   ),
                                   const SizedBox(height: 8),
-                                  // Small info text
+
                                   Row(
                                     children: [
                                       const Icon(
@@ -367,7 +361,6 @@ class _YajmanRegisterScreenState extends State<YajmanRegisterScreen> {
 
                                   const SizedBox(height: 20),
 
-                                  // FIELD 3 — EMAIL ADDRESS
                                   RichText(
                                     text: TextSpan(
                                       style: GoogleFonts.lato(
@@ -417,7 +410,6 @@ class _YajmanRegisterScreenState extends State<YajmanRegisterScreen> {
 
                                   const SizedBox(height: 24),
 
-                                  // CONTINUE BUTTON
                                   SizedBox(
                                     width: double.infinity,
                                     height: 54,
@@ -462,7 +454,6 @@ class _YajmanRegisterScreenState extends State<YajmanRegisterScreen> {
 
                                   const SizedBox(height: 16),
 
-                                  // ─── DIVIDER ───────────────────────────────
                                   const Divider(
                                     color: Color(0xFFE0D5C5),
                                     thickness: 0.8,
@@ -470,7 +461,6 @@ class _YajmanRegisterScreenState extends State<YajmanRegisterScreen> {
 
                                   const SizedBox(height: 16),
 
-                                  // ─── BOTTOM TEXT ───────────────────────────
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [

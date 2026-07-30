@@ -63,21 +63,19 @@ class _YajmanOtpScreenState extends State<YajmanOtpScreen> {
   Future<void> _handleResend() async {
     if (!_canResend) return;
 
-    // Clear existing fields
     for (var controller in _controllers) {
       controller.clear();
     }
     _focusNodes[0].requestFocus();
 
     try {
-      // Call send OTP API again
+
       await ApiService.sendOtp(UserData.phone);
 
-      // Start timer again
       _startTimer();
 
       if (mounted) {
-        // Show friendly success SnackBar
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -90,7 +88,7 @@ class _YajmanOtpScreenState extends State<YajmanOtpScreen> {
         );
       }
     } catch (e) {
-      // Log detailed error
+
       debugPrint('Resend OTP failed: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -129,7 +127,7 @@ class _YajmanOtpScreenState extends State<YajmanOtpScreen> {
     });
 
     try {
-      // Call verify OTP API and store user data
+
       final response = await ApiService.verifyOtp(UserData.phone, otp, UserData.name);
       final Map<String, dynamic> user = (response != null && response['data'] != null && response['data']['user'] != null) ? Map<String, dynamic>.from(response['data']['user']) : {};
       UserData.save(
@@ -149,7 +147,6 @@ class _YajmanOtpScreenState extends State<YajmanOtpScreen> {
           _isVerifying = false;
         });
 
-        // Show beautiful success banner
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
@@ -167,11 +164,10 @@ class _YajmanOtpScreenState extends State<YajmanOtpScreen> {
           ),
         );
 
-        // Navigate to Home
         context.go('/home');
       }
     } catch (e) {
-      // Log detailed error
+
       debugPrint('OTP verification failed: $e');
       if (mounted) {
         setState(() {
@@ -200,7 +196,7 @@ class _YajmanOtpScreenState extends State<YajmanOtpScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // ─── BACKGROUND IMAGE ───────────────────────────────
+
           Image.asset('assets/images/role_select_bg.png', fit: BoxFit.cover),
 
           SafeArea(
@@ -219,7 +215,6 @@ class _YajmanOtpScreenState extends State<YajmanOtpScreen> {
                           children: [
                             const SizedBox(height: 12),
 
-                            // ─── TOP HEADER (Back Button + Logo) ───────────────
                             Stack(
                               alignment: Alignment.center,
                               children: [
@@ -271,7 +266,6 @@ class _YajmanOtpScreenState extends State<YajmanOtpScreen> {
 
                             const SizedBox(height: 36),
 
-                            // ─── LOCK / SMS HERO BADGE ─────────────────────────
                             Center(
                               child: Stack(
                                 alignment: Alignment.center,
@@ -314,7 +308,6 @@ class _YajmanOtpScreenState extends State<YajmanOtpScreen> {
 
                             const SizedBox(height: 18),
 
-                            // ─── HERO TEXT ─────────────────────────────────────
                             Text(
                               'Verify Your Number',
                               textAlign: TextAlign.center,
@@ -343,7 +336,6 @@ class _YajmanOtpScreenState extends State<YajmanOtpScreen> {
 
                             const SizedBox(height: 32),
 
-                            // ─── FORM CONTAINER ────────────────────────────────
                             Container(
                               decoration: BoxDecoration(
                                 color: Colors.white,
@@ -372,7 +364,6 @@ class _YajmanOtpScreenState extends State<YajmanOtpScreen> {
                                   ),
                                   const SizedBox(height: 16),
 
-                                  // 6 elegant rounded input boxes
                                   Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
@@ -382,7 +373,7 @@ class _YajmanOtpScreenState extends State<YajmanOtpScreen> {
                                         height: 52,
                                         child: KeyboardListener(
                                           focusNode:
-                                              FocusNode(), // Dummy node for backspace tracking
+                                              FocusNode(),
                                           onKeyEvent: (event) {
                                             if (event is KeyDownEvent &&
                                                 event.logicalKey ==
@@ -453,7 +444,6 @@ class _YajmanOtpScreenState extends State<YajmanOtpScreen> {
 
                                   const SizedBox(height: 24),
 
-                                  // Timer Countdown / Clickable Resend Text
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
@@ -500,7 +490,6 @@ class _YajmanOtpScreenState extends State<YajmanOtpScreen> {
 
                                   const SizedBox(height: 24),
 
-                                  // Dynamic Verify Button
                                   SizedBox(
                                     width: double.infinity,
                                     height: 54,

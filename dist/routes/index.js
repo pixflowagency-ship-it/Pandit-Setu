@@ -8,9 +8,8 @@ import productsRouter from "./products.routes.js";
 import { usersRouter } from "./users.routes.js";
 const apiRouter = Router();
 apiRouter.use("/auth", authRouter);
-apiRouter.use("/users", usersRouter); // mount users routes
-apiRouter.use("/products", productsRouter); // mount products routes
-// Example protected route demonstrating verifyToken + requireRole
+apiRouter.use("/users", usersRouter);
+apiRouter.use("/products", productsRouter);
 apiRouter.get("/me", verifyToken, asyncHandler((req, res) => {
     sendSuccess(res, { user: req.user });
 }));

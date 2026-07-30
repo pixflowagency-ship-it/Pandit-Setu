@@ -5,9 +5,6 @@ export interface GeoPoint {
   lng: number;
 }
 
-/**
- * PostGIS geometry(Point, 4326) mapped to { lat, lng } in application code.
- */
 export const geometryPoint = customType<{
   data: GeoPoint;
   driverData: string;

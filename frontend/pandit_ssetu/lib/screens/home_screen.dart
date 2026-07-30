@@ -7,7 +7,6 @@ import '../widgets/pooja_detail_modal.dart';
 import '../user_data.dart';
 import '../services/api_service.dart';
 
-// Custom arc clip shape for hero banner bottom
 class ArcClipShape extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
@@ -41,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Map<String, dynamic>> _bookings = [];
   bool _isLoadingBookings = true;
   Timer? _countdownTimer;
-  int _secondsRemaining = 21 * 3600 + 14 * 60 + 5; // 21h 14m 5s
+  int _secondsRemaining = 21 * 3600 + 14 * 60 + 5;
 
   @override
   void initState() {
@@ -92,7 +91,6 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
   }
-
 
   static const List<PoojaDetail> _trendingRituals = [
     PoojaDetail(
@@ -183,7 +181,6 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
   ];
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -228,10 +225,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
-  // ═══════════════════════════════
-  // TOP BAR
-  // ═══════════════════════════════
   Widget _buildTopBar() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -279,10 +272,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
-  // ═══════════════════════════════
-  // HERO BANNER
-  // ═══════════════════════════════
   Widget _buildHeroBanner() {
     return ClipRRect(
       borderRadius: const BorderRadius.only(
@@ -300,7 +289,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // Network image
+
               Image.network(
                 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/29/7d/4e/42/birla-temple-from-outside.jpg?w=900&h=500&s=1',
                 fit: BoxFit.cover,
@@ -331,7 +320,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
 
-              // Dark gradient overlay
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -347,7 +335,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              // Text content
               Positioned(
                 bottom: 40,
                 left: 24,
@@ -377,7 +364,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Book Havan blur button
                     GestureDetector(
                       onTap: () {
                         showPoojaDetailBottomSheet(
@@ -439,9 +425,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ═══════════════════════════════
-  // TODAY'S PANCHANG
-  // ═══════════════════════════════
   Widget _buildPanchangSection() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -462,7 +445,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 12),
           Container(
             width: double.infinity,
-            // MADE TALLER
+
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -519,7 +502,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
 
-                // Cylinder border button
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -550,9 +532,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ═══════════════════════════════
-  // QUICK ACTIONS WITH REAL IMAGES
-  // ═══════════════════════════════
   Widget _buildQuickActions() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -594,7 +573,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
 
   Widget _quickActionCard({
     String? assetPath,
@@ -652,9 +630,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ═══════════════════════════════
-  // FEATURE CARDS
-  // ═══════════════════════════════
   Widget _buildFeatureCards() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -752,10 +727,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
-  // ═══════════════════════════════
-  // TRENDING RITUALS SECTION
-  // ═══════════════════════════════
   Widget _buildTrendingRitualsSection() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -958,11 +929,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ═══════════════════════════════
-  // FLOATING PILL NAVBAR
-  // ONLY CYLINDER BORDER - NO BG
-  // ═══════════════════════════════
-
   Widget _buildUpcomingBookingBanner(Map<String, dynamic> booking) {
     return GestureDetector(
       onTap: () => context.push('/tracking'),
@@ -1032,7 +998,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            // Embedded Pandit Card
+
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(

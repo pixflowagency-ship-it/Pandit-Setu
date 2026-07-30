@@ -2,9 +2,7 @@ import 'dotenv/config';
 import { db } from '../db/index.js';
 import { poojas } from '../db/schema/poojas.js';
 import { products } from '../db/schema/products.js';
-// Helper to run the seed script
 async function seed() {
-    // Seed Poojas
     const poojaEntries = [
         { title: 'Satyanarayan Pooja', slug: 'satyanarayan-pooja', description: 'Traditional Satyanarayan ritual', basePrice: '5000', durationMinutes: 120 },
         { title: 'Griha Pravesh', slug: 'griha-pravesh', description: 'Housewarming ceremony', basePrice: '8000', durationMinutes: 180 },
@@ -16,7 +14,6 @@ async function seed() {
         { title: 'Lakshmi Puja', slug: 'lakshmi-puja', description: 'Lakshmi worship for prosperity', basePrice: '3500', durationMinutes: 80 },
     ];
     await db.insert(poojas).values(poojaEntries);
-    // Seed Products
     const productEntries = [
         {
             name: 'Satyanarayan Pooja Kit',

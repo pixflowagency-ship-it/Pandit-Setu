@@ -5,7 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../user_data.dart';
 import '../services/api_service.dart';
 
-// ── Kartik's exact color palette ─────────────────────────────────────
 class _C {
   static const parchmentBg = Color(0xFFFDFAF3);
   static const warmCream = Color(0xFFFAF2DC);
@@ -26,10 +25,8 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _isEditMode = false;
 
-  // Edit buffers
   late String _name, _phone, _email, _dob, _tob, _pob, _gotra, _zodiac;
 
-  // Saved state
   late String _savedName = UserData.name;
   late String _savedPhone = UserData.phone;
   late String _savedEmail = UserData.email;
@@ -47,7 +44,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _resetBuffers() {
-    // Pull fresh values from UserData each time edit is opened
+
     _savedName = UserData.name;
     _savedPhone = UserData.phone;
     _savedEmail = UserData.email;
@@ -66,7 +63,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _zodiac = _savedZodiac;
   }
 
-  // Fetch latest profile from backend
   Future<void> _loadUserProfile() async {
     try {
       final response = await ApiService.getProfile();
@@ -113,31 +109,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         _buildVedicDivider(),
                         const SizedBox(height: 18),
 
-                        // Main Devotee Card (Sacred Devotee Core)
                         _buildSacredDevoteeCoreCard(context),
                         const SizedBox(height: 16),
 
-                        // Section 1: Astrological Quick-View Card
                         _buildAstroQuickViewCard(),
                         const SizedBox(height: 16),
 
-                        // Section 2: Saved Delivery Addresses
                         _buildSavedAddressesCard(),
                         const SizedBox(height: 16),
 
-                        // My Bookings Card
                         _buildMyBookingsCard(),
                         const SizedBox(height: 16),
 
-                        // Favourite Experts Card
                         _buildFavoriteExperts(),
                         const SizedBox(height: 16),
 
-                        // Section 3: App Settings & Account Actions
                         _buildAppSettingsAndAccountActions(context),
                         const SizedBox(height: 16),
 
-                        // Support Contact Button
                         _buildContactSupportBtn(),
                         const SizedBox(height: 20),
                       ],
@@ -148,7 +137,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
 
-            // Edit profile overlay dialog
             if (_isEditMode) _buildEditDialog(context),
           ],
         ),
@@ -156,7 +144,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── Top Bar ────────────────────────────────────────────────────────
   Widget _buildTopBar(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -203,7 +190,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── Vedic Ornamental Divider ───────────────────────────────────────
   Widget _buildVedicDivider() {
     return Row(
       children: [
@@ -270,7 +256,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── Sacred Devotee Core Main Profile Card ──────────────────────────
   Widget _buildSacredDevoteeCoreCard(BuildContext context) {
     final name = UserData.name.isNotEmpty
         ? UserData.name
@@ -306,7 +291,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Devotee Avatar
+
               Container(
                 width: 62,
                 height: 62,
@@ -482,7 +467,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── Section 1: Astrological Quick-View Card ───────────────────────
   Widget _buildAstroQuickViewCard() {
     final gotra = UserData.gotra.isNotEmpty
         ? UserData.gotra
@@ -547,7 +531,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          // 3 Astro Tags
+
           Row(
             children: [
               Expanded(
@@ -650,7 +634,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── Section 2: Saved Delivery Addresses ────────────────────────────
   Widget _buildSavedAddressesCard() {
     final city = UserData.city.isNotEmpty ? UserData.city : 'Mumbai';
 
@@ -712,7 +695,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
           const SizedBox(height: 14),
-          // Address ListTile 1
+
           _buildAddressTile(
             title: 'Home (Primary)',
             address: 'Flat 402, Shivam Apts, MG Road, $city - 400001',
@@ -720,7 +703,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             isPrimary: true,
           ),
           const SizedBox(height: 8),
-          // Address ListTile 2
+
           _buildAddressTile(
             title: 'Temple / Event Venue',
             address: 'Plot 12, Sector 14, Near Hanuman Mandir',
@@ -910,7 +893,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── My Bookings Card ───────────────────────────────────────────────
   Widget _buildMyBookingsCard() {
     return Container(
       decoration: BoxDecoration(
@@ -1152,7 +1134,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── Favourite Experts ──────────────────────────────────────────────
   Widget _buildFavoriteExperts() {
     final experts = [
       {'rating': '4.9', 'color': const Color(0xFF2C3E50)},
@@ -1266,7 +1247,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── Section 3: App Settings & Account Actions ─────────────────────
   Widget _buildAppSettingsAndAccountActions(BuildContext context) {
     final items = [
       {
@@ -1486,7 +1466,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // ── Contact Support Button ─────────────────────────────────────────
   Widget _buildContactSupportBtn() {
     return Container(
       width: double.infinity,
@@ -1524,7 +1503,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── Edit Profile Overlay Dialog ────────────────────────────────────
   Widget _buildEditDialog(BuildContext context) {
     return Container(
       color: Colors.black.withValues(alpha: 0.45),
@@ -1545,7 +1523,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           child: Column(
             children: [
-              // Dialog header
+
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 16, 12, 0),
                 child: Row(
@@ -1569,7 +1547,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const Divider(color: _C.accentLine, height: 1),
-              // Scrollable form
+
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(20),
@@ -1756,7 +1734,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── Nav Bar (same as home/book/panchang/shop) ──────────────────────
   Widget _buildNavBar(BuildContext context) {
     final items = [
       {'icon': Icons.home_outlined, 'activeIcon': Icons.home, 'label': 'Home'},
@@ -1801,7 +1778,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: List.generate(items.length, (i) {
-            final isActive = i == 4; // Profile = index 4
+            final isActive = i == 4;
             return GestureDetector(
               onTap: () {
                 switch (i) {

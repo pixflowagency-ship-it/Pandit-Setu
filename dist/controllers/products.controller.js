@@ -1,10 +1,6 @@
 import { db, products } from '../db/index.js';
 import { eq } from 'drizzle-orm';
 import { sendSuccess, sendError } from '../utils/response.js';
-/**
- * GET /api/v1/products
- * Returns all active products.
- */
 export const getProductsHandler = async (req, res) => {
     try {
         const rows = await db.query.products.findMany({ where: eq(products.isActive, true) });

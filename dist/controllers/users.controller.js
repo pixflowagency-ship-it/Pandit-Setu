@@ -3,10 +3,6 @@ import { eq } from 'drizzle-orm';
 import { sendSuccess, sendError } from '../utils/response.js';
 import { AppError } from '../utils/api-error.js';
 import { updateProfileSchema } from '../validators/users.validator.js';
-/**
- * GET /api/v1/users/profile
- * Returns the authenticated user's profile.
- */
 export const getProfileHandler = async (req, res) => {
     const userId = req.user?.id;
     if (!userId) {
@@ -19,10 +15,6 @@ export const getProfileHandler = async (req, res) => {
     const { id, phone, name, role, dob, tob, pob, gotra, zodiac, city, email } = user;
     return sendSuccess(res, { id, phone, fullName: name, role, dob, tob, pob, gotra, zodiac, city, email });
 };
-/**
- * PUT /api/v1/users/profile
- * Updates allowed profile fields for the authenticated user.
- */
 export const updateProfileHandler = async (req, res) => {
     const userId = req.user?.id;
     if (!userId) {

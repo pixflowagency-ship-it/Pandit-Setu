@@ -15,7 +15,6 @@ import { poojas } from "./poojas.js";
 import { verificationStatusEnum, docTypeEnum, docStatusEnum, verificationStageEnum } from "./enums.js";
 import { geometryPoint } from "../custom-types/point.js";
 
-// 1. Pandits Table
 export const pandits = pgTable("pandits", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: uuid("user_id")
@@ -50,7 +49,6 @@ export const pandits = pgTable("pandits", {
 export type Bandit = typeof pandits.$inferSelect;
 export type NewPandit = typeof pandits.$inferInsert;
 
-// 2. Pandit Documents Table
 export const panditDocuments = pgTable("pandit_documents", {
   id: uuid("id").defaultRandom().primaryKey(),
   panditId: uuid("pandit_id")
@@ -73,7 +71,6 @@ export const panditDocuments = pgTable("pandit_documents", {
 export type BanditDocument = typeof panditDocuments.$inferSelect;
 export type NewPanditDocument = typeof panditDocuments.$inferInsert;
 
-// 3. Pandit Services Table
 export const panditServices = pgTable("pandit_services", {
   panditId: uuid("pandit_id")
     .notNull()
@@ -98,7 +95,6 @@ export const panditServices = pgTable("pandit_services", {
 export type BanditService = typeof panditServices.$inferSelect;
 export type NewPanditService = typeof panditServices.$inferInsert;
 
-// 4. Legacy Pandit Profiles (Preserved for Drizzle Kit non-interactive schema diff alignment)
 export const panditProfiles = pgTable("pandit_profiles", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: uuid("user_id")

@@ -1,7 +1,4 @@
 import { customType } from "drizzle-orm/pg-core";
-/**
- * PostGIS geometry(Point, 4326) mapped to { lat, lng } in application code.
- */
 export const geometryPoint = customType({
     dataType() {
         return "geometry(Point, 4326)";
