@@ -286,6 +286,64 @@ class _BookScreenState extends State<BookScreen> {
         availability: 'Available Friday',
       ),
     ],
+    'online': [
+      const PoojaDetail(
+        id: 'virtual_satyanarayan',
+        title: 'Virtual Satyanarayan Pooja',
+        category: 'Online Pooja',
+        imageUrl:
+            'https://images.unsplash.com/photo-1605152276897-4f618f831968?w=500',
+        isPopular: true,
+        duration: '1.5 Hours',
+        durationBreakdown: '15 mins setup • 1.25 hours interactive video ritual',
+        description:
+            'Perform Satyanarayan Pooja virtually via HD video call. Live virtual guidance for Sankalpa and Katha recitation by a certified Acharya.',
+        spiritualSignificance:
+            'Invokes truth and divine grace in your household over a digital medium, transcending physical boundaries.',
+        inclusions: [
+          'Certified Vedic Acharya',
+          'Digital Muhurat Consultation',
+          'Online Live Sankalpa',
+          'E-Prashad & Digital blessings',
+        ],
+        chantingDetails: [
+          'Vishnu Sahasranama Chanting',
+          'Satyanarayan Vrat Katha recitation',
+        ],
+        standardPrice: 1100.0,
+        samagriPrice: 500.0,
+        originalPrice: 2200.0,
+        availability: 'Available Daily',
+      ),
+      const PoojaDetail(
+        id: 'online_mahamrityunjaya',
+        title: 'E-Mahamrityunjaya Havan',
+        category: 'Online Pooja',
+        imageUrl:
+            'https://images.unsplash.com/photo-1608306448197-e83633f1261c?w=500',
+        isPopular: true,
+        duration: '2.0 Hours',
+        durationBreakdown: '20 mins setup • 1.66 hours online sacred fire rites',
+        description:
+            'HD live streaming of Mahamrityunjaya fire sacrifice for health and healing. Pandit Ji chants for your specific name/gotra.',
+        spiritualSignificance:
+            'Invokes the healing energies of Lord Rudra (Shiva) to remove chronic health issues and restore mental peace.',
+        inclusions: [
+          '2 Vedic Priests at Temple',
+          'Live Sankalpa via Zoom/Meet',
+          'Pooja video recording copy link',
+          'Prashad mailed to your address',
+        ],
+        chantingDetails: [
+          '108 Mahamrityunjaya Recitations',
+          'Rudra Ashtadhyayi Chanting',
+        ],
+        standardPrice: 2100.0,
+        samagriPrice: 800.0,
+        originalPrice: 4500.0,
+        availability: 'Available This Sunday',
+      ),
+    ],
   };
 
   List<Widget> _buildRitualCards() {
@@ -474,32 +532,47 @@ class _BookScreenState extends State<BookScreen> {
   }
 
   Widget _buildCategoryCards() {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildCategoryCard(
-            icon: Icons.favorite,
-            label: 'Wedding\nRituals',
-            id: 'wedding',
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          SizedBox(
+            width: 115,
+            child: _buildCategoryCard(
+              icon: Icons.favorite,
+              label: 'Wedding\nRituals',
+              id: 'wedding',
+            ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _buildCategoryCard(
-            icon: Icons.home_outlined,
-            label: 'House\nWarming',
-            id: 'housewarming',
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 115,
+            child: _buildCategoryCard(
+              icon: Icons.home_outlined,
+              label: 'House\nWarming',
+              id: 'housewarming',
+            ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _buildCategoryCard(
-            icon: Icons.temple_hindu,
-            label: 'Pooja\nHome',
-            id: 'poojahome',
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 115,
+            child: _buildCategoryCard(
+              icon: Icons.temple_hindu,
+              label: 'Pooja\nHome',
+              id: 'poojahome',
+            ),
           ),
-        ),
-      ],
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 115,
+            child: _buildCategoryCard(
+              icon: Icons.videocam,
+              label: 'Online\nPooja',
+              id: 'online',
+            ),
+          ),
+        ],
+      ),
     );
   }
 

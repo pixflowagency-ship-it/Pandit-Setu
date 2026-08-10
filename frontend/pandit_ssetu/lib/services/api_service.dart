@@ -147,6 +147,7 @@ class ApiService {
       'address': bookingData['address'] ?? 'Near City Center',
       'totalAmount': bookingData['totalAmount'] ?? 3200,
       'panditName': bookingData['panditName'] ?? 'Auto-Allocated Acharya',
+      'allocationMode': bookingData['allocationMode'] ?? 'auto',
       'createdAt': DateTime.now().toIso8601String(),
     };
 

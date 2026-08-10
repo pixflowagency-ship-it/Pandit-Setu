@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
@@ -15,12 +16,22 @@ class _BookingsScreenState extends State<BookingsScreen>
   late TabController _tabController;
   List<Map<String, dynamic>> _userBookings = [];
   bool _isLoading = true;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _fetchBookings();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
   }
 
   Future<void> _fetchBookings() async {
@@ -36,6 +47,7 @@ class _BookingsScreenState extends State<BookingsScreen>
 
   @override
   void dispose() {
+    _timer?.cancel();
     _tabController.dispose();
     super.dispose();
   }
@@ -237,20 +249,40 @@ class _BookingsScreenState extends State<BookingsScreen>
             ),
           ),
           const SizedBox(height: 6),
-          Row(
-            children: [
-              const Icon(Icons.person_outline, size: 16, color: Color(0xFFD97706)),
-              const SizedBox(width: 6),
-              Text(
-                booking['panditName'] ?? 'Assigned Pandit',
-                style: GoogleFonts.lato(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF6B5B52),
+          Builder(builder: (context) {
+            final createdAtStr = booking['createdAt'];
+            bool isAllocating = false;
+            int remainingSecs = 0;
+            if (booking['allocationMode'] == 'auto' && createdAtStr != null) {
+              final createdAt = DateTime.parse(createdAtStr);
+              final diff = DateTime.now().difference(createdAt);
+              if (diff.inSeconds < 180) {
+                isAllocating = true;
+                remainingSecs = 180 - diff.inSeconds;
+              }
+            }
+
+            return Row(
+              children: [
+                Icon(
+                  isAllocating ? Icons.hourglass_empty : Icons.person_outline,
+                  size: 16,
+                  color: const Color(0xFFD97706),
                 ),
-              ),
-            ],
-          ),
+                const SizedBox(width: 6),
+                Text(
+                  isAllocating
+                      ? 'Allocating Acharya (${remainingSecs ~/ 60}m ${remainingSecs % 60}s)'
+                      : (booking['panditName'] ?? 'Assigned Pandit'),
+                  style: GoogleFonts.lato(
+                    fontSize: 13,
+                    fontWeight: isAllocating ? FontWeight.bold : FontWeight.w600,
+                    color: isAllocating ? const Color(0xFFD97706) : const Color(0xFF6B5B52),
+                  ),
+                ),
+              ],
+            );
+          }),
           const SizedBox(height: 4),
           Row(
             children: [
@@ -312,38 +344,58 @@ class _BookingsScreenState extends State<BookingsScreen>
                   ),
                 ],
               ),
-              Row(
-                children: [
-                  OutlinedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Connecting to ${booking['panditName']}...',
-                            style: GoogleFonts.lato(),
-                          ),
-                          backgroundColor: const Color(0xFFD97706),
+              Builder(builder: (context) {
+                final createdAtStr = booking['createdAt'];
+                bool isAllocating = false;
+                if (booking['allocationMode'] == 'auto' && createdAtStr != null) {
+                  final createdAt = DateTime.parse(createdAtStr);
+                  final diff = DateTime.now().difference(createdAt);
+                  if (diff.inSeconds < 180) {
+                    isAllocating = true;
+                  }
+                }
+
+                return Row(
+                  children: [
+                    OutlinedButton(
+                      onPressed: isAllocating
+                          ? null
+                          : () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Connecting to ${booking['panditName']}...',
+                                    style: GoogleFonts.lato(),
+                                  ),
+                                  backgroundColor: const Color(0xFFD97706),
+                                ),
+                              );
+                            },
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(
+                          color: isAllocating
+                              ? Colors.grey.shade400
+                              : const Color(0xFFD97706),
                         ),
-                      );
-                    },
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFFD97706)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        minimumSize: const Size(0, 36),
                       ),
-                      minimumSize: const Size(0, 36),
-                    ),
-                    child: Text(
-                      'Contact Pandit',
-                      style: GoogleFonts.lato(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFFD97706),
+                      child: Text(
+                        isAllocating ? 'Assigning...' : 'Contact Pandit',
+                        style: GoogleFonts.lato(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: isAllocating
+                              ? Colors.grey.shade500
+                              : const Color(0xFFD97706),
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                );
+              }),
             ],
           ),
         ],

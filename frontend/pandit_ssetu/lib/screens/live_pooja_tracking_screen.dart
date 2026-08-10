@@ -1,6 +1,9 @@
+import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LivePoojaTrackingScreen extends StatefulWidget {
   const LivePoojaTrackingScreen({super.key});
@@ -10,7 +13,87 @@ class LivePoojaTrackingScreen extends StatefulWidget {
 }
 
 class _LivePoojaTrackingScreenState extends State<LivePoojaTrackingScreen> {
-  int _currentProgressStep = 2;
+  int _currentProgressStep = 0;
+  Map<String, dynamic>? _latestBooking;
+  bool _isLoadingBooking = true;
+  Timer? _allocationTimer;
+  int _allocationSecondsRemaining = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLatestBooking();
+  }
+
+  Future<void> _loadLatestBooking() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final bookingsStr = prefs.getString('user_bookings') ?? '[]';
+      final List bookingsList = jsonDecode(bookingsStr);
+      if (bookingsList.isNotEmpty) {
+        final latest = Map<String, dynamic>.from(bookingsList.first);
+        setState(() {
+          _latestBooking = latest;
+          _isLoadingBooking = false;
+          // If we have a real booking, default progress step to 0 or 1 based on assignment
+          _currentProgressStep = 0;
+        });
+        _checkAllocationTimer();
+      } else {
+        setState(() {
+          _isLoadingBooking = false;
+          _currentProgressStep = 2; // fallback to en route
+        });
+      }
+    } catch (_) {
+      setState(() {
+        _isLoadingBooking = false;
+        _currentProgressStep = 2; // fallback to en route
+      });
+    }
+  }
+
+  void _checkAllocationTimer() {
+    if (_latestBooking == null || _latestBooking!['allocationMode'] != 'auto') {
+      // Manual booking is allocated immediately, so progress can be Pt. Assigned (step 0 or more)
+      setState(() {
+        _currentProgressStep = 0;
+      });
+      return;
+    }
+    final createdAtStr = _latestBooking!['createdAt'];
+    if (createdAtStr == null) {
+      setState(() {
+        _currentProgressStep = 0;
+      });
+      return;
+    }
+
+    final createdAt = DateTime.parse(createdAtStr);
+    final diff = DateTime.now().difference(createdAt);
+    if (diff.inSeconds < 180) {
+      setState(() {
+        _allocationSecondsRemaining = 180 - diff.inSeconds;
+      });
+      _allocationTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (mounted) {
+          setState(() {
+            if (_allocationSecondsRemaining > 0) {
+              _allocationSecondsRemaining--;
+            } else {
+              _allocationTimer?.cancel();
+            }
+          });
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _allocationTimer?.cancel();
+    super.dispose();
+  }
 
   final List<Map<String, String>> _steps = [
     {
@@ -56,28 +139,27 @@ class _LivePoojaTrackingScreenState extends State<LivePoojaTrackingScreen> {
         ),
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(20),
-                children: [
-
-                  _buildLocationMapCard(),
-
-                  const SizedBox(height: 16),
-
-                  _buildPanditCard(),
-
-                  const SizedBox(height: 16),
-
-                  _buildTimelineWidget(),
-                ],
-              ),
-            ),
-            _buildBottomActionBar(),
-          ],
-        ),
+        child: _isLoadingBooking
+            ? const Center(child: CircularProgressIndicator(color: Color(0xFFD97706)))
+            : (_allocationSecondsRemaining > 0
+                ? _buildAllocationView()
+                : Column(
+                    children: [
+                      Expanded(
+                        child: ListView(
+                          padding: const EdgeInsets.all(20),
+                          children: [
+                            _buildLocationMapCard(),
+                            const SizedBox(height: 16),
+                            _buildPanditCard(),
+                            const SizedBox(height: 16),
+                            _buildTimelineWidget(),
+                          ],
+                        ),
+                      ),
+                      _buildBottomActionBar(),
+                    ],
+                  )),
       ),
     );
   }
@@ -553,6 +635,179 @@ class _LivePoojaTrackingScreenState extends State<LivePoojaTrackingScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildAllocationView() {
+    return Center(
+      child: ListView(
+        padding: const EdgeInsets.all(24),
+        shrinkWrap: true,
+        children: [
+          // Elegant radar pulsing animation
+          Center(
+            child: Container(
+              width: 140,
+              height: 140,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF3E0),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: const Color(0xFFD97706).withValues(alpha: 0.2),
+                  width: 2,
+                ),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Outer ring (looping pulse via ValueKey)
+                  TweenAnimationBuilder<double>(
+                    key: ValueKey(_allocationSecondsRemaining ~/ 2),
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    duration: const Duration(seconds: 2),
+                    builder: (context, value, child) {
+                      return Opacity(
+                        opacity: 1.0 - value,
+                        child: Transform.scale(
+                          scale: 1.0 + value * 0.8,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: const Color(0xFFD97706),
+                                width: 2,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const Icon(
+                    Icons.self_improvement,
+                    color: Color(0xFFD97706),
+                    size: 54,
+                  ),
+                  const Positioned(
+                    top: 25,
+                    left: 25,
+                    child: Icon(Icons.star, color: Color(0xFFD97706), size: 10),
+                  ),
+                  const Positioned(
+                    bottom: 30,
+                    right: 25,
+                    child: Icon(Icons.star, color: Color(0xFFD97706), size: 10),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
+          Text(
+            'Allocating Vedic Acharya',
+            style: GoogleFonts.lato(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF1F2937),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Searching for the best certified priests near Mumbai',
+            style: GoogleFonts.lato(
+              fontSize: 13.5,
+              color: const Color(0xFF6B5B52),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          // Large countdown timer
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFFE8D5A3).withValues(alpha: 0.5)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.timer_outlined, color: Color(0xFFD97706), size: 20),
+                const SizedBox(width: 10),
+                Text(
+                  'Time Remaining: ${_formatTime(_allocationSecondsRemaining)}',
+                  style: GoogleFonts.lato(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFFD97706),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 28),
+          Text(
+            'System Allocation Steps:',
+            style: GoogleFonts.lato(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF1F2937),
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Status steps
+          _buildAllocationStep(
+            'Verifying location coordinates',
+            true,
+          ),
+          _buildAllocationStep(
+            'Matching required language (Sanskrit, Hindi)',
+            true,
+          ),
+          _buildAllocationStep(
+            'Pinging 3 nearby verified Acharyas',
+            _allocationSecondsRemaining <= 120,
+          ),
+          _buildAllocationStep(
+            'Finalizing optimal Acharya assignment',
+            _allocationSecondsRemaining <= 10,
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatTime(int seconds) {
+    final m = seconds ~/ 60;
+    final s = seconds % 60;
+    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+  }
+
+  Widget _buildAllocationStep(String text, bool isDone) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Icon(
+            isDone ? Icons.check_circle : Icons.radio_button_unchecked,
+            color: isDone ? Colors.green : Colors.grey,
+            size: 16,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: GoogleFonts.lato(
+                fontSize: 12.5,
+                color: isDone ? const Color(0xFF1F2937) : Colors.grey,
+                fontWeight: isDone ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

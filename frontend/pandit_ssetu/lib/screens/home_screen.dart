@@ -202,13 +202,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       _buildUpcomingBookingBanner(_bookings.first),
                     ],
                     const SizedBox(height: 24),
-                    _buildCategoryGrid(),
+                    _buildServiceGrid(),
                     const SizedBox(height: 24),
                     _buildPanchangSection(),
                     const SizedBox(height: 24),
-                    _buildQuickActions(),
-                    const SizedBox(height: 24),
-                    _buildFeatureCards(),
+                    _buildRarestItemsSection(),
                     const SizedBox(height: 24),
                     _buildKundliQuickWidget(),
                     const SizedBox(height: 24),
@@ -531,199 +529,218 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+  Widget _buildRarestItemsSection() {
+    final rareItems = [
+      {
+        'name': 'Nepal Ek Mukhi Rudraksha',
+        'price': 5001.0,
+        'originalPrice': 8000.0,
+        'description': 'Sourced from Nepal, certified authentic. Invokes immense focus and blessings.',
+        'badge': 'RAREST',
+        'image': 'https://images.unsplash.com/photo-1590073844006-33379778ae09?w=300',
+      },
+      {
+        'name': 'Parad Shivling (Mercury)',
+        'price': 3500.0,
+        'originalPrice': 5500.0,
+        'description': 'Pure mercury Shivling. Ideal for removing Vastu doshas.',
+        'badge': 'LIMITED',
+        'image': 'https://images.unsplash.com/photo-1609130767012-004463453a4c?w=300',
+      },
+      {
+        'name': 'Siddh Sphatik Mala',
+        'price': 1250.0,
+        'originalPrice': 2200.0,
+        'description': '108+1 beads pure crystal mala for Japa and meditation.',
+        'badge': 'SACRED',
+        'image': 'https://images.unsplash.com/photo-1596567189078-43bb229ccde9?w=300',
+      },
+    ];
 
-  Widget _buildQuickActions() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: () => context.push('/kundli'),
-              child: _quickActionCard(
-                assetPath: 'assets/images/kundli.jpg',
-                label: 'Kundli',
-                fallbackIcon: Icons.blur_circular,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => context.go('/book'),
-              child: _quickActionCard(
-                assetPath: 'assets/images/book_pooja.jpg',
-                label: 'Book Pooja',
-                fallbackIcon: Icons.local_florist,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => context.push('/support'),
-              child: _quickActionCard(
-                assetPath: 'assets/images/talk_pandit.png',
-                label: 'Talk to Pandit',
-                fallbackIcon: Icons.phone_in_talk,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _quickActionCard({
-    String? assetPath,
-    required String label,
-    required IconData fallbackIcon,
-    bool useIcon = false,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          useIcon
-              ? Icon(fallbackIcon, color: const Color(0xFFE8920A), size: 36)
-              : (assetPath != null
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.asset(
-                          assetPath,
-                          width: 56,
-                          height: 56,
-                          fit: BoxFit.cover,
-                        ),
-                      )
-                    : Icon(
-                        fallbackIcon,
-                        color: const Color(0xFFE8920A),
-                        size: 36,
-                      )),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: GoogleFonts.lato(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF2D1A00),
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFeatureCards() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              height: 120,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFFE8920A), Color(0xFF8B4513)],
-                ),
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Column(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Icon(Icons.auto_awesome, color: Colors.white, size: 24),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Daily Ritual',
-                        style: GoogleFonts.lato(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        'Start your day with positivity',
-                        style: GoogleFonts.lato(
-                          fontSize: 11,
-                          color: Colors.white70,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                  Text(
+                    'Rarest Spiritual Items',
+                    style: GoogleFonts.lato(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF1A1A1A),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Certified authentic & highly auspicious artifacts',
+                    style: GoogleFonts.lato(
+                      fontSize: 11.5,
+                      color: const Color(0xFF8A7060),
+                    ),
                   ),
                 ],
               ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Container(
-              height: 120,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFFB8860B), Color(0xFF5C3A00)],
-                ),
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Icon(Icons.menu_book, color: Colors.white, size: 24),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Read Scriptures',
-                        style: GoogleFonts.lato(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        'Ancient Wisdom',
-                        style: GoogleFonts.lato(
-                          fontSize: 11,
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ],
+              TextButton(
+                onPressed: () => context.go('/shop'),
+                child: Text(
+                  'View Shop >',
+                  style: GoogleFonts.lato(
+                    color: const Color(0xFFD97706),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 195,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: rareItems.length,
+            itemBuilder: (context, index) {
+              final item = rareItems[index];
+              return Container(
+                width: 250,
+                margin: const EdgeInsets.only(right: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: const Color(0xFFE8D5A3).withValues(alpha: 0.4),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: Image.network(
+                        item['image'] as String,
+                        width: 90,
+                        height: 170,
+                        fit: BoxFit.cover,
+                        errorBuilder: (c, e, s) => Container(
+                          width: 90,
+                          color: const Color(0xFFFFF3E0),
+                          child: const Icon(Icons.spa, color: Color(0xFFD97706)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFF3E0),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  item['badge'] as String,
+                                  style: GoogleFonts.lato(
+                                    fontSize: 8.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFFD97706),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                item['name'] as String,
+                                style: GoogleFonts.lato(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF1F2937),
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                item['description'] as String,
+                                style: GoogleFonts.lato(
+                                  fontSize: 10,
+                                  color: const Color(0xFF6B5B52),
+                                ),
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '₹${(item['originalPrice'] as double).toInt()}',
+                                    style: GoogleFonts.lato(
+                                      fontSize: 10,
+                                      color: Colors.grey,
+                                      decoration: TextDecoration.lineThrough,
+                                    ),
+                                  ),
+                                  Text(
+                                    '₹${(item['price'] as double).toInt()}',
+                                    style: GoogleFonts.lato(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFFD97706),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              ElevatedButton(
+                                onPressed: () {
+                                  context.go('/shop');
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFD97706),
+                                  foregroundColor: Colors.white,
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: const Size(40, 28),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: Text(
+                                  'Get',
+                                  style: GoogleFonts.lato(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -930,6 +947,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildUpcomingBookingBanner(Map<String, dynamic> booking) {
+    final createdAtStr = booking['createdAt'];
+    bool isAllocating = false;
+    int remainingSecs = 0;
+    if (booking['allocationMode'] == 'auto' && createdAtStr != null) {
+      final createdAt = DateTime.parse(createdAtStr);
+      final diff = DateTime.now().difference(createdAt);
+      if (diff.inSeconds < 180) {
+        isAllocating = true;
+        remainingSecs = 180 - diff.inSeconds;
+      }
+    }
+
     return GestureDetector(
       onTap: () => context.push('/tracking'),
       child: Container(
@@ -999,57 +1028,105 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 8),
 
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(18),
-                    child: Image.network(
-                      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
-                      width: 36,
-                      height: 36,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        width: 36,
-                        height: 36,
-                        color: Colors.white24,
-                        child: const Icon(Icons.person, color: Colors.white, size: 18),
+            isAllocating
+                ? Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        width: 1,
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
                       children: [
-                        Text(
-                          booking['panditName'] ?? 'Pt. Rameshwar Sharma',
-                          style: GoogleFonts.lato(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                        const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            strokeWidth: 2,
                           ),
                         ),
-                        Text(
-                          'Rigveda Acharya • Vastu Specialist',
-                          style: GoogleFonts.lato(
-                            fontSize: 10.5,
-                            color: Colors.white.withValues(alpha: 0.8),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Finding Best Vedic Acharya...',
+                                style: GoogleFonts.lato(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              Text(
+                                'Automatic allocation completes in ${remainingSecs ~/ 60}m ${remainingSecs % 60}s',
+                                style: GoogleFonts.lato(
+                                  fontSize: 10.5,
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
+                        const Icon(Icons.chevron_right, color: Colors.white70, size: 18),
                       ],
                     ),
-                  ),
-                  const Icon(Icons.chevron_right, color: Colors.white70, size: 18),
+                  )
+                : Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(18),
+                          child: Image.network(
+                            'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
+                            width: 36,
+                            height: 36,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              width: 36,
+                              height: 36,
+                              color: Colors.white24,
+                              child: const Icon(Icons.person, color: Colors.white, size: 18),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                booking['panditName'] ?? 'Pt. Rameshwar Sharma',
+                                style: GoogleFonts.lato(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              Text(
+                                'Rigveda Acharya • Vastu Specialist',
+                                style: GoogleFonts.lato(
+                                  fontSize: 10.5,
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.chevron_right, color: Colors.white70, size: 18),
                 ],
               ),
             ),
@@ -1089,13 +1166,44 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildCategoryGrid() {
-    final categories = [
-      {'icon': Icons.favorite, 'label': 'Wedding'},
-      {'icon': Icons.home_outlined, 'label': 'Housewarming'},
-      {'icon': Icons.temple_hindu, 'label': 'Grah Shanti'},
-      {'icon': Icons.hourglass_bottom, 'label': 'Ancestral'},
-      {'icon': Icons.self_improvement, 'label': 'Daily Rituals'},
+  Widget _buildServiceGrid() {
+    final gridItems = [
+      {
+        'icon': Icons.menu_book,
+        'label': 'Book Pooja',
+        'color': const Color(0xFFD97706),
+        'onTap': () => context.go('/book'),
+      },
+      {
+        'icon': Icons.bolt,
+        'label': '45 mins delivery',
+        'color': const Color(0xFFE28A00),
+        'onTap': () => context.go('/shop'),
+      },
+      {
+        'icon': Icons.brightness_7,
+        'label': 'Kundli',
+        'color': const Color(0xFFC25E00),
+        'onTap': () => context.push('/kundli'),
+      },
+      {
+        'icon': Icons.videocam,
+        'label': 'Online Pooja',
+        'color': const Color(0xFFD97706),
+        'onTap': () => context.go('/book?category=online'),
+      },
+      {
+        'icon': Icons.temple_hindu,
+        'label': 'Nearest Temple',
+        'color': const Color(0xFFE28A00),
+        'onTap': () => _showNearestTemplesBottomSheet(context),
+      },
+      {
+        'icon': Icons.spa,
+        'label': 'Pooja mala',
+        'color': const Color(0xFFC25E00),
+        'onTap': () => context.go('/shop?search=mala'),
+      },
     ];
 
     return Column(
@@ -1104,7 +1212,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Padding(
           padding: const EdgeInsets.only(left: 20, bottom: 12),
           child: Text(
-            'Quick Categories',
+            'Sacred Services',
             style: GoogleFonts.lato(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -1112,55 +1220,233 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
-        SizedBox(
-          height: 94,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: categories.length,
-            itemBuilder: (context, index) {
-              final cat = categories[index];
-              String routeParam = 'wedding';
-              if (cat['label'] == 'Housewarming') routeParam = 'housewarming';
-              if (cat['label'] == 'Grah Shanti') routeParam = 'housewarming';
-              if (cat['label'] == 'Ancestral') routeParam = 'poojahome';
-              if (cat['label'] == 'Daily Rituals') routeParam = 'poojahome';
-
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 3,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            childAspectRatio: 1.05,
+            children: gridItems.map((item) {
               return GestureDetector(
-                onTap: () => context.go('/book?category=$routeParam'),
+                onTap: item['onTap'] as VoidCallback,
                 child: Container(
-                  width: 90,
-                  margin: const EdgeInsets.only(right: 10),
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFE8D5A3).withValues(alpha: 0.5)),
+                    border: Border.all(
+                      color: const Color(0xFFE8D5A3).withValues(alpha: 0.4),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.03),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(cat['icon'] as IconData, color: const Color(0xFFD97706), size: 24),
-                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: (item['color'] as Color).withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          item['icon'] as IconData,
+                          color: item['color'] as Color,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       Text(
-                        cat['label'] as String,
+                        item['label'] as String,
                         style: GoogleFonts.lato(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                           color: const Color(0xFF3D2200),
                         ),
                         textAlign: TextAlign.center,
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
                 ),
               );
-            },
+            }).toList(),
           ),
         ),
       ],
+    );
+  }
+
+  void _showNearestTemplesBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFFFAF6EE),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) {
+        final temples = [
+          {
+            'name': 'Shree Siddhivinayak Temple',
+            'distance': '1.2 km away',
+            'deity': 'Lord Ganesha',
+            'timings': '6:00 AM - 10:00 PM',
+            'address': 'Prabhadevi, Mumbai, Maharashtra',
+            'imageUrl': 'https://images.unsplash.com/photo-1608976328267-e673d3ec06ce?w=200',
+          },
+          {
+            'name': 'Mahalakshmi Temple',
+            'distance': '3.4 km away',
+            'deity': 'Goddess Mahalakshmi',
+            'timings': '6:00 AM - 9:30 PM',
+            'address': 'Bhulabhai Desai Road, Mumbai',
+            'imageUrl': 'https://images.unsplash.com/photo-1621252179027-94459d278660?w=200',
+          },
+          {
+            'name': 'Mumbadevi Temple',
+            'distance': '4.1 km away',
+            'deity': 'Goddess Mumbadevi',
+            'timings': '6:00 AM - 9:00 PM',
+            'address': 'Bhuleshwar, Mumbai',
+            'imageUrl': 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200',
+          },
+        ];
+
+        return Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 50,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Nearest Vedic Temples',
+                    style: GoogleFonts.lato(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF1F2937),
+                    ),
+                  ),
+                  const Icon(Icons.temple_hindu, color: Color(0xFFD97706)),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Sacred shrines near your registered address.',
+                style: GoogleFonts.lato(
+                  fontSize: 13,
+                  color: const Color(0xFF6B5B52),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: temples.length,
+                  itemBuilder: (context, idx) {
+                    final t = temples[idx];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFE8D5A3).withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(
+                              t['imageUrl']!,
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
+                              errorBuilder: (c, e, s) => Container(
+                                width: 60,
+                                height: 60,
+                                color: const Color(0xFFFFF3E0),
+                                child: const Icon(Icons.temple_hindu, color: Color(0xFFD97706)),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  t['name']!,
+                                  style: GoogleFonts.lato(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF1F2937),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${t['deity']} • ${t['distance']}',
+                                  style: GoogleFonts.lato(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFFD97706),
+                                  ),
+                                ),
+                                Text(
+                                  t['timings']!,
+                                  style: GoogleFonts.lato(
+                                    fontSize: 11,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.navigation, color: Color(0xFFD97706)),
+                            onPressed: () {
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Launching directions to ${t['name']}...', style: GoogleFonts.lato()),
+                                  backgroundColor: const Color(0xFFD97706),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

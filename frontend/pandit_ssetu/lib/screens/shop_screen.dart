@@ -100,6 +100,72 @@ class _ShopScreenState extends State<ShopScreen> {
       'samagri': ['Haldi Pack', 'Rose Petals', 'Brass Kalash', 'Holy Thread'],
       'imagePath': 'assets/images/marriage_kit.jpg',
     },
+    {
+      'id': 7,
+      'name': 'Nepal Ek Mukhi Rudraksha',
+      'description': 'Sourced from Nepal, certified authentic. Invokes immense focus and blessings of Lord Shiva.',
+      'price': 5001.0,
+      'category': 'Single Items',
+      'badge': 'RAREST',
+      'badgeColor': 0xFFD97706,
+      'samagri': ['Certified Card', 'Red Silk Thread', 'Ganga Jal Purified'],
+      'imagePath': 'https://images.unsplash.com/photo-1590073844006-33379778ae09?w=500',
+    },
+    {
+      'id': 8,
+      'name': 'Parad Shivling (Mercury)',
+      'description': '99% pure mercury Shivling. Ideal for removing directional Vastu doshas.',
+      'price': 3500.0,
+      'category': 'Single Items',
+      'badge': 'RAREST',
+      'badgeColor': 0xFFD97706,
+      'samagri': ['Wooden Pedestal', 'Red Velvet Cloth'],
+      'imagePath': 'https://images.unsplash.com/photo-1609130767012-004463453a4c?w=500',
+    },
+    {
+      'id': 9,
+      'name': 'Siddh Sphatik Mala',
+      'description': '108+1 beads pure crystal mala for Japa, meditation, and cooling body energies.',
+      'price': 1250.0,
+      'category': 'Single Items',
+      'badge': 'SACRED',
+      'badgeColor': 0xFF3F51B5,
+      'samagri': ['Pouch', 'Certificate'],
+      'imagePath': 'https://images.unsplash.com/photo-1596567189078-43bb229ccde9?w=500',
+    },
+    {
+      'id': 10,
+      'name': 'Kashmiri Mongra Kesar (1g)',
+      'description': 'Grade A++ pure Kashmiri saffron for holy offering and daily Tilak.',
+      'price': 450.0,
+      'category': 'Single Items',
+      'badge': 'EXOTIC',
+      'badgeColor': 0xFFE91E63,
+      'samagri': ['Glass Container'],
+      'imagePath': 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=500',
+    },
+    {
+      'id': 11,
+      'name': 'Premium Gangajal (500ml)',
+      'description': 'Pristine water from Gangotri valley, hermetically sealed for sacred rituals.',
+      'price': 149.0,
+      'category': 'Single Items',
+      'badge': 'PURE',
+      'badgeColor': 0xFF2196F3,
+      'samagri': ['Copper Bottle Cap'],
+      'imagePath': 'https://images.unsplash.com/photo-1548989937-3c15daad65ec?w=500',
+    },
+    {
+      'id': 12,
+      'name': 'Pure Bhimseni Kapoor (100g)',
+      'description': '100% natural camphor for continuous positive aroma during havan chanting.',
+      'price': 199.0,
+      'category': 'Single Items',
+      'badge': 'ESSENTIAL',
+      'badgeColor': 0xFF607D8B,
+      'samagri': ['Airtight Jar'],
+      'imagePath': 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=500',
+    },
   ];
 
   List<Map<String, dynamic>> get _filteredProducts {
@@ -270,7 +336,7 @@ class _ShopScreenState extends State<ShopScreen> {
   }
 
   Widget _buildOccasionRow() {
-    final categories = ['All', 'Marriage', 'Hawan'];
+    final categories = ['All', 'Marriage', 'Hawan', 'Single Items'];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -284,49 +350,52 @@ class _ShopScreenState extends State<ShopScreen> {
           ),
         ),
         const SizedBox(height: 10),
-        Row(
-          children: categories.map((cat) {
-            final isActive = _selectedCategory == cat;
-            return GestureDetector(
-              onTap: () => setState(() => _selectedCategory = cat),
-              child: Container(
-                margin: const EdgeInsets.only(right: 10),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: isActive ? const Color(0xFFF18C16) : Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: isActive
-                        ? const Color(0xFFF18C16)
-                        : const Color(0xFFE8D5A3),
-                    width: 1,
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: categories.map((cat) {
+              final isActive = _selectedCategory == cat;
+              return GestureDetector(
+                onTap: () => setState(() => _selectedCategory = cat),
+                child: Container(
+                  margin: const EdgeInsets.only(right: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 8,
                   ),
-                  boxShadow: isActive
-                      ? [
-                          BoxShadow(
-                            color: const Color(
-                              0xFFF18C16,
-                            ).withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ]
-                      : [],
-                ),
-                child: Text(
-                  cat,
-                  style: GoogleFonts.lato(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                    color: isActive ? Colors.white : const Color(0xFF3D2200),
+                  decoration: BoxDecoration(
+                    color: isActive ? const Color(0xFFF18C16) : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isActive
+                          ? const Color(0xFFF18C16)
+                          : const Color(0xFFE8D5A3),
+                      width: 1,
+                    ),
+                    boxShadow: isActive
+                        ? [
+                            BoxShadow(
+                              color: const Color(
+                                0xFFF18C16,
+                              ).withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : [],
+                  ),
+                  child: Text(
+                    cat,
+                    style: GoogleFonts.lato(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      color: isActive ? Colors.white : const Color(0xFF3D2200),
+                    ),
                   ),
                 ),
-              ),
-            );
-          }).toList(),
+              );
+            }).toList(),
+          ),
         ),
       ],
     );
@@ -608,27 +677,49 @@ class _ProductCard extends StatelessWidget {
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(18),
                 ),
-                child: Image.asset(
-                  product['imagePath'] as String,
-                  width: double.infinity,
-                  height: 200,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    width: double.infinity,
-                    height: 200,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFFFF7EA),
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(18),
+                child: (product['imagePath'] as String).startsWith('http')
+                    ? Image.network(
+                        product['imagePath'] as String,
+                        width: double.infinity,
+                        height: 200,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          width: double.infinity,
+                          height: 200,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFFFF7EA),
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(18),
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.temple_hindu,
+                            color: Color(0xFFE8920A),
+                            size: 60,
+                          ),
+                        ),
+                      )
+                    : Image.asset(
+                        product['imagePath'] as String,
+                        width: double.infinity,
+                        height: 200,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          width: double.infinity,
+                          height: 200,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFFFF7EA),
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(18),
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.temple_hindu,
+                            color: Color(0xFFE8920A),
+                            size: 60,
+                          ),
+                        ),
                       ),
-                    ),
-                    child: const Icon(
-                      Icons.temple_hindu,
-                      color: Color(0xFFE8920A),
-                      size: 60,
-                    ),
-                  ),
-                ),
               ),
               if (hasBadge)
                 Positioned(
