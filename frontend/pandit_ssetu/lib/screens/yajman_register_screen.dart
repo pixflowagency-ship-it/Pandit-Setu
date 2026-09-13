@@ -64,7 +64,13 @@ class _YajmanRegisterScreenState extends State<YajmanRegisterScreen> {
 
     try {
 
-      await ApiService.sendOtp(phone);
+      final res = await ApiService.sendOtp(phone);
+      final mockOtp = res['data']?['mockOtp'];
+      if (mockOtp != null) {
+        debugPrint('\n==============================================');
+        debugPrint('  🔑 DEV MODE OTP CODE: $mockOtp');
+        debugPrint('==============================================\n');
+      }
 
       UserData.save(
         name: name,
@@ -73,7 +79,18 @@ class _YajmanRegisterScreenState extends State<YajmanRegisterScreen> {
       );
 
       if (mounted) {
-
+        if (mockOtp != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'OTP Sent! (Dev Code: $mockOtp)',
+                style: GoogleFonts.lato(fontWeight: FontWeight.bold),
+              ),
+              backgroundColor: const Color(0xFFE8920A),
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
         context.go('/yajman-otp');
       }
     } catch (e) {

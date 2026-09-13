@@ -70,7 +70,13 @@ class _YajmanOtpScreenState extends State<YajmanOtpScreen> {
 
     try {
 
-      await ApiService.sendOtp(UserData.phone);
+      final res = await ApiService.sendOtp(UserData.phone);
+      final mockOtp = res['data']?['mockOtp'];
+      if (mockOtp != null) {
+        debugPrint('\n==============================================');
+        debugPrint('  🔑 RESENT DEV MODE OTP CODE: $mockOtp');
+        debugPrint('==============================================\n');
+      }
 
       _startTimer();
 
@@ -79,11 +85,14 @@ class _YajmanOtpScreenState extends State<YajmanOtpScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'OTP has been resent successfully!',
-              style: GoogleFonts.lato(),
+              mockOtp != null
+                  ? 'OTP Resent! (Dev Code: $mockOtp)'
+                  : 'OTP has been resent successfully!',
+              style: GoogleFonts.lato(fontWeight: FontWeight.bold),
             ),
             backgroundColor: const Color(0xFFE8920A),
             behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 5),
           ),
         );
       }

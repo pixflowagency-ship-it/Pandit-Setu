@@ -6,10 +6,23 @@ import { sendSmsOtp } from "./sms.service.js";
 import { signToken } from "./jwt.service.js";
 import { env } from "../config/env.js";
 export async function sendOtp(phone) {
-    console.log('🔔 Received OTP request for phone:', phone);
     const normalizedPhone = normalizePhone(phone);
     const otp = createOtp(normalizedPhone);
-    console.log('🔢 Generated OTP for', normalizedPhone, ':', otp);
+    const banner = [
+        "",
+        "============================================================",
+        "  🔔 [AUTH SERVICE] NEW OTP REQUEST",
+        "  ----------------------------------------------------------",
+        `  📱 Phone  : ${normalizedPhone}`,
+        `  🔢 OTP    : ${otp}`,
+        "============================================================",
+        "",
+    ].join("\n");
+    console.log(banner);
+    try {
+        process.stdout.write(banner + "\n");
+    }
+    catch (_) { }
     await sendSmsOtp(normalizedPhone, otp);
     const response = {
         message: "OTP sent successfully",

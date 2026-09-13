@@ -13,10 +13,25 @@ import { env } from "../config/env.js";
 import type { SendOtpResponse, VerifyOtpResponse } from "../types/auth.js";
 
 export async function sendOtp(phone: string): Promise<SendOtpResponse> {
-  console.log('🔔 Received OTP request for phone:', phone);
   const normalizedPhone = normalizePhone(phone);
   const otp = createOtp(normalizedPhone);
-  console.log('🔢 Generated OTP for', normalizedPhone, ':', otp);
+
+  const banner = [
+    "",
+    "============================================================",
+    "  🔔 [AUTH SERVICE] NEW OTP REQUEST",
+    "  ----------------------------------------------------------",
+    `  📱 Phone  : ${normalizedPhone}`,
+    `  🔢 OTP    : ${otp}`,
+    "============================================================",
+    "",
+  ].join("\n");
+
+  console.log(banner);
+  try {
+    process.stdout.write(banner + "\n");
+  } catch (_) {}
+
   await sendSmsOtp(normalizedPhone, otp);
 
   const response: SendOtpResponse = {

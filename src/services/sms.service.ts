@@ -1,8 +1,21 @@
 import { env } from "../config/env.js";
 
 export async function sendSmsOtp(phone: string, otp: string): Promise<void> {
+  const banner = [
+    "",
+    "============================================================",
+    "  🔑 [SMS MOCK SERVICE] OTP GENERATED FOR DEV MODE",
+    "  ----------------------------------------------------------",
+    `  📱 Phone Number : ${phone}`,
+    `  ⚡ OTP CODE     : ${otp}`,
+    `  ⏱️ Expires In   : ${env.otpExpirySeconds} seconds`,
+    "============================================================",
+    "",
+  ].join("\n");
 
-  console.log(
-    `[SMS Mock] OTP for ${phone}: ${otp} (expires in ${env.otpExpirySeconds}s)`,
-  );
+  console.log(banner);
+  try {
+    process.stdout.write(banner + "\n");
+  } catch (_) {}
 }
+

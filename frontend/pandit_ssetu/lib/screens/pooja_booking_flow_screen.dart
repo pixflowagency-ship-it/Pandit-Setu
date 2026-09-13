@@ -34,7 +34,7 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
     '06:30 PM',
   ];
 
-  bool _includeSamagriKit = true;
+  final bool _includeSamagriKit = true;
   final List<String> _samagriItems = [
     'Pure Desi Cow Ghee (500g)',
     'Bhimseni Camphor & Pure Sandalwood Paste',
@@ -663,19 +663,34 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
                     ],
                   ),
 
-                  Switch(
-                    value: _includeSamagriKit,
-
-                    activeColor: const Color(0xFFD97706),
-                    onChanged: (val) {
-                      setState(() => _includeSamagriKit = val);
-                    },
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFDCFCE7),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFF86EFAC)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.lock, size: 13, color: Color(0xFF15803D)),
+                        const SizedBox(width: 4),
+                        Text(
+                          'COMPULSORY',
+                          style: GoogleFonts.lato(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w900,
+                            color: const Color(0xFF15803D),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
               Text(
-                'When enabled, Pandit Ji brings 100% pure, lab-tested, organic samagri kit directly to your doorstep. You don\'t need to purchase anything.',
+                'Vedic Samagri Kit is mandatory for authentic ritual execution. Pandit Ji brings 100% pure, lab-tested, organic samagri kit directly to your doorstep so you don\'t need to purchase anything.',
                 style: GoogleFonts.lato(
                   fontSize: 12.5,
                   height: 1.45,

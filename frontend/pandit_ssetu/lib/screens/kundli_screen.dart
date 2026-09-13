@@ -111,7 +111,8 @@ class _KundliScreenState extends State<KundliScreen>
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-
+        _buildHandmadeKundliBanner(),
+        const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
@@ -438,6 +439,175 @@ class _KundliScreenState extends State<KundliScreen>
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHandmadeKundliBanner() {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFE28A00), Color(0xFFB45309)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFE28A00).withValues(alpha: 0.35),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.auto_awesome, color: Colors.white, size: 12),
+                    const SizedBox(width: 4),
+                    Text(
+                      'PREMIUM VEDIC SERVICE',
+                      style: GoogleFonts.lato(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFE082),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'SAVE 50%',
+                  style: GoogleFonts.lato(
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF3D2200),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Handmade Kundli by Senior Acharya',
+            style: GoogleFonts.lato(
+              fontSize: 19,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '32-Page detailed hand-drawn Janam Patri prepared by certified Varanasi Jyotish Acharyas with life predictions, Dasha breakdown & gemstone remedies.',
+            style: GoogleFonts.lato(
+              fontSize: 12.5,
+              color: Colors.white.withValues(alpha: 0.9),
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    '₹3,000',
+                    style: GoogleFonts.lato(
+                      fontSize: 13,
+                      color: Colors.white60,
+                      decoration: TextDecoration.lineThrough,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '₹1,501',
+                    style: GoogleFonts.lato(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      backgroundColor: const Color(0xFFFFF8EE),
+                      title: Text(
+                        'Order Handmade Kundli',
+                        style: GoogleFonts.lato(fontWeight: FontWeight.bold),
+                      ),
+                      content: Text(
+                        'Your Handmade Janam Patri order (₹1,501) will be prepared by Senior Jyotish Acharya Rameshwar Sharma and dispatched to your home address within 5 business days.',
+                        style: GoogleFonts.lato(fontSize: 14, color: const Color(0xFF5A4A3A)),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: Text('Cancel', style: GoogleFonts.lato(color: Colors.grey)),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Handmade Kundli order placed successfully!'),
+                                backgroundColor: const Color(0xFFF18C16),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFF18C16),
+                          ),
+                          child: Text('Confirm Order', style: GoogleFonts.lato(color: Colors.white)),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: const Color(0xFFB45309),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  elevation: 0,
+                ),
+                child: Text(
+                  'Order Handmade Kundli',
+                  style: GoogleFonts.lato(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

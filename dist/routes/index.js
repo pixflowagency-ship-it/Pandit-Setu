@@ -6,10 +6,12 @@ import { sendSuccess } from "../utils/response.js";
 import { asyncHandler } from "../middleware/async-handler.js";
 import productsRouter from "./products.routes.js";
 import { usersRouter } from "./users.routes.js";
+import poojasRouter from "./poojas.routes.js";
 const apiRouter = Router();
 apiRouter.use("/auth", authRouter);
 apiRouter.use("/users", usersRouter);
 apiRouter.use("/products", productsRouter);
+apiRouter.use("/poojas", poojasRouter);
 apiRouter.get("/me", verifyToken, asyncHandler((req, res) => {
     sendSuccess(res, { user: req.user });
 }));

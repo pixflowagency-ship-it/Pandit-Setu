@@ -17,6 +17,11 @@ import 'screens/kundli_screen.dart';
 import 'screens/live_pooja_tracking_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'screens/support_screen.dart';
+import 'screens/phool_mala_screen.dart';
+import 'screens/nearest_temple_screen.dart';
+
+import 'screens/pandit_login_screen.dart';
+import 'screens/pandit_dashboard_screen.dart';
 
 final _router = GoRouter(
   initialLocation: '/',
@@ -45,9 +50,11 @@ final _router = GoRouter(
     ),
     GoRoute(
       path: '/pandit-login',
-      builder: (context, state) => const Scaffold(
-        body: Center(child: Text('Pandit Login — Coming Soon')),
-      ),
+      builder: (context, state) => const PanditLoginScreen(),
+    ),
+    GoRoute(
+      path: '/pandit-dashboard',
+      builder: (context, state) => const PanditDashboardScreen(),
     ),
     GoRoute(
       path: '/home',
@@ -56,7 +63,7 @@ final _router = GoRouter(
     GoRoute(
       path: '/book',
       builder: (context, state) {
-        final category = state.uri.queryParameters['category'] ?? 'wedding';
+        final category = state.uri.queryParameters['category'] ?? 'ghar_jeevan';
         return BookScreen(initialCategory: category);
       },
     ),
@@ -65,20 +72,20 @@ final _router = GoRouter(
       builder: (context, state) {
         final pooja = state.extra as PoojaDetail? ??
             const PoojaDetail(
-              id: 'satyanarayan',
-              title: 'Satyanarayan Pooja',
-              category: 'Wedding Rituals',
+              id: 'satyanarayan_katha',
+              title: 'Satyanarayan Katha',
+              category: 'Ghar & Jeevan',
               imageUrl:
                   'https://images.unsplash.com/photo-1605152276897-4f618f831968?w=500',
               isPopular: true,
-              duration: '2.5 Hours',
-              durationBreakdown: '30 mins setup • 2.0 hours main ritual',
+              duration: '1-3 Hour',
+              durationBreakdown: '30 mins setup • 2.0 hours main ritual by 1 Pandit',
               description:
                   'Shri Satyanarayan Pooja is performed to seek divine blessings of Lord Vishnu for prosperity and health.',
               spiritualSignificance:
                   'Reciting Satyanarayan Katha invokes truth and divine consciousness.',
               inclusions: [
-                '2 Certified Acharyas',
+                '1 Certified Acharya',
                 'Complete Sacred Havan & Samagri Kit'
               ],
               chantingDetails: [
@@ -86,8 +93,8 @@ final _router = GoRouter(
                 '108 Gayatri Mantra'
               ],
               standardPrice: 2100.0,
-              samagriPrice: 1100.0,
-              originalPrice: 4000.0,
+              samagriPrice: 525.0,
+              originalPrice: 3150.0,
             );
         return PoojaBookingFlowScreen(pooja: pooja);
       },
@@ -127,6 +134,14 @@ final _router = GoRouter(
     GoRoute(
       path: '/support',
       builder: (context, state) => const SupportScreen(),
+    ),
+    GoRoute(
+      path: '/phool-mala',
+      builder: (context, state) => const PhoolMalaScreen(),
+    ),
+    GoRoute(
+      path: '/nearest-temple',
+      builder: (context, state) => const NearestTempleScreen(),
     ),
   ],
 );

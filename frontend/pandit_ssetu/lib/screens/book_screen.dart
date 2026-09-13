@@ -5,343 +5,712 @@ import '../widgets/pooja_detail_modal.dart';
 
 class BookScreen extends StatefulWidget {
   final String initialCategory;
-  const BookScreen({super.key, this.initialCategory = 'wedding'});
+  const BookScreen({super.key, this.initialCategory = 'ghar_jeevan'});
 
   @override
   State<BookScreen> createState() => _BookScreenState();
 }
 
 class _BookScreenState extends State<BookScreen> {
-
   late String selectedCategory;
-
-  int _currentNavIndex = 1;
+  final int _currentNavIndex = 1;
 
   @override
   void initState() {
     super.initState();
     selectedCategory = widget.initialCategory;
+    if (!_categoryRituals.containsKey(selectedCategory)) {
+      selectedCategory = 'ghar_jeevan';
+    }
   }
 
   final Map<String, List<PoojaDetail>> _categoryRituals = {
-    'wedding': [
+    'ghar_jeevan': [
       const PoojaDetail(
-        id: 'satyanarayan',
-        title: 'Satyanarayan Pooja',
-        category: 'Wedding Rituals',
-        imageUrl:
-            'https://images.unsplash.com/photo-1605152276897-4f618f831968?w=500',
+        id: 'griha_pravesh_pooja',
+        title: 'Griha Pravesh Pooja',
+        category: 'Ghar aur Jeevan se related Pooja',
+        imageUrl: 'https://images.unsplash.com/photo-1605152276897-4f618f831968?w=600&q=80',
         isPopular: true,
-        duration: '2.5 Hours',
-        durationBreakdown:
-            '30 mins setup • 2.0 hours main ritual & katha recitation',
-        description:
-            'Shri Satyanarayan Pooja is performed to seek divine blessings of Lord Vishnu for prosperity, health, and family harmony. Conducted by certified Vedic pandits with 10+ years of experience.',
-        spiritualSignificance:
-            'Reciting the Satyanarayan Katha invokes truth (Satya) and divine consciousness, removing negative energy and showering infinite prosperity upon the family.',
+        duration: '1-3 Hour',
+        durationBreakdown: '30 mins setup • 1-3 Hour ritual with 2 Pandit(s)',
+        description: 'Auspicious Griha Pravesh Pooja performed strictly according to Vedic Shastras by 2 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
         inclusions: [
-          '2 Certified Acharyas (Vedic Scholars)',
-          'Complete Sacred Havan & Samagri Kit (Pure Desi Ghee)',
+          '2 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
           'Kalash Sthapana & Panchamrit setup',
-          'Satyanarayan Vrat Katha Book & Prashad',
-          'Flower Decoration & Mandap consultation',
+          'Prashad & Blessing Rituals',
         ],
         chantingDetails: [
-          'Vishnu Sahasranama Stotram',
-          'Rigveda Shlokas',
-          '108 Gayatri Mantra Recitation',
-          'Satyanarayan Ashtothara Shatanamavali',
-        ],
-        standardPrice: 2100.0,
-        samagriPrice: 1100.0,
-        originalPrice: 4000.0,
-        availability: 'Available Tomorrow',
-      ),
-      const PoojaDetail(
-        id: 'vaidika_vivaha',
-        title: 'Vaidika Vivaha (Vedic Wedding)',
-        category: 'Wedding Rituals',
-        imageUrl:
-            'https://images.unsplash.com/photo-1609102434313-f938d87a718b?w=500',
-        isPopular: true,
-        duration: '4.5 Hours',
-        durationBreakdown:
-            '45 mins setup • 3.75 hours complete traditional wedding rites',
-        description:
-            'Comprehensive Vedic marriage ceremony following traditional Shastras, complete with Kanyadaan, Saptapadi (Seven Vows), Mangal Pheras, and sacred Vivaha Havan.',
-        spiritualSignificance:
-            'Binds two souls in a sacred spiritual union under the witness of Agni Dev (Fire God) and chanting of holy mantras for seven lifetimes of companionate bliss.',
-        inclusions: [
-          'Head Pandit + Assistant Acharya',
-          'Premium Vivaha Havan Kit & Sacred Herbs',
-          'Saptapadi & Mangalsutra Pujan kit',
-          'Veda Mantras chanting & Live Sankalpa',
-        ],
-        chantingDetails: [
-          'Yajurveda Vivaha Suktam',
-          'Mangalashtakam Chanting',
-          'Agni Invocation Mantras',
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
         ],
         standardPrice: 5100.0,
-        samagriPrice: 2400.0,
-        originalPrice: 9500.0,
-        availability: 'Available this Saturday',
-      ),
-      const PoojaDetail(
-        id: 'mangal_sutra',
-        title: 'Mangal Sutra Ceremony',
-        category: 'Wedding Rituals',
-        imageUrl:
-            'https://images.unsplash.com/photo-1583307878879-9a4c4e78b7e5?w=500',
-        isPopular: false,
-        duration: '1.5 Hours',
-        durationBreakdown: '20 mins setup • 1.10 hours sacred bond rites',
-        description:
-            'Traditional mangalsutra binding ritual invoking divine protection, health, and long life for the spouse with Vedic mantras and holy water sprinkling.',
-        spiritualSignificance:
-            'Protects the matrimonial bond against evil eyes and enhances mutual affection, respect, and devotion between partners.',
-        inclusions: [
-          'Experienced Vedic Pandit',
-          'Mangal Sutra Pujan & Abhishekam',
-          'Pure Kumkum, Haldi, Aksata & Sacred Threads',
-        ],
-        chantingDetails: [
-          'Gauri Pujan Mantras',
-          'Soubhagya Suktam',
-        ],
-        standardPrice: 1500.0,
-        samagriPrice: 600.0,
-        originalPrice: 2500.0,
-        availability: 'Available Sunday',
-      ),
-    ],
-    'housewarming': [
-      const PoojaDetail(
-        id: 'griha_pravesh',
-        title: 'Griha Pravesha Pooja',
-        category: 'Housewarming',
-        imageUrl:
-            'https://images.unsplash.com/photo-1621252179027-94459d278660?w=500',
-        isPopular: true,
-        duration: '3.0 Hours',
-        durationBreakdown: '30 mins setup • 2.5 hours Vastu Shanti & Havan',
-        description:
-            'Auspicious ritual for entering a new home. Purifies the space of negative energies, establishes positive vibrations, and invokes Mahalakshmi & Ganesha.',
-        spiritualSignificance:
-            'Ensures that the new residence is filled with peace, wealth, health, and protection from all subtle negative forces.',
-        inclusions: [
-          '2 Vedic Scholars',
-          'Complete Vastu Shanti & Havan Samagri',
-          'Milk Boiling Rites (Doodh Ufalna) Guidance',
-          'Toran & Threshold (Dwar Pujan) Kit',
-        ],
-        chantingDetails: [
-          'Vastu Purusha Mantras',
-          'Ganapati Atharvashirsha',
-          'Navagraha Mantra Jaap',
-        ],
-        standardPrice: 3100.0,
-        samagriPrice: 1400.0,
-        originalPrice: 5500.0,
-        availability: 'Available Tomorrow',
-      ),
-      const PoojaDetail(
-        id: 'vastu_shanti',
-        title: 'Vastu Shanti Puja',
-        category: 'Housewarming',
-        imageUrl:
-            'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500',
-        isPopular: false,
-        duration: '2.0 Hours',
-        durationBreakdown: '20 mins setup • 1.66 hours Vastu rectifications',
-        description:
-            'Specialized ritual designed to rectify architectural and directional Vastu doshas in living or office spaces.',
-        spiritualSignificance:
-            'Harmonizes the five elements (Pancha Bhoota) within the premises for maximum comfort and mental clarity.',
-        inclusions: [
-          'Senior Vastu Specialist Pandit',
-          'Vastu Yantra Installation Kit',
-          'Havan & Copper Pyramid Setup',
-        ],
-        chantingDetails: [
-          'Dikpalaka Invocation',
-          'Panch Bhoota Mantras',
-        ],
-        standardPrice: 2200.0,
-        samagriPrice: 900.0,
-        originalPrice: 3800.0,
-        availability: 'Available This Week',
-      ),
-      const PoojaDetail(
-        id: 'navagraha_homa',
-        title: 'Navagraha Homa',
-        category: 'Housewarming',
-        imageUrl:
-            'https://images.unsplash.com/photo-1604882737079-7dc3df3e09ac?w=500',
-        isPopular: true,
-        duration: '3.5 Hours',
-        durationBreakdown:
-            '30 mins setup • 3.0 hours nine planets fire ritual',
-        description:
-            'Potent fire ritual performed to appease the nine planetary deities and neutralize unfavorable astrological influences.',
-        spiritualSignificance:
-            'Balances planetary energies, bestows prosperity, good health, and success in new beginnings.',
-        inclusions: [
-          '2 Certified Vedic Pandits',
-          '9 Grains (Navadhanya) & Pure Ghee Kit',
-          'Navagraha Yantra & Abhishekam',
-        ],
-        chantingDetails: [
-          'Navagraha Stotram',
-          'Rahu-Ketu Shanti Mantras',
-          'Aditya Hrudayam',
-        ],
-        standardPrice: 3500.0,
-        samagriPrice: 1500.0,
-        originalPrice: 6000.0,
-        availability: 'Available Saturday',
-      ),
-    ],
-    'poojahome': [
-      const PoojaDetail(
-        id: 'nitya_pooja',
-        title: 'Daily Nitya Pooja',
-        category: 'Pooja at Home',
-        imageUrl:
-            'https://images.unsplash.com/photo-1608306448197-e83633f1261c?w=500',
-        isPopular: false,
-        duration: '1.0 Hour',
-        durationBreakdown: '15 mins setup • 45 mins ritual & aarti',
-        description:
-            'Daily sacred ritual to establish a peaceful spiritual aura at home, including deity abhishekam, dhup-deepa, and stotra chanting.',
-        spiritualSignificance:
-            'Keeps household energy elevated and purified on a consistent daily basis.',
-        inclusions: [
-          'Experienced Local Pandit',
-          'Daily Worship Flowers & Chandan Kit',
-          'Panchamrit & Aarti',
-        ],
-        chantingDetails: [
-          'Daily Prarthana Mantras',
-          'Hanuman Chalisa',
-        ],
-        standardPrice: 800.0,
-        samagriPrice: 300.0,
-        originalPrice: 1500.0,
+        samagriPrice: 1275.0,
+        originalPrice: 7650.0,
         availability: 'Available Daily',
       ),
       const PoojaDetail(
-        id: 'ganesh_sthapana',
-        title: 'Ganesh Sthapana Pooja',
-        category: 'Pooja at Home',
-        imageUrl:
-            'https://images.unsplash.com/photo-1567604130959-7d9d2d0af7c2?w=500',
-        isPopular: true,
-        duration: '2.0 Hours',
-        durationBreakdown:
-            '20 mins setup • 1.66 hours idol installation & havan',
-        description:
-            'Invocation of Lord Ganesha to remove obstacles (Vighnaharta) and ensure good fortune before launching any major endeavor or festival.',
-        spiritualSignificance:
-            'Lord Ganesha is Prathama Pujya (first worshipped deity). His presence guarantees smooth success and wisdom.',
+        id: 'vastu_shanti_pooja',
+        title: 'Vastu Shanti Pooja',
+        category: 'Ghar aur Jeevan se related Pooja',
+        imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500',
+        isPopular: false,
+        duration: '1-7 Days',
+        durationBreakdown: '30 mins setup • 1-7 Days ritual with 5 To 7 Pandit(s)',
+        description: 'Auspicious Vastu Shanti Pooja performed strictly according to Vedic Shastras by 5 To 7 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
         inclusions: [
-          'Verified Vedic Pandit',
-          'Durva Grass, Modak & Roli Chhanvan Kit',
-          'Short Ganesh Havan',
+          '5 To 7 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
+          'Kalash Sthapana & Panchamrit setup',
+          'Prashad & Blessing Rituals',
         ],
         chantingDetails: [
-          'Ganapati Atharvashirsha',
-          '108 Ganesha Namavali',
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
         ],
-        standardPrice: 1800.0,
-        samagriPrice: 800.0,
-        originalPrice: 3200.0,
-        availability: 'Available Tomorrow',
-      ),
-      const PoojaDetail(
-        id: 'lakshmi_puja',
-        title: 'Lakshmi Puja',
-        category: 'Pooja at Home',
-        imageUrl:
-            'https://images.unsplash.com/photo-1617981408346-39acb6da1b64?w=500',
-        isPopular: true,
-        duration: '1.5 Hours',
-        durationBreakdown: '20 mins setup • 1.10 hours prosperity ritual',
-        description:
-            'Sacred worship of Goddess Lakshmi and Kuber for inviting abundance, wealth, business success, and financial harmony.',
-        spiritualSignificance:
-            'Destroys poverty mindset and opens channels of divine prosperity and abundance.',
-        inclusions: [
-          'Certified Vedic Scholar',
-          'Lotus Flowers, Kamalgatta & Kuber Yantra Kit',
-          'Shree Suktam Archana',
-        ],
-        chantingDetails: [
-          'Shree Suktam',
-          'Kuber Ashta Lakshmi Stotram',
-        ],
-        standardPrice: 2000.0,
-        samagriPrice: 900.0,
-        originalPrice: 3600.0,
-        availability: 'Available Friday',
-      ),
-    ],
-    'online': [
-      const PoojaDetail(
-        id: 'virtual_satyanarayan',
-        title: 'Virtual Satyanarayan Pooja',
-        category: 'Online Pooja',
-        imageUrl:
-            'https://images.unsplash.com/photo-1605152276897-4f618f831968?w=500',
-        isPopular: true,
-        duration: '1.5 Hours',
-        durationBreakdown: '15 mins setup • 1.25 hours interactive video ritual',
-        description:
-            'Perform Satyanarayan Pooja virtually via HD video call. Live virtual guidance for Sankalpa and Katha recitation by a certified Acharya.',
-        spiritualSignificance:
-            'Invokes truth and divine grace in your household over a digital medium, transcending physical boundaries.',
-        inclusions: [
-          'Certified Vedic Acharya',
-          'Digital Muhurat Consultation',
-          'Online Live Sankalpa',
-          'E-Prashad & Digital blessings',
-        ],
-        chantingDetails: [
-          'Vishnu Sahasranama Chanting',
-          'Satyanarayan Vrat Katha recitation',
-        ],
-        standardPrice: 1100.0,
-        samagriPrice: 500.0,
-        originalPrice: 2200.0,
+        standardPrice: 51000.0,
+        samagriPrice: 12750.0,
+        originalPrice: 76500.0,
         availability: 'Available Daily',
       ),
       const PoojaDetail(
-        id: 'online_mahamrityunjaya',
-        title: 'E-Mahamrityunjaya Havan',
-        category: 'Online Pooja',
-        imageUrl:
-            'https://images.unsplash.com/photo-1608306448197-e83633f1261c?w=500',
+        id: 'satyanarayan_katha',
+        title: 'Satyanarayan Katha',
+        category: 'Ghar aur Jeevan se related Pooja',
+        imageUrl: 'https://images.unsplash.com/photo-1605152276897-4f618f831968?w=500',
         isPopular: true,
-        duration: '2.0 Hours',
-        durationBreakdown: '20 mins setup • 1.66 hours online sacred fire rites',
-        description:
-            'HD live streaming of Mahamrityunjaya fire sacrifice for health and healing. Pandit Ji chants for your specific name/gotra.',
-        spiritualSignificance:
-            'Invokes the healing energies of Lord Rudra (Shiva) to remove chronic health issues and restore mental peace.',
+        duration: '1-3 Hour',
+        durationBreakdown: '30 mins setup • 1-3 Hour ritual with 1 Pandit(s)',
+        description: 'Auspicious Satyanarayan Katha performed strictly according to Vedic Shastras by 1 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
         inclusions: [
-          '2 Vedic Priests at Temple',
-          'Live Sankalpa via Zoom/Meet',
-          'Pooja video recording copy link',
-          'Prashad mailed to your address',
+          '1 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
+          'Kalash Sthapana & Panchamrit setup',
+          'Prashad & Blessing Rituals',
         ],
         chantingDetails: [
-          '108 Mahamrityunjaya Recitations',
-          'Rudra Ashtadhyayi Chanting',
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
         ],
         standardPrice: 2100.0,
-        samagriPrice: 800.0,
-        originalPrice: 4500.0,
-        availability: 'Available This Sunday',
+        samagriPrice: 525.0,
+        originalPrice: 3150.0,
+        availability: 'Available Daily',
+      ),
+      const PoojaDetail(
+        id: 'lakshmi_pooja',
+        title: 'Lakshmi Pooja',
+        category: 'Ghar aur Jeevan se related Pooja',
+        imageUrl: 'https://images.unsplash.com/photo-1617981408346-39acb6da1b64?w=500',
+        isPopular: false,
+        duration: '1-3 Hour',
+        durationBreakdown: '30 mins setup • 1-3 Hour ritual with 1 Pandit(s)',
+        description: 'Auspicious Lakshmi Pooja performed strictly according to Vedic Shastras by 1 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
+        inclusions: [
+          '1 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
+          'Kalash Sthapana & Panchamrit setup',
+          'Prashad & Blessing Rituals',
+        ],
+        chantingDetails: [
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
+        ],
+        standardPrice: 3100.0,
+        samagriPrice: 775.0,
+        originalPrice: 4650.0,
+        availability: 'Available Daily',
+      ),
+      const PoojaDetail(
+        id: 'kuber_pooja',
+        title: 'Kuber Pooja',
+        category: 'Ghar aur Jeevan se related Pooja',
+        imageUrl: 'https://images.unsplash.com/photo-1608306448197-e83633f1261c?w=500',
+        isPopular: false,
+        duration: '1-3 Hour',
+        durationBreakdown: '30 mins setup • 1-3 Hour ritual with 1 Pandit(s)',
+        description: 'Auspicious Kuber Pooja performed strictly according to Vedic Shastras by 1 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
+        inclusions: [
+          '1 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
+          'Kalash Sthapana & Panchamrit setup',
+          'Prashad & Blessing Rituals',
+        ],
+        chantingDetails: [
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
+        ],
+        standardPrice: 3100.0,
+        samagriPrice: 775.0,
+        originalPrice: 4650.0,
+        availability: 'Available Daily',
+      ),
+    ],
+    'sanskar': [
+      const PoojaDetail(
+        id: 'vivah_marriage_pooja',
+        title: 'Vivah (Marriage Pooja)',
+        category: 'Sanskar (Life Events)',
+        imageUrl: 'https://images.unsplash.com/photo-1609102434313-f938d87a718b?w=500',
+        isPopular: true,
+        duration: '1-3 Hour',
+        durationBreakdown: '30 mins setup • 1-3 Hour ritual with 2 Pandit(s)',
+        description: 'Auspicious Vivah (Marriage Pooja) performed strictly according to Vedic Shastras by 2 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
+        inclusions: [
+          '2 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
+          'Kalash Sthapana & Panchamrit setup',
+          'Prashad & Blessing Rituals',
+        ],
+        chantingDetails: [
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
+        ],
+        standardPrice: 21000.0,
+        samagriPrice: 5250.0,
+        originalPrice: 31500.0,
+        availability: 'Available Daily',
+      ),
+      const PoojaDetail(
+        id: 'namkaran_sanskar',
+        title: 'Namkaran Sanskar',
+        category: 'Sanskar (Life Events)',
+        imageUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=500',
+        isPopular: false,
+        duration: '1-3 Hour',
+        durationBreakdown: '30 mins setup • 1-3 Hour ritual with 1 Pandit(s)',
+        description: 'Auspicious Namkaran Sanskar performed strictly according to Vedic Shastras by 1 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
+        inclusions: [
+          '1 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
+          'Kalash Sthapana & Panchamrit setup',
+          'Prashad & Blessing Rituals',
+        ],
+        chantingDetails: [
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
+        ],
+        standardPrice: 3100.0,
+        samagriPrice: 775.0,
+        originalPrice: 4650.0,
+        availability: 'Available Daily',
+      ),
+      const PoojaDetail(
+        id: 'mundan_sanskar',
+        title: 'Mundan Sanskar',
+        category: 'Sanskar (Life Events)',
+        imageUrl: 'https://images.unsplash.com/photo-1583307878879-9a4c4e78b7e5?w=500',
+        isPopular: false,
+        duration: '1-3 Hour',
+        durationBreakdown: '30 mins setup • 1-3 Hour ritual with 1 Pandit(s)',
+        description: 'Auspicious Mundan Sanskar performed strictly according to Vedic Shastras by 1 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
+        inclusions: [
+          '1 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
+          'Kalash Sthapana & Panchamrit setup',
+          'Prashad & Blessing Rituals',
+        ],
+        chantingDetails: [
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
+        ],
+        standardPrice: 2100.0,
+        samagriPrice: 525.0,
+        originalPrice: 3150.0,
+        availability: 'Available Daily',
+      ),
+      const PoojaDetail(
+        id: 'upanayan_janeu_sanskar',
+        title: 'Upanayan (Janeu Sanskar)',
+        category: 'Sanskar (Life Events)',
+        imageUrl: 'https://images.unsplash.com/photo-1604882737079-7dc3df3e09ac?w=500',
+        isPopular: false,
+        duration: '1-3 Hour',
+        durationBreakdown: '30 mins setup • 1-3 Hour ritual with 1 Pandit(s)',
+        description: 'Auspicious Upanayan (Janeu Sanskar) performed strictly according to Vedic Shastras by 1 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
+        inclusions: [
+          '1 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
+          'Kalash Sthapana & Panchamrit setup',
+          'Prashad & Blessing Rituals',
+        ],
+        chantingDetails: [
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
+        ],
+        standardPrice: 5100.0,
+        samagriPrice: 1275.0,
+        originalPrice: 7650.0,
+        availability: 'Available Daily',
+      ),
+      const PoojaDetail(
+        id: 'annaprashan',
+        title: 'Annaprashan',
+        category: 'Sanskar (Life Events)',
+        imageUrl: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?w=500',
+        isPopular: false,
+        duration: '1-3 Hour',
+        durationBreakdown: '30 mins setup • 1-3 Hour ritual with 1 Pandit(s)',
+        description: 'Auspicious Annaprashan performed strictly according to Vedic Shastras by 1 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
+        inclusions: [
+          '1 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
+          'Kalash Sthapana & Panchamrit setup',
+          'Prashad & Blessing Rituals',
+        ],
+        chantingDetails: [
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
+        ],
+        standardPrice: 2100.0,
+        samagriPrice: 525.0,
+        originalPrice: 3150.0,
+        availability: 'Available Daily',
+      ),
+    ],
+    'dosh_nivaran': [
+      const PoojaDetail(
+        id: 'navgraha_shanti_pooja',
+        title: 'Navgraha Shanti Pooja',
+        category: 'Dosh Nivaran & Special Pooja',
+        imageUrl: 'https://images.unsplash.com/photo-1604882737079-7dc3df3e09ac?w=500',
+        isPopular: true,
+        duration: '1 day',
+        durationBreakdown: '30 mins setup • 1 day ritual with 3 Pandit(s)',
+        description: 'Auspicious Navgraha Shanti Pooja performed strictly according to Vedic Shastras by 3 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
+        inclusions: [
+          '3 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
+          'Kalash Sthapana & Panchamrit setup',
+          'Prashad & Blessing Rituals',
+        ],
+        chantingDetails: [
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
+        ],
+        standardPrice: 11000.0,
+        samagriPrice: 2750.0,
+        originalPrice: 16500.0,
+        availability: 'Available Daily',
+      ),
+      const PoojaDetail(
+        id: 'kaal_sarp_dosh_pooja',
+        title: 'Kaal Sarp Dosh Pooja',
+        category: 'Dosh Nivaran & Special Pooja',
+        imageUrl: 'https://images.unsplash.com/photo-1608306448197-e83633f1261c?w=500',
+        isPopular: false,
+        duration: '3 Day',
+        durationBreakdown: '30 mins setup • 3 Day ritual with 5 Pandit(s)',
+        description: 'Auspicious Kaal Sarp Dosh Pooja performed strictly according to Vedic Shastras by 5 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
+        inclusions: [
+          '5 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
+          'Kalash Sthapana & Panchamrit setup',
+          'Prashad & Blessing Rituals',
+        ],
+        chantingDetails: [
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
+        ],
+        standardPrice: 25000.0,
+        samagriPrice: 6250.0,
+        originalPrice: 37500.0,
+        availability: 'Available Daily',
+      ),
+      const PoojaDetail(
+        id: 'mangal_dosh_pooja',
+        title: 'Mangal Dosh Pooja',
+        category: 'Dosh Nivaran & Special Pooja',
+        imageUrl: 'https://images.unsplash.com/photo-1567604130959-7d9d2d0af7c2?w=500',
+        isPopular: false,
+        duration: '1 Day',
+        durationBreakdown: '30 mins setup • 1 Day ritual with 3 Pandit(s)',
+        description: 'Auspicious Mangal Dosh Pooja performed strictly according to Vedic Shastras by 3 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
+        inclusions: [
+          '3 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
+          'Kalash Sthapana & Panchamrit setup',
+          'Prashad & Blessing Rituals',
+        ],
+        chantingDetails: [
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
+        ],
+        standardPrice: 11000.0,
+        samagriPrice: 2750.0,
+        originalPrice: 16500.0,
+        availability: 'Available Daily',
+      ),
+      const PoojaDetail(
+        id: 'mahamrityunjaya_jaap',
+        title: 'Mahamrityunjaya Jaap',
+        category: 'Dosh Nivaran & Special Pooja',
+        imageUrl: 'https://images.unsplash.com/photo-1604882737079-7dc3df3e09ac?w=500',
+        isPopular: false,
+        duration: '1 To 7',
+        durationBreakdown: '30 mins setup • 1 To 7 ritual with 7 Pandit(s)',
+        description: 'Auspicious Mahamrityunjaya Jaap performed strictly according to Vedic Shastras by 7 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
+        inclusions: [
+          '7 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
+          'Kalash Sthapana & Panchamrit setup',
+          'Prashad & Blessing Rituals',
+        ],
+        chantingDetails: [
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
+        ],
+        standardPrice: 2100.0,
+        samagriPrice: 525.0,
+        originalPrice: 3150.0,
+        availability: 'Available Daily',
+      ),
+      const PoojaDetail(
+        id: 'pitra_dosh_nivaran',
+        title: 'Pitra Dosh Nivaran',
+        category: 'Dosh Nivaran & Special Pooja',
+        imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500',
+        isPopular: false,
+        duration: '1 Day',
+        durationBreakdown: '30 mins setup • 1 Day ritual with 1 Pandit(s)',
+        description: 'Auspicious Pitra Dosh Nivaran performed strictly according to Vedic Shastras by 1 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
+        inclusions: [
+          '1 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
+          'Kalash Sthapana & Panchamrit setup',
+          'Prashad & Blessing Rituals',
+        ],
+        chantingDetails: [
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
+        ],
+        standardPrice: 5100.0,
+        samagriPrice: 1275.0,
+        originalPrice: 7650.0,
+        availability: 'Available Daily',
+      ),
+    ],
+    'festival': [
+      const PoojaDetail(
+        id: 'diwali_lakshmi_ganesh_pooja',
+        title: 'Diwali Lakshmi Ganesh Pooja',
+        category: 'Festival Special Pooja',
+        imageUrl: 'https://images.unsplash.com/photo-1617981408346-39acb6da1b64?w=500',
+        isPopular: true,
+        duration: '1-3 Hour',
+        durationBreakdown: '30 mins setup • 1-3 Hour ritual with 1 Pandit(s)',
+        description: 'Auspicious Diwali Lakshmi Ganesh Pooja performed strictly according to Vedic Shastras by 1 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
+        inclusions: [
+          '1 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
+          'Kalash Sthapana & Panchamrit setup',
+          'Prashad & Blessing Rituals',
+        ],
+        chantingDetails: [
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
+        ],
+        standardPrice: 5100.0,
+        samagriPrice: 1275.0,
+        originalPrice: 7650.0,
+        availability: 'Available Daily',
+      ),
+      const PoojaDetail(
+        id: 'ganesh_chaturthi_pooja',
+        title: 'Ganesh Chaturthi Pooja',
+        category: 'Festival Special Pooja',
+        imageUrl: 'https://images.unsplash.com/photo-1567604130959-7d9d2d0af7c2?w=500',
+        isPopular: false,
+        duration: '5 Day',
+        durationBreakdown: '30 mins setup • 5 Day ritual with 1 Pandit(s)',
+        description: 'Auspicious Ganesh Chaturthi Pooja performed strictly according to Vedic Shastras by 1 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
+        inclusions: [
+          '1 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
+          'Kalash Sthapana & Panchamrit setup',
+          'Prashad & Blessing Rituals',
+        ],
+        chantingDetails: [
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
+        ],
+        standardPrice: 2100.0,
+        samagriPrice: 525.0,
+        originalPrice: 3150.0,
+        availability: 'Available Daily',
+      ),
+      const PoojaDetail(
+        id: 'navratri_pooja',
+        title: 'Navratri Pooja',
+        category: 'Festival Special Pooja',
+        imageUrl: 'https://images.unsplash.com/photo-1608306448197-e83633f1261c?w=500',
+        isPopular: false,
+        duration: '9 Day',
+        durationBreakdown: '30 mins setup • 9 Day ritual with 1 Pandit(s)',
+        description: 'Auspicious Navratri Pooja performed strictly according to Vedic Shastras by 1 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
+        inclusions: [
+          '1 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
+          'Kalash Sthapana & Panchamrit setup',
+          'Prashad & Blessing Rituals',
+        ],
+        chantingDetails: [
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
+        ],
+        standardPrice: 2100.0,
+        samagriPrice: 525.0,
+        originalPrice: 3150.0,
+        availability: 'Available Daily',
+      ),
+      const PoojaDetail(
+        id: 'durga_pooja',
+        title: 'Durga Pooja',
+        category: 'Festival Special Pooja',
+        imageUrl: 'https://images.unsplash.com/photo-1608306448197-e83633f1261c?w=500',
+        isPopular: false,
+        duration: '1 Day',
+        durationBreakdown: '30 mins setup • 1 Day ritual with 1 Pandit(s)',
+        description: 'Auspicious Durga Pooja performed strictly according to Vedic Shastras by 1 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
+        inclusions: [
+          '1 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
+          'Kalash Sthapana & Panchamrit setup',
+          'Prashad & Blessing Rituals',
+        ],
+        chantingDetails: [
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
+        ],
+        standardPrice: 3100.0,
+        samagriPrice: 775.0,
+        originalPrice: 4650.0,
+        availability: 'Available Daily',
+      ),
+      const PoojaDetail(
+        id: 'shivratri_pooja',
+        title: 'Shivratri Pooja',
+        category: 'Festival Special Pooja',
+        imageUrl: 'https://images.unsplash.com/photo-1604882737079-7dc3df3e09ac?w=500',
+        isPopular: false,
+        duration: '1 Day',
+        durationBreakdown: '30 mins setup • 1 Day ritual with 1 Pandit(s)',
+        description: 'Auspicious Shivratri Pooja performed strictly according to Vedic Shastras by 1 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
+        inclusions: [
+          '1 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
+          'Kalash Sthapana & Panchamrit setup',
+          'Prashad & Blessing Rituals',
+        ],
+        chantingDetails: [
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
+        ],
+        standardPrice: 5100.0,
+        samagriPrice: 1275.0,
+        originalPrice: 7650.0,
+        availability: 'Available Daily',
+      ),
+    ],
+    'business': [
+      const PoojaDetail(
+        id: 'vishwakarma_pooja',
+        title: 'Vishwakarma Pooja',
+        category: 'Business Pooja',
+        imageUrl: 'https://images.unsplash.com/photo-1621252179027-94459d278660?w=500',
+        isPopular: false,
+        duration: '1 Day',
+        durationBreakdown: '30 mins setup • 1 Day ritual with 1 Pandit(s)',
+        description: 'Auspicious Vishwakarma Pooja performed strictly according to Vedic Shastras by 1 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
+        inclusions: [
+          '1 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
+          'Kalash Sthapana & Panchamrit setup',
+          'Prashad & Blessing Rituals',
+        ],
+        chantingDetails: [
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
+        ],
+        standardPrice: 3100.0,
+        samagriPrice: 775.0,
+        originalPrice: 4650.0,
+        availability: 'Available Daily',
+      ),
+      const PoojaDetail(
+        id: 'kuber_upasana',
+        title: 'Kuber Upasana',
+        category: 'Business Pooja',
+        imageUrl: 'https://images.unsplash.com/photo-1608306448197-e83633f1261c?w=500',
+        isPopular: false,
+        duration: '1 Day',
+        durationBreakdown: '30 mins setup • 1 Day ritual with 1 Pandit(s)',
+        description: 'Auspicious Kuber Upasana performed strictly according to Vedic Shastras by 1 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
+        inclusions: [
+          '1 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
+          'Kalash Sthapana & Panchamrit setup',
+          'Prashad & Blessing Rituals',
+        ],
+        chantingDetails: [
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
+        ],
+        standardPrice: 5100.0,
+        samagriPrice: 1275.0,
+        originalPrice: 7650.0,
+        availability: 'Available Daily',
+      ),
+    ],
+    'daily': [
+      const PoojaDetail(
+        id: 'ganesh_pooja',
+        title: 'Ganesh Pooja',
+        category: 'Daily / Regular Pooja',
+        imageUrl: 'https://images.unsplash.com/photo-1567604130959-7d9d2d0af7c2?w=500',
+        isPopular: false,
+        duration: '1 Day',
+        durationBreakdown: '30 mins setup • 1 Day ritual with 1 Pandit(s)',
+        description: 'Auspicious Ganesh Pooja performed strictly according to Vedic Shastras by 1 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
+        inclusions: [
+          '1 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
+          'Kalash Sthapana & Panchamrit setup',
+          'Prashad & Blessing Rituals',
+        ],
+        chantingDetails: [
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
+        ],
+        standardPrice: 2100.0,
+        samagriPrice: 525.0,
+        originalPrice: 3150.0,
+        availability: 'Available Daily',
+      ),
+      const PoojaDetail(
+        id: 'hanuman_pooja',
+        title: 'Hanuman Pooja',
+        category: 'Daily / Regular Pooja',
+        imageUrl: 'https://images.unsplash.com/photo-1604882737079-7dc3df3e09ac?w=500',
+        isPopular: false,
+        duration: '1 Day',
+        durationBreakdown: '30 mins setup • 1 Day ritual with 1 Pandit(s)',
+        description: 'Auspicious Hanuman Pooja performed strictly according to Vedic Shastras by 1 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
+        inclusions: [
+          '1 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
+          'Kalash Sthapana & Panchamrit setup',
+          'Prashad & Blessing Rituals',
+        ],
+        chantingDetails: [
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
+        ],
+        standardPrice: 2100.0,
+        samagriPrice: 525.0,
+        originalPrice: 3150.0,
+        availability: 'Available Daily',
+      ),
+      const PoojaDetail(
+        id: 'sundarkand_path',
+        title: 'Sundarkand Path',
+        category: 'Daily / Regular Pooja',
+        imageUrl: 'https://images.unsplash.com/photo-1605152276897-4f618f831968?w=500',
+        isPopular: true,
+        duration: '1 Day',
+        durationBreakdown: '30 mins setup • 1 Day ritual with 5 Pandit(s)',
+        description: 'Auspicious Sundarkand Path performed strictly according to Vedic Shastras by 5 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
+        inclusions: [
+          '5 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
+          'Kalash Sthapana & Panchamrit setup',
+          'Prashad & Blessing Rituals',
+        ],
+        chantingDetails: [
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
+        ],
+        standardPrice: 15000.0,
+        samagriPrice: 3750.0,
+        originalPrice: 22500.0,
+        availability: 'Available Daily',
+      ),
+      const PoojaDetail(
+        id: 'rudrabhishek',
+        title: 'Rudrabhishek',
+        category: 'Daily / Regular Pooja',
+        imageUrl: 'https://images.unsplash.com/photo-1604882737079-7dc3df3e09ac?w=500',
+        isPopular: false,
+        duration: '1 Day',
+        durationBreakdown: '30 mins setup • 1 Day ritual with 1 Pandit(s)',
+        description: 'Auspicious Rudrabhishek performed strictly according to Vedic Shastras by 1 certified Acharya(s).',
+        spiritualSignificance: 'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the family.',
+        inclusions: [
+          '1 Certified Vedic Acharya(s)',
+          'Complete Sacred Havan & Samagri Kit',
+          'Kalash Sthapana & Panchamrit setup',
+          'Prashad & Blessing Rituals',
+        ],
+        chantingDetails: [
+          'Vedic Suktam & Mantra Recitation',
+          '108 Gayatri Mantra Chanting',
+          'Aarti & Sankalpa',
+        ],
+        standardPrice: 3100.0,
+        samagriPrice: 775.0,
+        originalPrice: 4650.0,
+        availability: 'Available Daily',
       ),
     ],
   };
@@ -358,7 +727,6 @@ class _BookScreenState extends State<BookScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
       backgroundColor: const Color(0xFFFFF8EE),
       body: SafeArea(
         child: Column(
@@ -373,9 +741,7 @@ class _BookScreenState extends State<BookScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildTopBar(),
-                    const SizedBox(height: 24),
-                    _buildSelectRitualSubtitle(),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 20),
                     _buildSelectRitualTitle(),
                     const SizedBox(height: 18),
                     _buildSearchBar(),
@@ -444,51 +810,47 @@ class _BookScreenState extends State<BookScreen> {
     );
   }
 
-  Widget _buildSelectRitualSubtitle() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+  Widget _buildSelectRitualTitle() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Row(
+          children: [
+            Text(
+              'Select Ritual',
+              style: GoogleFonts.lato(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF3D2200),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFF9800), Color(0xFFE65100)],
+                ),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                'VERIFIED PANDITS',
+                style: GoogleFonts.lato(
+                  color: Colors.white,
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
         Text(
-          'SELECT RITUAL',
+          'Authentic Vedic rituals performed by 100% certified Acharyas',
           style: GoogleFonts.lato(
             fontSize: 13,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 1.5,
-            color: const Color(0xFFE5A93B),
-          ),
-        ),
-        const SizedBox(width: 4),
-        Container(
-          width: 6,
-          height: 6,
-          decoration: const BoxDecoration(
-            color: Color(0xFFE5A93B),
-            shape: BoxShape.circle,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSelectRitualTitle() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        Text(
-          'Select Ritual',
-          style: GoogleFonts.lato(
-            fontSize: 36,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF3D2200),
-          ),
-        ),
-        const SizedBox(width: 6),
-        Container(
-          width: 8,
-          height: 8,
-          decoration: const BoxDecoration(
-            color: Color(0xFFFFB300),
-            shape: BoxShape.circle,
+            color: const Color(0xFF7A6251),
           ),
         ),
       ],
@@ -539,18 +901,45 @@ class _BookScreenState extends State<BookScreen> {
           SizedBox(
             width: 115,
             child: _buildCategoryCard(
-              icon: Icons.favorite,
-              label: 'Wedding\nRituals',
-              id: 'wedding',
+              icon: Icons.home_outlined,
+              label: 'Ghar &\nJeevan',
+              id: 'ghar_jeevan',
             ),
           ),
           const SizedBox(width: 10),
           SizedBox(
             width: 115,
             child: _buildCategoryCard(
-              icon: Icons.home_outlined,
-              label: 'House\nWarming',
-              id: 'housewarming',
+              icon: Icons.favorite_outline,
+              label: 'Sanskar\nRituals',
+              id: 'sanskar',
+            ),
+          ),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 115,
+            child: _buildCategoryCard(
+              icon: Icons.shield_outlined,
+              label: 'Dosh\nNivaran',
+              id: 'dosh_nivaran',
+            ),
+          ),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 115,
+            child: _buildCategoryCard(
+              icon: Icons.auto_awesome,
+              label: 'Festival\nSpecial',
+              id: 'festival',
+            ),
+          ),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 115,
+            child: _buildCategoryCard(
+              icon: Icons.storefront,
+              label: 'Business &\nWealth',
+              id: 'business',
             ),
           ),
           const SizedBox(width: 10),
@@ -558,17 +947,8 @@ class _BookScreenState extends State<BookScreen> {
             width: 115,
             child: _buildCategoryCard(
               icon: Icons.temple_hindu,
-              label: 'Pooja\nHome',
-              id: 'poojahome',
-            ),
-          ),
-          const SizedBox(width: 10),
-          SizedBox(
-            width: 115,
-            child: _buildCategoryCard(
-              icon: Icons.videocam,
-              label: 'Online\nPooja',
-              id: 'online',
+              label: 'Daily &\nRegular',
+              id: 'daily',
             ),
           ),
         ],
@@ -608,14 +988,14 @@ class _BookScreenState extends State<BookScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Icon(icon, color: const Color(0xFF3D2200), size: 28),
+            Icon(icon, color: isActive ? Colors.white : const Color(0xFF3D2200), size: 28),
             const SizedBox(height: 10),
             Text(
               label,
               style: GoogleFonts.lato(
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFF3D2200),
+                color: isActive ? Colors.white : const Color(0xFF3D2200),
               ),
               textAlign: TextAlign.center,
             ),
@@ -660,7 +1040,7 @@ class _BookScreenState extends State<BookScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          'Trending Rituals',
+          'Available Rituals',
           style: GoogleFonts.lato(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -697,7 +1077,6 @@ class _BookScreenState extends State<BookScreen> {
         children: [
           Row(
             children: [
-
               ClipRRect(
                 borderRadius: BorderRadius.circular(14),
                 child: Image.network(
@@ -721,7 +1100,6 @@ class _BookScreenState extends State<BookScreen> {
                 ),
               ),
               const SizedBox(width: 16),
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -766,7 +1144,7 @@ class _BookScreenState extends State<BookScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      '${detail.duration} • ₹${detail.totalPrice.toInt()}',
+                      '${detail.duration} • ₹${detail.standardPrice.toInt()}',
                       style: GoogleFonts.lato(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -799,7 +1177,7 @@ class _BookScreenState extends State<BookScreen> {
                           style: GoogleFonts.lato(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFFE8920A),
+                            color: const Color(0xFF8A7060),
                           ),
                         ),
                       ],
@@ -809,71 +1187,30 @@ class _BookScreenState extends State<BookScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    showPoojaDetailBottomSheet(context, detail);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFEEEEEE),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    minimumSize: const Size(0, 44),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    'View Details',
-                    style: GoogleFonts.lato(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF3D2200),
-                    ),
-                  ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 38,
+            child: ElevatedButton(
+              onPressed: () {
+                showPoojaDetailBottomSheet(context, detail);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF18C16),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                'View Details & Book',
+                style: GoogleFonts.lato(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                flex: 1,
-                child: Container(
-                  height: 44,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [Color(0xFFF18C16), Color(0xFFE5A93B)],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      context.push('/book-flow', extra: detail);
-                    },
-                    style: ElevatedButton.styleFrom(
-
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      minimumSize: const Size(0, 44),
-                    ),
-                    child: Text(
-                      'Book Now',
-                      style: GoogleFonts.lato(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),
@@ -881,114 +1218,52 @@ class _BookScreenState extends State<BookScreen> {
   }
 
   Widget _buildNavBar() {
-    final items = [
-      {'icon': Icons.home_outlined, 'activeIcon': Icons.home, 'label': 'Home'},
-      {
-        'icon': Icons.menu_book_outlined,
-        'activeIcon': Icons.menu_book,
-        'label': 'Book',
-      },
-      {
-        'icon': Icons.calendar_month_outlined,
-        'activeIcon': Icons.calendar_month,
-        'label': 'Panchang',
-      },
-      {
-        'icon': Icons.shopping_bag_outlined,
-        'activeIcon': Icons.shopping_bag,
-        'label': 'Shop',
-      },
-      {
-        'icon': Icons.person_outline,
-        'activeIcon': Icons.person,
-        'label': 'Profile',
-      },
-    ];
-
     return Container(
-      color: Colors.transparent,
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).padding.bottom + 8,
-        top: 8,
-        left: 16,
-        right: 16,
+      height: 64,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            offset: Offset(0, -2),
+          ),
+        ],
       ),
-      child: Container(
-        height: 64,
-        decoration: BoxDecoration(
-          color: const Color(0xFF3D2200),
-          borderRadius: BorderRadius.circular(40),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildNavItem(0, Icons.home_outlined, Icons.home, 'Home', () => context.go('/home')),
+          _buildNavItem(1, Icons.menu_book_outlined, Icons.menu_book, 'Bookings', () => context.go('/book')),
+          _buildNavItem(2, Icons.storefront_outlined, Icons.storefront, 'Shop', () => context.go('/shop')),
+          _buildNavItem(3, Icons.person_outline, Icons.person, 'Profile', () => context.go('/profile')),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData icon, IconData activeIcon, String label, VoidCallback onTap) {
+    final bool isSelected = _currentNavIndex == index;
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            isSelected ? activeIcon : icon,
+            color: isSelected ? const Color(0xFFF18C16) : Colors.grey,
+            size: 24,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: GoogleFonts.lato(
+              fontSize: 11,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              color: isSelected ? const Color(0xFFF18C16) : Colors.grey,
             ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: List.generate(items.length, (i) {
-            final isActive = _currentNavIndex == i;
-            return GestureDetector(
-              onTap: () {
-                setState(() => _currentNavIndex = i);
-                switch (i) {
-                  case 0:
-                    context.go('/home');
-                    break;
-                  case 1:
-                    context.go('/book');
-                    break;
-                  case 2:
-                    context.go('/panchang');
-                    break;
-                  case 3:
-                    context.go('/shop');
-                    break;
-                  case 4:
-                    context.go('/profile');
-                    break;
-                }
-              },
-              child: isActive
-                  ? Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF18C16),
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            items[i]['activeIcon'] as IconData,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            items[i]['label'] as String,
-                            style: GoogleFonts.lato(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : Icon(
-                      items[i]['icon'] as IconData,
-                      color: Colors.white.withValues(alpha: 0.6),
-                      size: 22,
-                    ),
-            );
-          }),
-        ),
+          ),
+        ],
       ),
     );
   }
