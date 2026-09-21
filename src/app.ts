@@ -4,7 +4,12 @@ import cors from "cors";
 import apiRouter from "./routes/index.js";
 import { errorHandler } from "./middleware/error-handler.js";
 
+import { webhookHandler } from "./controllers/payments.controller.js";
+
 const app = express();
+
+// Webhook must be parsed as raw before express.json() intercepts it
+app.post("/api/v1/payments/webhook", express.raw({ type: "application/json" }), webhookHandler);
 
 app.use(express.json());
 app.use(cors({ origin: '*', credentials: true }));

@@ -1,18 +1,29 @@
-import { Router } from 'express';
-import { verifyToken } from '../middleware/verify-token.js';
-import { asyncHandler } from '../middleware/async-handler.js';
-import { getProfileHandler, updateProfileHandler } from '../controllers/users.controller.js';
+import { Router } from "express";
+import { verifyToken } from "../middleware/verify-token.js";
+import { asyncHandler, validateBody } from "../middleware/async-handler.js";
+import {
+  getProfileHandler,
+  updateProfileHandler,
+  updateFcmTokenHandler,
+} from "../controllers/users.controller.js";
+import { updateProfileSchema, fcmTokenSchema } from "../validators/users.validator.js";
 
-export const usersRouter = Router();
+const usersRouter = Router();
 
-usersRouter.get(
-  '/profile',
+usersRouter.get("/me", verifyToken, asyncHandler(getProfileHandler));
+
+usersRouter.patch(
+  "/me",
   verifyToken,
-  asyncHandler(getProfileHandler),
+  validateBody(updateProfileSchema),
+  asyncHandler(updateProfileHandler)
 );
 
-usersRouter.put(
-  '/profile',
+usersRouter.post(
+  "/fcm-token",
   verifyToken,
-  asyncHandler(updateProfileHandler),
+  validateBody(fcmTokenSchema),
+  asyncHandler(updateFcmTokenHandler)
 );
+
+export { usersRouter };

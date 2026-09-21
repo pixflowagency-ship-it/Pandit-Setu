@@ -8,6 +8,41 @@
       "when": 1784886176465,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789888559603,
+      "tag": "0001_slow_sharon_carter",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789892286166,
+      "tag": "0002_postgis_setup",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789893467093,
+      "tag": "0003_razorpay_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789893928076,
+      "tag": "0004_add_subscriptions_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789894709460,
+      "tag": "0005_fcm_token",
+      "breakpoints": true
     }
   ]
 }

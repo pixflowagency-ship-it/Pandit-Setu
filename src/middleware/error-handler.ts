@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 import { AppError } from "../utils/api-error.js";
 import { sendError } from "../utils/response.js";
 import { env } from "../config/env.js";
+import { logger } from "../utils/logger.js";
 
 export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof AppError) {
@@ -23,7 +24,7 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     return;
   }
 
-  console.error("[Unhandled Error]", err);
+  logger.error({ err }, "Unhandled error");
 
   sendError(res, 500, {
     code: "INTERNAL_SERVER_ERROR",

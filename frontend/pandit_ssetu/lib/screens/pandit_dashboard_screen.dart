@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import '../widgets/app_side_drawer.dart';
 
 class PanditDashboardScreen extends StatefulWidget {
   const PanditDashboardScreen({super.key});
@@ -271,10 +272,14 @@ class _PanditDashboardScreenState extends State<PanditDashboardScreen>
     );
   }
 
+  int _selectedNavIndex = 0;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFF8EE),
+      drawer: const AppSideDrawer(),
+      bottomNavigationBar: _buildBottomNavBar(),
       body: SafeArea(
         child: Stack(
           children: [
@@ -354,6 +359,101 @@ class _PanditDashboardScreenState extends State<PanditDashboardScreen>
     );
   }
 
+  Widget _buildBottomNavBar() {
+    final navItems = [
+      {
+        'icon': Icons.space_dashboard_outlined,
+        'activeIcon': Icons.space_dashboard,
+        'label': 'Dashboard',
+        'action': () {
+          setState(() => _selectedNavIndex = 0);
+        },
+      },
+      {
+        'icon': Icons.calendar_month_outlined,
+        'activeIcon': Icons.calendar_month,
+        'label': 'Bookings',
+        'action': () {
+          setState(() => _selectedNavIndex = 1);
+          context.push('/bookings');
+        },
+      },
+      {
+        'icon': Icons.headset_mic_outlined,
+        'activeIcon': Icons.headset_mic,
+        'label': 'Help',
+        'action': () {
+          setState(() => _selectedNavIndex = 2);
+          context.push('/support');
+        },
+      },
+      {
+        'icon': Icons.person_outline,
+        'activeIcon': Icons.person,
+        'label': 'Profile',
+        'action': () {
+          setState(() => _selectedNavIndex = 3);
+          context.push('/profile');
+        },
+      },
+    ];
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFF3D2200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: List.generate(navItems.length, (index) {
+            final isSelected = _selectedNavIndex == index;
+            final item = navItems[index];
+            return InkWell(
+              onTap: item['action'] as VoidCallback,
+              borderRadius: BorderRadius.circular(20),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isSelected ? const Color(0xFFF18C16) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      isSelected ? item['activeIcon'] as IconData : item['icon'] as IconData,
+                      color: isSelected ? Colors.white : Colors.amber.shade200,
+                      size: 22,
+                    ),
+                    if (isSelected) ...[
+                      const SizedBox(width: 6),
+                      Text(
+                        item['label'] as String,
+                        style: GoogleFonts.lato(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          }),
+        ),
+      ),
+    );
+  }
+
   // ----------------------------------------------------
   // UI Sub-components
   // ----------------------------------------------------
@@ -367,9 +467,16 @@ class _PanditDashboardScreenState extends State<PanditDashboardScreen>
       ),
       child: Row(
         children: [
+          Builder(
+            builder: (ctx) => GestureDetector(
+              onTap: () => Scaffold.of(ctx).openDrawer(),
+              child: const Icon(Icons.menu, size: 24, color: Color(0xFF3D2200)),
+            ),
+          ),
+          const SizedBox(width: 12),
           Container(
-            width: 44,
-            height: 44,
+            width: 40,
+            height: 40,
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
               image: DecorationImage(

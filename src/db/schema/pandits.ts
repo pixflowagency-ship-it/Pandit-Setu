@@ -9,6 +9,7 @@ import {
   timestamp,
   jsonb,
   primaryKey,
+  index,
 } from "drizzle-orm/pg-core";
 import { users } from "./users.js";
 import { poojas } from "./poojas.js";
@@ -44,6 +45,10 @@ export const pandits = pgTable("pandits", {
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date()),
+}, (table) => {
+  return {
+    locationIdx: index("idx_pandits_location_gist").using("gist", table.location),
+  };
 });
 
 export type Bandit = typeof pandits.$inferSelect;

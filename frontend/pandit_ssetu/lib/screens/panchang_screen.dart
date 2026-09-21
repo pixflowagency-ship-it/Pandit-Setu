@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import '../widgets/app_bottom_nav_bar.dart';
+import '../widgets/app_side_drawer.dart';
 
 class PanchangScreen extends StatefulWidget {
   const PanchangScreen({super.key});
@@ -81,6 +83,7 @@ class _PanchangScreenState extends State<PanchangScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFFAEDD8),
+      drawer: const AppSideDrawer(),
       body: SafeArea(
         child: Stack(
           children: [
@@ -121,17 +124,17 @@ class _PanchangScreenState extends State<PanchangScreen> {
                         _buildMuhuratCard(),
                         const SizedBox(height: 20),
                         _buildUpcomingFestivalsSection(),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 80),
                       ],
                     ),
                   ),
                 ),
-                _buildNavBar(context),
               ],
             ),
           ],
         ),
       ),
+      bottomNavigationBar: const AppBottomNavBar(currentPath: '/panchang'),
     );
   }
 
@@ -139,12 +142,21 @@ class _PanchangScreenState extends State<PanchangScreen> {
     return Stack(
       alignment: Alignment.center,
       children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Builder(
+            builder: (ctx) => GestureDetector(
+              onTap: () => Scaffold.of(ctx).openDrawer(),
+              child: const Icon(Icons.menu, size: 26, color: Color(0xFF5A4A3A)),
+            ),
+          ),
+        ),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 42,
-              height: 42,
+              width: 36,
+              height: 36,
               decoration: const BoxDecoration(
                 color: Color(0xFFF18C16),
                 shape: BoxShape.circle,
@@ -152,15 +164,15 @@ class _PanchangScreenState extends State<PanchangScreen> {
               child: const Icon(
                 Icons.self_improvement,
                 color: Colors.white,
-                size: 22,
+                size: 20,
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             Text(
               'Pandit Setu',
               style: GoogleFonts.lato(
                 fontWeight: FontWeight.bold,
-                fontSize: 22,
+                fontSize: 20,
                 color: const Color(0xFF3D2200),
               ),
             ),
@@ -977,96 +989,6 @@ class _PanchangScreenState extends State<PanchangScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildNavBar(BuildContext context) {
-    final items = [
-      {'icon': Icons.home_outlined, 'activeIcon': Icons.home, 'label': 'Home'},
-      {'icon': Icons.menu_book_outlined, 'activeIcon': Icons.menu_book, 'label': 'Book'},
-      {'icon': Icons.calendar_month_outlined, 'activeIcon': Icons.calendar_month, 'label': 'Panchang'},
-      {'icon': Icons.shopping_bag_outlined, 'activeIcon': Icons.shopping_bag, 'label': 'Shop'},
-      {'icon': Icons.person_outline, 'activeIcon': Icons.person, 'label': 'Profile'},
-    ];
-
-    return Container(
-      color: Colors.transparent,
-      padding: const EdgeInsets.only(bottom: 16, top: 8, left: 16, right: 16),
-      child: Container(
-        height: 64,
-        decoration: BoxDecoration(
-          color: const Color(0xFF3D2200),
-          borderRadius: BorderRadius.circular(40),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: List.generate(items.length, (i) {
-            final isActive = i == 2;
-            return GestureDetector(
-              onTap: () {
-                switch (i) {
-                  case 0:
-                    context.go('/home');
-                    break;
-                  case 1:
-                    context.go('/book');
-                    break;
-                  case 2:
-                    break;
-                  case 3:
-                    context.go('/shop');
-                    break;
-                  case 4:
-                    context.go('/profile');
-                    break;
-                }
-              },
-              child: isActive
-                  ? Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF18C16),
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            items[i]['activeIcon'] as IconData,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            items[i]['label'] as String,
-                            style: GoogleFonts.lato(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : Icon(
-                      items[i]['icon'] as IconData,
-                      color: Colors.white.withValues(alpha: 0.6),
-                      size: 22,
-                    ),
-            );
-          }),
-        ),
-      ),
     );
   }
 }

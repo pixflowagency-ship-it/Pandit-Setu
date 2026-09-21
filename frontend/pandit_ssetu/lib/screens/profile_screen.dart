@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../widgets/app_bottom_nav_bar.dart';
+import '../widgets/app_side_drawer.dart';
 import '../user_data.dart';
 import '../services/api_service.dart';
 
@@ -90,6 +92,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _C.parchmentBg,
+      drawer: const AppSideDrawer(),
       body: SafeArea(
         child: Stack(
           children: [
@@ -128,12 +131,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(height: 16),
 
                         _buildContactSupportBtn(),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 80),
                       ],
                     ),
                   ),
                 ),
-                _buildNavBar(context),
               ],
             ),
 
@@ -141,6 +143,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
       ),
+      bottomNavigationBar: const AppBottomNavBar(currentPath: '/profile'),
     );
   }
 
@@ -150,13 +153,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         Row(
           children: [
-            const Icon(Icons.menu, color: _C.richAmber, size: 26),
+            Builder(
+              builder: (ctx) => GestureDetector(
+                onTap: () => Scaffold.of(ctx).openDrawer(),
+                child: const Icon(Icons.menu, color: _C.richAmber, size: 26),
+              ),
+            ),
             const SizedBox(width: 12),
             Text(
               'Pandit Setu',
               style: GoogleFonts.lato(
                 fontWeight: FontWeight.bold,
-                fontSize: 24,
+                fontSize: 22,
                 color: _C.richAmber,
                 letterSpacing: 0.5,
               ),
@@ -1729,112 +1737,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: _C.saffronGold, width: 1.5),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavBar(BuildContext context) {
-    final items = [
-      {'icon': Icons.home_outlined, 'activeIcon': Icons.home, 'label': 'Home'},
-      {
-        'icon': Icons.menu_book_outlined,
-        'activeIcon': Icons.menu_book,
-        'label': 'Book',
-      },
-      {
-        'icon': Icons.calendar_month_outlined,
-        'activeIcon': Icons.calendar_month,
-        'label': 'Panchang',
-      },
-      {
-        'icon': Icons.shopping_bag_outlined,
-        'activeIcon': Icons.shopping_bag,
-        'label': 'Shop',
-      },
-      {
-        'icon': Icons.person_outline,
-        'activeIcon': Icons.person,
-        'label': 'Profile',
-      },
-    ];
-
-    return Container(
-      color: Colors.transparent,
-      padding: const EdgeInsets.only(bottom: 16, top: 8, left: 16, right: 16),
-      child: Container(
-        height: 64,
-        decoration: BoxDecoration(
-          color: const Color(0xFF3D2200),
-          borderRadius: BorderRadius.circular(40),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: List.generate(items.length, (i) {
-            final isActive = i == 4;
-            return GestureDetector(
-              onTap: () {
-                switch (i) {
-                  case 0:
-                    context.go('/home');
-                    break;
-                  case 1:
-                    context.go('/book');
-                    break;
-                  case 2:
-                    context.go('/panchang');
-                    break;
-                  case 3:
-                    context.go('/shop');
-                    break;
-                  case 4:
-                    break;
-                }
-              },
-              child: isActive
-                  ? Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF18C16),
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            items[i]['activeIcon'] as IconData,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            items[i]['label'] as String,
-                            style: GoogleFonts.lato(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : Icon(
-                      items[i]['icon'] as IconData,
-                      color: Colors.white.withValues(alpha: 0.6),
-                      size: 22,
-                    ),
-            );
-          }),
         ),
       ),
     );

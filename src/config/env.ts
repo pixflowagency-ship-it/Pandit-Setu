@@ -14,4 +14,5 @@ export const env = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? "7d",
   otpExpirySeconds: Number(process.env.OTP_EXPIRY_SECONDS ?? 300),
   otpLength: 6,
+  redisUrl: process.env.REDIS_URL ?? "redis://localhost:6379",
 } as const;

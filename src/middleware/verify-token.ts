@@ -30,3 +30,19 @@ export const verifyToken: RequestHandler = (req, _res, next) => {
     next(error);
   }
 };
+
+export const requireRole = (roles: string[]): RequestHandler => {
+  return (req, _res, next) => {
+    if (!req.user) {
+      next(new AppError(401, "UNAUTHORIZED", "Authentication required"));
+      return;
+    }
+
+    if (!roles.includes(req.user.role)) {
+      next(new AppError(403, "FORBIDDEN", "You do not have permission to perform this action"));
+      return;
+    }
+
+    next();
+  };
+};

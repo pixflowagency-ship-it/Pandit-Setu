@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/pooja_detail_modal.dart';
+import '../widgets/app_bottom_nav_bar.dart';
+import '../widgets/app_side_drawer.dart';
 
 class BookScreen extends StatefulWidget {
   final String initialCategory;
@@ -13,7 +15,6 @@ class BookScreen extends StatefulWidget {
 
 class _BookScreenState extends State<BookScreen> {
   late String selectedCategory;
-  final int _currentNavIndex = 1;
 
   @override
   void initState() {
@@ -728,6 +729,7 @@ class _BookScreenState extends State<BookScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFF8EE),
+      drawer: const AppSideDrawer(),
       body: SafeArea(
         child: Column(
           children: [
@@ -741,29 +743,27 @@ class _BookScreenState extends State<BookScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildTopBar(),
-                    const SizedBox(height: 20),
-                    _buildSelectRitualTitle(),
-                    const SizedBox(height: 18),
-                    _buildSearchBar(),
-                    const SizedBox(height: 24),
-                    _buildCategoriesHeader(),
-                    const SizedBox(height: 14),
-                    _buildCategoryCards(),
-                    const SizedBox(height: 20),
-                    _buildOrnamentalDivider(),
-                    const SizedBox(height: 16),
-                    _buildTrendingRitualsHeader(),
                     const SizedBox(height: 12),
+                    _buildSelectRitualTitle(),
+                    const SizedBox(height: 10),
+                    _buildSearchBar(),
+                    const SizedBox(height: 12),
+                    _buildCategoryCards(),
+                    const SizedBox(height: 14),
+                    _buildOrnamentalDivider(),
+                    const SizedBox(height: 12),
+                    _buildTrendingRitualsHeader(),
+                    const SizedBox(height: 10),
                     ..._buildRitualCards(),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 80),
                   ],
                 ),
               ),
             ),
-            _buildNavBar(),
           ],
         ),
       ),
+      bottomNavigationBar: const AppBottomNavBar(currentPath: '/book'),
     );
   }
 
@@ -771,12 +771,21 @@ class _BookScreenState extends State<BookScreen> {
     return Stack(
       alignment: Alignment.center,
       children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Builder(
+            builder: (ctx) => GestureDetector(
+              onTap: () => Scaffold.of(ctx).openDrawer(),
+              child: const Icon(Icons.menu, size: 26, color: Color(0xFF5A4A3A)),
+            ),
+          ),
+        ),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 42,
-              height: 42,
+              width: 36,
+              height: 36,
               decoration: const BoxDecoration(
                 color: Color(0xFFF18C16),
                 shape: BoxShape.circle,
@@ -784,14 +793,14 @@ class _BookScreenState extends State<BookScreen> {
               child: const Icon(
                 Icons.self_improvement,
                 color: Colors.white,
-                size: 22,
+                size: 20,
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             Text(
               'Pandit Setu',
               style: GoogleFonts.lato(
-                fontSize: 22,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: const Color(0xFF3D2200),
               ),
@@ -800,10 +809,13 @@ class _BookScreenState extends State<BookScreen> {
         ),
         Align(
           alignment: Alignment.centerRight,
-          child: const Icon(
-            Icons.notifications_outlined,
-            size: 28,
-            color: Color(0xFFE8920A),
+          child: GestureDetector(
+            onTap: () => context.push('/notifications'),
+            child: const Icon(
+              Icons.notifications_outlined,
+              size: 26,
+              color: Color(0xFFE8920A),
+            ),
           ),
         ),
       ],
@@ -811,33 +823,33 @@ class _BookScreenState extends State<BookScreen> {
   }
 
   Widget _buildSelectRitualTitle() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Row(
           children: [
             Text(
               'Select Ritual',
               style: GoogleFonts.lato(
-                fontSize: 28,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: const Color(0xFF3D2200),
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [Color(0xFFFF9800), Color(0xFFE65100)],
                 ),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 'VERIFIED PANDITS',
                 style: GoogleFonts.lato(
                   color: Colors.white,
-                  fontSize: 9,
+                  fontSize: 8,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 0.5,
                 ),
@@ -845,12 +857,12 @@ class _BookScreenState extends State<BookScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 4),
         Text(
-          'Authentic Vedic rituals performed by 100% certified Acharyas',
+          '100% Vedic Shastra',
           style: GoogleFonts.lato(
-            fontSize: 13,
+            fontSize: 11,
             color: const Color(0xFF7A6251),
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],
@@ -858,100 +870,52 @@ class _BookScreenState extends State<BookScreen> {
   }
 
   Widget _buildSearchBar() {
-    return TextField(
-      decoration: InputDecoration(
-        hintText: 'Search rituals, pandits, or locations...',
-        hintStyle: GoogleFonts.lato(fontSize: 15, color: Colors.grey),
-        prefixIcon: const Icon(Icons.search, color: Color(0xFFE8920A)),
-        filled: true,
-        fillColor: const Color(0xFFFAF0DC),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
-          borderSide: const BorderSide(color: Color(0xFFFAF0DC), width: 1),
+    return SizedBox(
+      height: 44,
+      child: TextField(
+        decoration: InputDecoration(
+          contentPadding: const EdgeInsets.symmetric(vertical: 8),
+          hintText: 'Search rituals, pandits, or locations...',
+          hintStyle: GoogleFonts.lato(fontSize: 13, color: Colors.grey),
+          prefixIcon: const Icon(Icons.search, color: Color(0xFFE8920A), size: 20),
+          filled: true,
+          fillColor: const Color(0xFFFAF0DC),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(22),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(22),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(22),
+            borderSide: const BorderSide(color: Color(0xFFE8920A), width: 1),
+          ),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
-          borderSide: const BorderSide(color: Color(0xFFFAF0DC), width: 1),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
-          borderSide: const BorderSide(color: Color(0xFFE8920A), width: 1),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCategoriesHeader() {
-    return Text(
-      'CATEGORIES',
-      style: GoogleFonts.lato(
-        fontSize: 12,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 1.0,
-        color: const Color(0xFFE8920A),
       ),
     );
   }
 
   Widget _buildCategoryCards() {
+    final categories = [
+      {'id': 'ghar_jeevan', 'label': 'Ghar & Jeevan', 'icon': Icons.home_outlined},
+      {'id': 'sanskar', 'label': 'Sanskar Rituals', 'icon': Icons.favorite_outline},
+      {'id': 'dosh_nivaran', 'label': 'Dosh Nivaran', 'icon': Icons.shield_outlined},
+      {'id': 'festival', 'label': 'Festival Special', 'icon': Icons.auto_awesome},
+      {'id': 'business', 'label': 'Business & Wealth', 'icon': Icons.storefront},
+      {'id': 'daily', 'label': 'Daily & Regular', 'icon': Icons.temple_hindu},
+    ];
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
-        children: [
-          SizedBox(
-            width: 115,
-            child: _buildCategoryCard(
-              icon: Icons.home_outlined,
-              label: 'Ghar &\nJeevan',
-              id: 'ghar_jeevan',
-            ),
-          ),
-          const SizedBox(width: 10),
-          SizedBox(
-            width: 115,
-            child: _buildCategoryCard(
-              icon: Icons.favorite_outline,
-              label: 'Sanskar\nRituals',
-              id: 'sanskar',
-            ),
-          ),
-          const SizedBox(width: 10),
-          SizedBox(
-            width: 115,
-            child: _buildCategoryCard(
-              icon: Icons.shield_outlined,
-              label: 'Dosh\nNivaran',
-              id: 'dosh_nivaran',
-            ),
-          ),
-          const SizedBox(width: 10),
-          SizedBox(
-            width: 115,
-            child: _buildCategoryCard(
-              icon: Icons.auto_awesome,
-              label: 'Festival\nSpecial',
-              id: 'festival',
-            ),
-          ),
-          const SizedBox(width: 10),
-          SizedBox(
-            width: 115,
-            child: _buildCategoryCard(
-              icon: Icons.storefront,
-              label: 'Business &\nWealth',
-              id: 'business',
-            ),
-          ),
-          const SizedBox(width: 10),
-          SizedBox(
-            width: 115,
-            child: _buildCategoryCard(
-              icon: Icons.temple_hindu,
-              label: 'Daily &\nRegular',
-              id: 'daily',
-            ),
-          ),
-        ],
+        children: categories.map((cat) {
+          final String id = cat['id'] as String;
+          final String label = cat['label'] as String;
+          final IconData icon = cat['icon'] as IconData;
+          return _buildCategoryCard(icon: icon, label: label, id: id);
+        }).toList(),
       ),
     );
   }
@@ -969,35 +933,39 @@ class _BookScreenState extends State<BookScreen> {
         });
       },
       child: Container(
-        padding: const EdgeInsets.all(14),
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isActive ? const Color(0xFFF18C16) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: isActive
-              ? null
-              : Border.all(color: const Color(0xFFE8D5A3), width: 1),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isActive ? const Color(0xFFF18C16) : const Color(0xFFE8D5A3),
+            width: 1,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: isActive ? 8 : 2,
+              color: Colors.black.withValues(alpha: isActive ? 0.12 : 0.03),
+              blurRadius: isActive ? 6 : 2,
               offset: const Offset(0, 2),
             ),
           ],
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: isActive ? Colors.white : const Color(0xFF3D2200), size: 28),
-            const SizedBox(height: 10),
+            Icon(
+              icon,
+              color: isActive ? Colors.white : const Color(0xFF3D2200),
+              size: 18,
+            ),
+            const SizedBox(width: 6),
             Text(
               label,
               style: GoogleFonts.lato(
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: FontWeight.bold,
                 color: isActive ? Colors.white : const Color(0xFF3D2200),
               ),
-              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -1210,57 +1178,6 @@ class _BookScreenState extends State<BookScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavBar() {
-    return Container(
-      height: 64,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 10,
-            offset: Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(0, Icons.home_outlined, Icons.home, 'Home', () => context.go('/home')),
-          _buildNavItem(1, Icons.menu_book_outlined, Icons.menu_book, 'Bookings', () => context.go('/book')),
-          _buildNavItem(2, Icons.storefront_outlined, Icons.storefront, 'Shop', () => context.go('/shop')),
-          _buildNavItem(3, Icons.person_outline, Icons.person, 'Profile', () => context.go('/profile')),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(int index, IconData icon, IconData activeIcon, String label, VoidCallback onTap) {
-    final bool isSelected = _currentNavIndex == index;
-    return InkWell(
-      onTap: onTap,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            isSelected ? activeIcon : icon,
-            color: isSelected ? const Color(0xFFF18C16) : Colors.grey,
-            size: 24,
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: GoogleFonts.lato(
-              fontSize: 11,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: isSelected ? const Color(0xFFF18C16) : Colors.grey,
             ),
           ),
         ],

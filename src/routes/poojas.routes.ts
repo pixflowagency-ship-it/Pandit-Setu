@@ -1,17 +1,14 @@
 import { Router } from "express";
-import { db } from "../db/index.js";
-import { poojas } from "../db/schema/poojas.js";
-import { asyncHandler } from "../middleware/async-handler.js";
-import { sendSuccess } from "../utils/response.js";
+import { asyncHandler, validateQuery } from "../middleware/async-handler.js";
+import { listPoojasHandler } from "../controllers/poojas.controller.js";
+import { listPoojasQuerySchema } from "../validators/poojas.validator.js";
 
 const poojasRouter = Router();
 
 poojasRouter.get(
   "/",
-  asyncHandler(async (_req, res) => {
-    const allPoojas = await db.select().from(poojas);
-    sendSuccess(res, { poojas: allPoojas });
-  })
+  validateQuery(listPoojasQuerySchema),
+  asyncHandler(listPoojasHandler),
 );
 
 export default poojasRouter;

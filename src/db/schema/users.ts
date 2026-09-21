@@ -20,6 +20,7 @@ export const users = pgTable("users", {
   city: varchar("city", { length: 255 }),
   email: varchar("email", { length: 255 }),
   profilePictureUrl: text("profile_picture_url"),
+  fcmToken: varchar("fcm_token", { length: 255 }),
   role: userRoleEnum("role").notNull().default("YAJMAN"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

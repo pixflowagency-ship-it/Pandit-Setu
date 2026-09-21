@@ -15,6 +15,7 @@ export const poojas = pgTable("poojas", {
   slug: varchar("slug", { length: 150 }).notNull().unique(),
   description: text("description"),
   basePrice: numeric("base_price", { precision: 10, scale: 2 }).notNull(),
+  samagriPrice: numeric("samagri_price", { precision: 10, scale: 2 }).notNull().default("0.00"),
   durationMinutes: integer("duration_minutes").notNull(),
   imageUrl: text("image_url"),
   isActive: boolean("is_active").notNull().default(true),

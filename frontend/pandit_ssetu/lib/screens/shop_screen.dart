@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import '../widgets/app_bottom_nav_bar.dart';
+import '../widgets/app_side_drawer.dart';
 
 class ShopScreen extends StatefulWidget {
   const ShopScreen({super.key});
@@ -18,6 +20,72 @@ class _ShopScreenState extends State<ShopScreen> {
   String _searchQuery = '';
 
   final List<Map<String, dynamic>> _allProducts = [
+    {
+      'id': 901,
+      'name': 'Satyanarayan Katha Complete Kit',
+      'description': 'Complete authentic Samagri Kit for Satyanarayan Katha. Includes Kalash, Roli, Akshat, Mauli, Kapoor, Ghee & Vrat Katha Book.',
+      'price': 525.0,
+      'category': 'Pooja Kits 📦',
+      'badge': 'POOJA KIT',
+      'badgeColor': 4278238816,
+      'samagri': ['17 Items Clubbed', 'Satyanarayan Pooja', 'Kalash & Ghee Included', 'Ready to Use'],
+      'imageUrl': 'https://images.unsplash.com/photo-1605152276897-4f618f831968?w=500',
+    },
+    {
+      'id': 902,
+      'name': 'Griha Pravesh & Vastu Shanti Samagri Kit',
+      'description': 'All-in-one sacred kit for Griha Pravesh & Vastu Shanti. Includes Vastu Yantra, Copper Kalash, Mango Leaves, Hawan Kund Herbs & Doodh Ufalna Pot.',
+      'price': 1275.0,
+      'category': 'Pooja Kits 📦',
+      'badge': 'POOJA KIT',
+      'badgeColor': 4294020118,
+      'samagri': ['24 Items Clubbed', 'Griha Pravesh', 'Vastu Yantra Included', 'Hawan Herbs'],
+      'imageUrl': 'https://images.unsplash.com/photo-1621252179027-94459d278660?w=500',
+    },
+    {
+      'id': 903,
+      'name': 'Lakshmi & Diwali Puja Deluxe Kit',
+      'description': 'Grand Lakshmi & Kuber Pujan bundle with Silver Coated Coins, Kamal Gatta, Pure Kesar, Roli, Akshat & Terracotta Diya set.',
+      'price': 850.0,
+      'category': 'Pooja Kits 📦',
+      'badge': 'POOJA KIT',
+      'badgeColor': 4288423856,
+      'samagri': ['21 Items Clubbed', 'Lakshmi Pooja', 'Silver Coin Included', 'Kamal Gatta'],
+      'imageUrl': 'https://images.unsplash.com/photo-1617981408346-39acb6da1b64?w=500',
+    },
+    {
+      'id': 904,
+      'name': 'Navgraha Shanti Havan Kit',
+      'description': 'Specialized 9-Planet Havan Samagri kit containing 9 specific Samidha woods, Navgraha Dhanya (grains), Guggal & Pure Cow Ghee.',
+      'price': 1100.0,
+      'category': 'Pooja Kits 📦',
+      'badge': 'POOJA KIT',
+      'badgeColor': 4293284096,
+      'samagri': ['19 Items Clubbed', 'Navgraha Pooja', '9 Samidha Woods', 'Pure Desi Ghee'],
+      'imageUrl': 'https://images.unsplash.com/photo-1608306448197-e83633f1261c?w=500',
+    },
+    {
+      'id': 905,
+      'name': 'Mahamrityunjaya & Rudrabhishek Kit',
+      'description': 'Sacred Abhishekam & Jaap Kit containing Pure Bhasma, Belpatra, Gangajal, Honey, Panchamrit Samagri & Sphatik Shivling.',
+      'price': 950.0,
+      'category': 'Pooja Kits 📦',
+      'badge': 'POOJA KIT',
+      'badgeColor': 4280926393,
+      'samagri': ['15 Items Clubbed', 'Rudrabhishek', 'Pure Gangajal', 'Sacred Bhasma'],
+      'imageUrl': 'https://images.unsplash.com/photo-1604882737079-7dc3df3e09ac?w=500',
+    },
+    {
+      'id': 906,
+      'name': 'Daily Nitya Puja Essentials Kit',
+      'description': 'Monthly refiller pack of everyday puja items: Cotton wicks, Pure Camphor, Sandalwood paste, Agarbatti & Brass Bell.',
+      'price': 399.0,
+      'category': 'Pooja Kits 📦',
+      'badge': 'POOJA KIT',
+      'badgeColor': 4279624522,
+      'samagri': ['12 Items Clubbed', 'Daily Pooja', '1 Month Supply', 'Pure Camphor'],
+      'imageUrl': 'https://images.unsplash.com/photo-1596704017254-9b121068fb31?w=500',
+    },
     {
       'id': 1,
       'name': 'तांबे का कलश',
@@ -1774,6 +1842,7 @@ class _ShopScreenState extends State<ShopScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFF8EE),
+      drawer: const AppSideDrawer(),
       body: SafeArea(
         child: Stack(
           children: [
@@ -1797,17 +1866,17 @@ class _ShopScreenState extends State<ShopScreen> {
                         _buildSortRow(),
                         const SizedBox(height: 16),
                         ..._buildProductCards(),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 80),
                       ],
                     ),
                   ),
                 ),
-                _buildNavBar(context),
               ],
             ),
           ],
         ),
       ),
+      bottomNavigationBar: const AppBottomNavBar(currentPath: '/shop'),
     );
   }
 
@@ -1817,9 +1886,16 @@ class _ShopScreenState extends State<ShopScreen> {
       children: [
         Row(
           children: [
+            Builder(
+              builder: (ctx) => GestureDetector(
+                onTap: () => Scaffold.of(ctx).openDrawer(),
+                child: const Icon(Icons.menu, size: 26, color: Color(0xFF5A4A3A)),
+              ),
+            ),
+            const SizedBox(width: 12),
             Container(
-              width: 42,
-              height: 42,
+              width: 36,
+              height: 36,
               decoration: const BoxDecoration(
                 color: Color(0xFFF18C16),
                 shape: BoxShape.circle,
@@ -1827,14 +1903,14 @@ class _ShopScreenState extends State<ShopScreen> {
               child: const Icon(
                 Icons.shopping_bag,
                 color: Colors.white,
-                size: 22,
+                size: 20,
               ),
             ),
             const SizedBox(width: 10),
             Text(
               'Pooja Store',
               style: GoogleFonts.lato(
-                fontSize: 22,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: const Color(0xFF3D2200),
               ),
@@ -1911,6 +1987,7 @@ class _ShopScreenState extends State<ShopScreen> {
   Widget _buildOccasionRow() {
     final categories = [
       'All',
+      'Pooja Kits 📦',
       'Kalash Sthapana',
       'मुख्य पूजा सामग्री',
       'पुष्प एवं पत्ते',
@@ -2126,62 +2203,7 @@ class _ShopScreenState extends State<ShopScreen> {
         .toList();
   }
 
-  Widget _buildNavBar(BuildContext context) {
-    return Container(
-      color: Colors.transparent,
-      padding: const EdgeInsets.only(bottom: 16, top: 8, left: 16, right: 16),
-      child: Container(
-        height: 64,
-        decoration: BoxDecoration(
-          color: const Color(0xFF3D2200),
-          borderRadius: BorderRadius.circular(40),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildNavItem(0, Icons.home_outlined, Icons.home, 'Home', () => context.go('/home')),
-            _buildNavItem(1, Icons.menu_book_outlined, Icons.menu_book, 'Book', () => context.go('/book')),
-            _buildNavItem(2, Icons.calendar_month_outlined, Icons.calendar_month, 'Panchang', () => context.go('/panchang')),
-            _buildNavItem(3, Icons.shopping_bag_outlined, Icons.shopping_bag, 'Shop', () {}),
-            _buildNavItem(4, Icons.person_outline, Icons.person, 'Profile', () => context.go('/profile')),
-          ],
-        ),
-      ),
-    );
-  }
 
-  Widget _buildNavItem(int index, IconData icon, IconData activeIcon, String label, VoidCallback onTap) {
-    final bool isSelected = index == 3;
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            isSelected ? activeIcon : icon,
-            color: isSelected ? const Color(0xFFF18C16) : Colors.grey.shade400,
-            size: 24,
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: GoogleFonts.lato(
-              fontSize: 10,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: isSelected ? const Color(0xFFF18C16) : Colors.grey.shade400,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _ProductCard extends StatelessWidget {

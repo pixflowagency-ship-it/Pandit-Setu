@@ -4,6 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/pooja_detail_modal.dart';
 import '../widgets/pandit_chat_modal.dart';
+import '../widgets/app_bottom_nav_bar.dart';
+import '../widgets/app_side_drawer.dart';
+import '../widgets/neumorphic_button.dart';
 import '../services/api_service.dart';
 import '../services/language_service.dart';
 
@@ -36,7 +39,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;
   List<Map<String, dynamic>> _bookings = [];
   bool _isLoadingBookings = true;
   Timer? _countdownTimer;
@@ -260,6 +262,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFF8EE),
+      drawer: const AppSideDrawer(),
       extendBody: true,
       resizeToAvoidBottomInset: false,
       body: SafeArea(
@@ -272,14 +275,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   children: [
                     _buildHeroSlideshowBanner(),
-                    if (!_isLoadingBookings && _bookings.isNotEmpty) ...[
-                      const SizedBox(height: 16),
-                      _buildUpcomingBookingBanner(_bookings.first),
-                    ],
-                    const SizedBox(height: 20),
-                    _buildSixBoxServiceGrid(),
                     const SizedBox(height: 14),
+                    _buildSixBoxServiceGrid(),
+                    const SizedBox(height: 8),
                     _buildLifeProblemsBanner(),
+                    const SizedBox(height: 10),
+                    _buildUpcomingBookingBanner(
+                      _bookings.isNotEmpty ? _bookings.first : null,
+                    ),
                     const SizedBox(height: 20),
                     _buildCategoryMenuSection(),
                     const SizedBox(height: 20),
@@ -300,7 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildFloatingNavBar(),
+      bottomNavigationBar: const AppBottomNavBar(currentPath: '/home'),
     );
   }
 
@@ -311,7 +314,12 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Icon(Icons.menu, size: 24, color: Color(0xFF5A4A3A)),
+          Builder(
+            builder: (ctx) => GestureDetector(
+              onTap: () => Scaffold.of(ctx).openDrawer(),
+              child: const Icon(Icons.menu, size: 26, color: Color(0xFF5A4A3A)),
+            ),
+          ),
           Row(
             children: [
               Container(
@@ -390,6 +398,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // 1. SLIDESHOW CAROUSEL WITH CTA BUTTON
   Widget _buildHeroSlideshowBanner() {
+    final isHindi = languageService.isHindi;
     return ClipRRect(
       borderRadius: const BorderRadius.only(
         topLeft: Radius.circular(35),
@@ -489,7 +498,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(height: 14),
 
                             // CTA BUTTON TO BOOK POOJA
-                            GestureDetector(
+                            NeumorphicButton(
+                              text: isHindi ? 'पूजा बुक करें' : 'Book Pooja Now',
+                              icon: Icons.auto_awesome,
+                              height: 40,
                               onTap: () {
                                 final poojaId = slide['poojaId'];
                                 final match = _trendingRituals.firstWhere(
@@ -498,37 +510,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                 );
                                 showPoojaDetailBottomSheet(context, match);
                               },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [Color(0xFFF18C16), Color(0xFFE5A93B)],
-                                  ),
-                                  borderRadius: BorderRadius.circular(25),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(0xFFF18C16).withValues(alpha: 0.4),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 3),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      'Book Pooja Now',
-                                      style: GoogleFonts.lato(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    const Icon(Icons.arrow_forward, color: Colors.white, size: 15),
-                                  ],
-                                ),
-                              ),
                             ),
                           ],
                         ),
@@ -660,7 +641,7 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisCount: 3,
               mainAxisSpacing: 10,
               crossAxisSpacing: 10,
-              childAspectRatio: 0.78,
+              childAspectRatio: 0.90,
             ),
             itemBuilder: (context, index) {
               final item = gridItems[index];
@@ -864,7 +845,11 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(width: 10),
-            GestureDetector(
+            NeumorphicButton(
+              text: isHindi ? 'समाधान पाएं' : 'GET SOLUTION',
+              icon: Icons.arrow_forward_rounded,
+              height: 38,
+              borderRadius: 14,
               onTap: () {
                 showModalBottomSheet(
                   context: context,
@@ -873,47 +858,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   builder: (context) => const PanditChatModal(),
                 );
               },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFFFF7A00),
-                      Color(0xFFFF3D00),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFFF4500).withValues(alpha: 0.35),
-                      blurRadius: 6,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      isHindi ? 'समाधान पाएं' : 'GET SOLUTION',
-                      style: GoogleFonts.lato(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        letterSpacing: 0.6,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    const Icon(
-                      Icons.arrow_forward_rounded,
-                      color: Colors.white,
-                      size: 14,
-                    ),
-                  ],
-                ),
-              ),
             ),
           ],
         ),
@@ -1878,274 +1822,129 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildUpcomingBookingBanner(Map<String, dynamic> booking) {
+  Widget _buildUpcomingBookingBanner(Map<String, dynamic>? booking) {
+    final b = booking ?? {
+      'poojaTitle': 'Satyanarayan Katha with Havan',
+      'panditName': 'Pt. Rameshwar Sharma',
+      'timeSlot': 'Tomorrow • 09:30 AM',
+    };
     return GestureDetector(
       onTap: () => context.push('/tracking'),
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [Color(0xFFD97706), Color(0xFFB45309)],
           ),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFD97706).withValues(alpha: 0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.live_tv, color: Colors.white, size: 16),
-                    const SizedBox(width: 6),
-                    Text(
-                      'UPCOMING POOJA LIVE STATUS',
-                      style: GoogleFonts.lato(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white.withValues(alpha: 0.9),
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    'Track Live >',
-                    style: GoogleFonts.lato(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              booking['poojaTitle'] ?? 'Vedic Pooja',
-              style: GoogleFonts.lato(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(18),
-                    child: Image.network(
-                      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
-                      width: 36,
-                      height: 36,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        width: 36,
-                        height: 36,
-                        color: Colors.white24,
-                        child: const Icon(Icons.person, color: Colors.white, size: 18),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          booking['panditName'] ?? 'Pt. Rameshwar Sharma',
-                          style: GoogleFonts.lato(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Text(
-                          'Rigveda Acharya • Vastu Specialist',
-                          style: GoogleFonts.lato(
-                            fontSize: 10.5,
-                            color: Colors.white.withValues(alpha: 0.8),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(Icons.chevron_right, color: Colors.white70, size: 18),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Divider(color: Colors.white24, height: 1),
-            const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.schedule, color: Colors.white70, size: 14),
-                    const SizedBox(width: 6),
-                    Text(
-                      _getCountdownString(),
-                      style: GoogleFonts.lato(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-                Text(
-                  booking['timeSlot'] ?? '09:30 AM',
-                  style: GoogleFonts.lato(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFloatingNavBar() {
-    final navItems = [
-      {
-        'icon': Icons.home_outlined,
-        'activeIcon': Icons.home,
-        'label': 'Home',
-      },
-      {
-        'icon': Icons.menu_book_outlined,
-        'activeIcon': Icons.menu_book,
-        'label': 'Book',
-      },
-      {
-        'icon': Icons.calendar_month_outlined,
-        'activeIcon': Icons.calendar_month,
-        'label': 'Panchang',
-      },
-      {
-        'icon': Icons.shopping_bag_outlined,
-        'activeIcon': Icons.shopping_bag,
-        'label': 'Shop',
-      },
-      {
-        'icon': Icons.person_outline,
-        'activeIcon': Icons.person,
-        'label': 'Profile',
-      },
-    ];
-
-    return Container(
-      color: Colors.transparent,
-      padding: const EdgeInsets.only(bottom: 16, top: 8, left: 16, right: 16),
-      child: Container(
-        height: 64,
-        decoration: BoxDecoration(
-          color: const Color(0xFF3D2200),
-          borderRadius: BorderRadius.circular(40),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
+              color: const Color(0xFFD97706).withValues(alpha: 0.25),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: List.generate(navItems.length, (index) {
-            final isActive = _currentIndex == index;
-            return GestureDetector(
-              onTap: () {
-                setState(() {
-                  _currentIndex = index;
-                });
-
-                switch (index) {
-                  case 0:
-                    break;
-                  case 1:
-                    context.go('/book');
-                    break;
-                  case 2:
-                    context.go('/panchang');
-                    break;
-                  case 3:
-                    context.go('/shop');
-                    break;
-                  case 4:
-                    context.go('/profile');
-                    break;
-                }
-              },
-              child: isActive
-                  ? Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF18C16),
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            navItems[index]['activeIcon'] as IconData,
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.live_tv, color: Colors.white, size: 18),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.25),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          'BOOKED POOJA',
+                          style: GoogleFonts.lato(
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.w900,
                             color: Colors.white,
-                            size: 20,
+                            letterSpacing: 0.5,
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            navItems[index]['label'] as String,
-                            style: GoogleFonts.lato(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    )
-                  : Icon(
-                      navItems[index]['icon'] as IconData,
-                      color: Colors.white.withValues(alpha: 0.6),
-                      size: 22,
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          _getCountdownString(),
+                          style: GoogleFonts.lato(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white70,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    b['poojaTitle'] ?? 'Vedic Pooja',
+                    style: GoogleFonts.lato(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
-            );
-          }),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    '${b['panditName'] ?? 'Pt. Rameshwar Sharma'} • ${b['timeSlot'] ?? '09:30 AM'}',
+                    style: GoogleFonts.lato(
+                      fontSize: 10.5,
+                      color: Colors.white.withValues(alpha: 0.85),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Track',
+                    style: GoogleFonts.lato(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFFB45309),
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  const Icon(Icons.arrow_forward_ios, size: 10, color: Color(0xFFB45309)),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

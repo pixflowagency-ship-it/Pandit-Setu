@@ -34,7 +34,14 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
     '06:30 PM',
   ];
 
-  final bool _includeSamagriKit = true;
+  bool _includeSamagriKit = true;
+
+  bool get isOnlinePooja {
+    final cat = widget.pooja.category.toLowerCase();
+    final title = widget.pooja.title.toLowerCase();
+    final id = widget.pooja.id.toLowerCase();
+    return cat.contains('online') || title.contains('online') || id.contains('online');
+  }
   final List<String> _samagriItems = [
     'Pure Desi Cow Ghee (500g)',
     'Bhimseni Camphor & Pure Sandalwood Paste',
@@ -609,95 +616,139 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-
-        Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: _includeSamagriKit
-                  ? const Color(0xFFD97706)
-                  : const Color(0xFFE5E7EB),
-              width: _includeSamagriKit ? 2 : 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 8,
+        GestureDetector(
+          onTap: () {
+            if (isOnlinePooja) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Samagri Kit is compulsory for Online Poojas.'),
+                  backgroundColor: Color(0xFFD97706),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            } else {
+              setState(() {
+                _includeSamagriKit = !_includeSamagriKit;
+              });
+            }
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: _includeSamagriKit
+                    ? const Color(0xFFD97706)
+                    : const Color(0xFFE5E7EB),
+                width: _includeSamagriKit ? 2 : 1,
               ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.shopping_bag,
-                          color: Color(0xFFD97706), size: 22),
-                      const SizedBox(width: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Pure Vedic Samagri Kit',
-                            style: GoogleFonts.lato(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF1F2937),
-                            ),
-                          ),
-                          Text(
-                            '+₹${widget.pooja.samagriPrice.toInt()}',
-                            style: GoogleFonts.lato(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFFD97706),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFDCFCE7),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFF86EFAC)),
-                    ),
-                    child: Row(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 8,
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
                       children: [
-                        const Icon(Icons.lock, size: 13, color: Color(0xFF15803D)),
-                        const SizedBox(width: 4),
-                        Text(
-                          'COMPULSORY',
-                          style: GoogleFonts.lato(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF15803D),
-                            letterSpacing: 0.5,
-                          ),
+                        Icon(
+                          _includeSamagriKit
+                              ? Icons.shopping_bag
+                              : Icons.shopping_bag_outlined,
+                          color: _includeSamagriKit
+                              ? const Color(0xFFD97706)
+                              : Colors.grey,
+                          size: 22,
+                        ),
+                        const SizedBox(width: 10),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Pure Vedic Samagri Kit',
+                              style: GoogleFonts.lato(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF1F2937),
+                              ),
+                            ),
+                            Text(
+                              _includeSamagriKit
+                                  ? '+₹${widget.pooja.samagriPrice.toInt()}'
+                                  : 'Excluded (Bring Own Samagri)',
+                              style: GoogleFonts.lato(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: _includeSamagriKit
+                                    ? const Color(0xFFD97706)
+                                    : Colors.grey,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Vedic Samagri Kit is mandatory for authentic ritual execution. Pandit Ji brings 100% pure, lab-tested, organic samagri kit directly to your doorstep so you don\'t need to purchase anything.',
-                style: GoogleFonts.lato(
-                  fontSize: 12.5,
-                  height: 1.45,
-                  color: const Color(0xFF6B5B52),
+
+                    if (isOnlinePooja)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFDCFCE7),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFF86EFAC)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.lock, size: 13, color: Color(0xFF15803D)),
+                            const SizedBox(width: 4),
+                            Text(
+                              'COMPULSORY',
+                              style: GoogleFonts.lato(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFF15803D),
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      Switch(
+                        value: _includeSamagriKit,
+                        activeTrackColor: const Color(0xFFD97706),
+                        activeThumbColor: Colors.white,
+                        onChanged: (val) {
+                          setState(() {
+                            _includeSamagriKit = val;
+                          });
+                        },
+                      ),
+                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 12),
+                Text(
+                  isOnlinePooja
+                      ? 'Vedic Samagri Kit is mandatory for Online Live Poojas so that Pandit Ji performs the consecrated Havan & rituals with 100% authentic pure items on your behalf.'
+                      : (_includeSamagriKit
+                          ? 'Pandit Ji brings 100% pure, lab-tested, organic Samagri kit directly to your doorstep so you don\'t need to purchase anything.'
+                          : 'You have chosen to arrange Samagri yourself. Please prepare all required sacred items before Pandit Ji arrives.'),
+                  style: GoogleFonts.lato(
+                    fontSize: 12.5,
+                    height: 1.45,
+                    color: const Color(0xFF6B5B52),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
 

@@ -1,8 +1,8 @@
 import type { RequestHandler } from "express";
-import type { ZodSchema } from "zod";
+import type { ZodTypeAny } from "zod";
 import { AppError } from "../utils/api-error.js";
 
-export function validateBody<T>(schema: ZodSchema<T>): RequestHandler {
+export function validateBody(schema: ZodTypeAny): RequestHandler {
   return (req, _res, next) => {
     const result = schema.safeParse(req.body);
 
@@ -16,6 +16,43 @@ export function validateBody<T>(schema: ZodSchema<T>): RequestHandler {
     }
 
     req.body = result.data;
+    next();
+  };
+}
+
+export function validateQuery(schema: ZodTypeAny): RequestHandler {
+  return (req, _res, next) => {
+    const result = schema.safeParse(req.query);
+
+    if (!result.success) {
+      next(
+        new AppError(400, "VALIDATION_ERROR", "Query validation failed", {
+          fields: result.error.flatten().fieldErrors,
+        }),
+      );
+      return;
+    }
+
+    // Express 5 makes req.query a getter — store parsed data on a custom key.
+    req.validatedQuery = result.data;
+    next();
+  };
+}
+
+export function validateParams(schema: ZodTypeAny): RequestHandler {
+  return (req, _res, next) => {
+    const result = schema.safeParse(req.params);
+
+    if (!result.success) {
+      next(
+        new AppError(400, "VALIDATION_ERROR", "Path parameter validation failed", {
+          fields: result.error.flatten().fieldErrors,
+        }),
+      );
+      return;
+    }
+
+    req.validatedParams = result.data;
     next();
   };
 }
