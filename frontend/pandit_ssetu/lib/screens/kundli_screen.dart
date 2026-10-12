@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../user_data.dart';
+import '../widgets/handmade_kundli_order_modal.dart';
 
 class KundliScreen extends StatefulWidget {
   const KundliScreen({super.key});
@@ -555,41 +556,11 @@ class _KundliScreenState extends State<KundliScreen>
               ),
               ElevatedButton(
                 onPressed: () {
-                  showDialog(
+                  showModalBottomSheet(
                     context: context,
-                    builder: (ctx) => AlertDialog(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      backgroundColor: const Color(0xFFFFF8EE),
-                      title: Text(
-                        'Order Handmade Kundli',
-                        style: GoogleFonts.lato(fontWeight: FontWeight.bold),
-                      ),
-                      content: Text(
-                        'Your Handmade Janam Patri order (₹1,501) will be prepared by Senior Jyotish Acharya Rameshwar Sharma and dispatched to your home address within 5 business days.',
-                        style: GoogleFonts.lato(fontSize: 14, color: const Color(0xFF5A4A3A)),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          child: Text('Cancel', style: GoogleFonts.lato(color: Colors.grey)),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.pop(ctx);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Handmade Kundli order placed successfully!'),
-                                backgroundColor: const Color(0xFFF18C16),
-                              ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFF18C16),
-                          ),
-                          child: Text('Confirm Order', style: GoogleFonts.lato(color: Colors.white)),
-                        ),
-                      ],
-                    ),
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (ctx) => const HandmadeKundliOrderModal(),
                   );
                 },
                 style: ElevatedButton.styleFrom(

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
-import '../widgets/app_side_drawer.dart';
 
 class PanditDashboardScreen extends StatefulWidget {
   const PanditDashboardScreen({super.key});
@@ -278,7 +277,6 @@ class _PanditDashboardScreenState extends State<PanditDashboardScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFF8EE),
-      drawer: const AppSideDrawer(),
       bottomNavigationBar: _buildBottomNavBar(),
       body: SafeArea(
         child: Stack(
@@ -298,7 +296,152 @@ class _PanditDashboardScreenState extends State<PanditDashboardScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        if (_dutyState == 'none') ...[
+                        if (_selectedNavIndex == 1) ...[
+                          const SizedBox(height: 16),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'My Allotted Poojas',
+                                style: GoogleFonts.lato(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF3D2200),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              _buildUpcomingBookings(),
+                              const SizedBox(height: 16),
+                              Container(
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(color: const Color(0xFFE8DCCB)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFE8F8F0),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Text(
+                                            '24 OCT',
+                                            style: GoogleFonts.lato(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              color: const Color(0xFF27AE60),
+                                            ),
+                                          ),
+                                          Text(
+                                            '11:00 AM',
+                                            style: GoogleFonts.lato(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.bold,
+                                              color: const Color(0xFF3D2200),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Satyanarayan Katha',
+                                            style: GoogleFonts.lato(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold,
+                                              color: const Color(0xFF3D2200),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            'Yajman: Priya Singh • Indirapuram',
+                                            style: GoogleFonts.lato(
+                                              fontSize: 12,
+                                              color: const Color(0xFF8C7355),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Text(
+                                      '₹2,100',
+                                      style: GoogleFonts.lato(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: const Color(0xFF27AE60),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ] else if (_selectedNavIndex == 2) ...[
+                          const SizedBox(height: 16),
+                          Center(
+                            child: Column(
+                              children: [
+                                const Icon(Icons.support_agent, size: 64, color: Color(0xFFF18C16)),
+                                const SizedBox(height: 16),
+                                Text('Pandit Support',
+                                    style: GoogleFonts.lato(fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFF3D2200))),
+                                const SizedBox(height: 8),
+                                Text('Call us at 1800-PANDIT-SETU',
+                                    style: GoogleFonts.lato(fontSize: 16, color: const Color(0xFF8C7355))),
+                              ],
+                            ),
+                          ),
+                        ] else if (_selectedNavIndex == 3) ...[
+                          const SizedBox(height: 16),
+                          Column(
+                            children: [
+                              const CircleAvatar(
+                                radius: 50,
+                                backgroundImage: NetworkImage('https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150'),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Acharya Shastri Ji',
+                                style: GoogleFonts.lato(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF3D2200),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                '+91 9876543210',
+                                style: GoogleFonts.lato(
+                                  fontSize: 16,
+                                  color: const Color(0xFF8C7355),
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              _buildPerformanceBadges(),
+                              const SizedBox(height: 24),
+                              ElevatedButton(
+                                onPressed: () => context.go('/role-select'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red[50],
+                                  foregroundColor: Colors.red[700],
+                                  elevation: 0,
+                                  minimumSize: const Size(double.infinity, 50),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
+                                child: Text('Logout', style: GoogleFonts.lato(fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ),
+                        ] else if (_dutyState == 'none') ...[
                           // Demand Radar Card
                           _buildDemandRadarCard(),
 
@@ -375,7 +518,6 @@ class _PanditDashboardScreenState extends State<PanditDashboardScreen>
         'label': 'Bookings',
         'action': () {
           setState(() => _selectedNavIndex = 1);
-          context.push('/bookings');
         },
       },
       {
@@ -384,7 +526,6 @@ class _PanditDashboardScreenState extends State<PanditDashboardScreen>
         'label': 'Help',
         'action': () {
           setState(() => _selectedNavIndex = 2);
-          context.push('/support');
         },
       },
       {
@@ -393,7 +534,6 @@ class _PanditDashboardScreenState extends State<PanditDashboardScreen>
         'label': 'Profile',
         'action': () {
           setState(() => _selectedNavIndex = 3);
-          context.push('/profile');
         },
       },
     ];
@@ -467,12 +607,6 @@ class _PanditDashboardScreenState extends State<PanditDashboardScreen>
       ),
       child: Row(
         children: [
-          Builder(
-            builder: (ctx) => GestureDetector(
-              onTap: () => Scaffold.of(ctx).openDrawer(),
-              child: const Icon(Icons.menu, size: 24, color: Color(0xFF3D2200)),
-            ),
-          ),
           const SizedBox(width: 12),
           Container(
             width: 40,

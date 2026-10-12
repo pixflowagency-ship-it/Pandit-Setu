@@ -297,7 +297,7 @@ class _PhoolMalaScreenState extends State<PhoolMalaScreen> {
   Widget _buildHeaderBanner() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      height: 155,
+      height: 180,
       child: Column(
         children: [
           Expanded(
@@ -314,7 +314,7 @@ class _PhoolMalaScreenState extends State<PhoolMalaScreen> {
                 return Container(
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(22),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.12),
@@ -324,7 +324,7 @@ class _PhoolMalaScreenState extends State<PhoolMalaScreen> {
                     ],
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(22),
                     child: Stack(
                       children: [
                         Positioned.fill(
@@ -341,8 +341,8 @@ class _PhoolMalaScreenState extends State<PhoolMalaScreen> {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  Colors.black.withValues(alpha: 0.8),
-                                  Colors.black.withValues(alpha: 0.35),
+                                  Colors.black.withValues(alpha: 0.82),
+                                  Colors.black.withValues(alpha: 0.40),
                                 ],
                                 begin: Alignment.centerLeft,
                                 end: Alignment.centerRight,
@@ -351,44 +351,44 @@ class _PhoolMalaScreenState extends State<PhoolMalaScreen> {
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(18),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFF18C16),
-                                  borderRadius: BorderRadius.circular(6),
+                                  color: const Color(0xFFE65100),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
                                   banner['tag']!,
                                   style: GoogleFonts.lato(
-                                    fontSize: 8.5,
+                                    fontSize: 10.5,
                                     fontWeight: FontWeight.w900,
                                     color: Colors.white,
-                                    letterSpacing: 0.8,
+                                    letterSpacing: 1.0,
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 6),
+                              const SizedBox(height: 8),
                               Text(
                                 banner['title']!,
                                 style: GoogleFonts.lato(
-                                  fontSize: 15,
+                                  fontSize: 18.5,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
                                   height: 1.2,
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 6),
                               Text(
                                 banner['subtitle']!,
                                 style: GoogleFonts.lato(
-                                  fontSize: 10.5,
-                                  color: Colors.white.withValues(alpha: 0.9),
-                                  height: 1.2,
+                                  fontSize: 13,
+                                  color: Colors.white.withValues(alpha: 0.95),
+                                  height: 1.25,
                                 ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
@@ -431,7 +431,7 @@ class _PhoolMalaScreenState extends State<PhoolMalaScreen> {
   Widget _buildTabSwitch() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
         color: const Color(0xFFFAF0DC),
         borderRadius: BorderRadius.circular(25),
@@ -442,15 +442,15 @@ class _PhoolMalaScreenState extends State<PhoolMalaScreen> {
             child: GestureDetector(
               onTap: () => setState(() => _selectedTab = 0),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10),
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: _selectedTab == 0 ? const Color(0xFFF18C16) : Colors.transparent,
+                  color: _selectedTab == 0 ? const Color(0xFFE65100) : Colors.transparent,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   'Monthly Subscription',
                   style: GoogleFonts.lato(
-                    fontSize: 13,
+                    fontSize: 14.5,
                     fontWeight: FontWeight.bold,
                     color: _selectedTab == 0 ? Colors.white : const Color(0xFF8A7060),
                   ),
@@ -463,15 +463,15 @@ class _PhoolMalaScreenState extends State<PhoolMalaScreen> {
             child: GestureDetector(
               onTap: () => setState(() => _selectedTab = 1),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10),
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: _selectedTab == 1 ? const Color(0xFFF18C16) : Colors.transparent,
+                  color: _selectedTab == 1 ? const Color(0xFFE65100) : Colors.transparent,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   'Daily Single Orders',
                   style: GoogleFonts.lato(
-                    fontSize: 13,
+                    fontSize: 14.5,
                     fontWeight: FontWeight.bold,
                     color: _selectedTab == 1 ? Colors.white : const Color(0xFF8A7060),
                   ),
@@ -494,20 +494,20 @@ class _PhoolMalaScreenState extends State<PhoolMalaScreen> {
         final bool isPopular = plan['popular'] == true;
 
         return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          padding: const EdgeInsets.all(18),
+          margin: const EdgeInsets.only(bottom: 18),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(22),
             border: Border.all(
-              color: isPopular ? const Color(0xFFF18C16) : const Color(0xFFE8D5A3),
-              width: isPopular ? 2 : 1,
+              color: isPopular ? const Color(0xFFE65100) : const Color(0xFFE8D5A3),
+              width: isPopular ? 2.2 : 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.06),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+                color: Colors.black.withValues(alpha: 0.07),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
               ),
             ],
           ),
@@ -521,62 +521,70 @@ class _PhoolMalaScreenState extends State<PhoolMalaScreen> {
                     child: Text(
                       plan['title'],
                       style: GoogleFonts.lato(
-                        fontSize: 17,
+                        fontSize: 19.5,
                         fontWeight: FontWeight.bold,
                         color: const Color(0xFF3D2200),
+                        height: 1.2,
                       ),
                     ),
                   ),
                   if (isPopular)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFE082),
+                        color: const Color(0xFFFFF3E0),
                         borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFFE65100), width: 1.2),
                       ),
                       child: Text(
                         'POPULAR',
                         style: GoogleFonts.lato(
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF3D2200),
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFFE65100),
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ),
                 ],
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               Row(
                 children: [
-                  const Icon(Icons.schedule, size: 14, color: Color(0xFFE8920A)),
-                  const SizedBox(width: 4),
-                  Text(
-                    plan['frequency'],
-                    style: GoogleFonts.lato(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFFE8920A),
+                  const Icon(Icons.schedule, size: 16, color: Color(0xFFE65100)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      plan['frequency'],
+                      style: GoogleFonts.lato(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFFE65100),
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
               const Divider(color: Color(0xFFFAF0DC), height: 1),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
               ...(plan['items'] as List<String>).map((item) {
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
+                  padding: const EdgeInsets.only(bottom: 8),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.check_circle_outline, size: 16, color: Color(0xFFF18C16)),
-                      const SizedBox(width: 8),
+                      const Icon(Icons.check_circle_outline, size: 18, color: Color(0xFFE65100)),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           item,
                           style: GoogleFonts.lato(
-                            fontSize: 13,
-                            color: const Color(0xFF5A4A3A),
+                            fontSize: 14.5,
+                            color: const Color(0xFF4A3A2A),
+                            height: 1.3,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
@@ -584,7 +592,7 @@ class _PhoolMalaScreenState extends State<PhoolMalaScreen> {
                   ),
                 );
               }),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -596,16 +604,17 @@ class _PhoolMalaScreenState extends State<PhoolMalaScreen> {
                       Text(
                         '₹${(plan['price'] as double).toInt()}',
                         style: GoogleFonts.lato(
-                          fontSize: 22,
+                          fontSize: 27,
                           fontWeight: FontWeight.bold,
-                          color: const Color(0xFFF18C16),
+                          color: const Color(0xFFE65100),
                         ),
                       ),
                       const SizedBox(width: 4),
                       Text(
                         '/${plan['period']}',
                         style: GoogleFonts.lato(
-                          fontSize: 12,
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
                           color: const Color(0xFF8A7060),
                         ),
                       ),
@@ -614,18 +623,18 @@ class _PhoolMalaScreenState extends State<PhoolMalaScreen> {
                   ElevatedButton(
                     onPressed: () => _showSubscriptionSuccessModal(plan),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFF18C16),
+                      backgroundColor: const Color(0xFFE65100),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                      elevation: 1,
                     ),
                     child: Text(
                       'Subscribe Now',
                       style: GoogleFonts.lato(
-                        fontSize: 13,
+                        fontSize: 14.5,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -688,19 +697,20 @@ class _PhoolMalaScreenState extends State<PhoolMalaScreen> {
                     Text(
                       item['name'],
                       style: GoogleFonts.lato(
-                        fontSize: 13,
+                        fontSize: 14.5,
                         fontWeight: FontWeight.bold,
                         color: const Color(0xFF3D2200),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 3),
                     Text(
                       item['size'],
                       style: GoogleFonts.lato(
-                        fontSize: 11,
+                        fontSize: 12.5,
                         color: const Color(0xFF8A7060),
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -710,9 +720,9 @@ class _PhoolMalaScreenState extends State<PhoolMalaScreen> {
                         Text(
                           '₹${(item['price'] as double).toInt()}',
                           style: GoogleFonts.lato(
-                            fontSize: 16,
+                            fontSize: 18.5,
                             fontWeight: FontWeight.bold,
-                            color: const Color(0xFFF18C16),
+                            color: const Color(0xFFE65100),
                           ),
                         ),
                         InkWell(
@@ -721,7 +731,7 @@ class _PhoolMalaScreenState extends State<PhoolMalaScreen> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('${item['name']} added to cart!'),
-                                backgroundColor: const Color(0xFFF18C16),
+                                backgroundColor: const Color(0xFFE65100),
                                 duration: const Duration(seconds: 2),
                               ),
                             );

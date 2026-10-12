@@ -64,39 +64,51 @@ final _router = GoRouter(
       path: '/book',
       builder: (context, state) {
         final category = state.uri.queryParameters['category'] ?? 'ghar_jeevan';
-        return BookScreen(initialCategory: category);
+        final mode = state.uri.queryParameters['mode'] ?? 'offline';
+        return BookScreen(initialCategory: category, mode: mode);
       },
     ),
     GoRoute(
       path: '/book-flow',
       builder: (context, state) {
-        final pooja = state.extra as PoojaDetail? ??
-            const PoojaDetail(
-              id: 'satyanarayan_katha',
-              title: 'Satyanarayan Katha',
-              category: 'Ghar & Jeevan',
-              imageUrl:
-                  'https://images.unsplash.com/photo-1605152276897-4f618f831968?w=500',
-              isPopular: true,
-              duration: '1-3 Hour',
-              durationBreakdown: '30 mins setup • 2.0 hours main ritual by 1 Pandit',
-              description:
-                  'Shri Satyanarayan Pooja is performed to seek divine blessings of Lord Vishnu for prosperity and health.',
-              spiritualSignificance:
-                  'Reciting Satyanarayan Katha invokes truth and divine consciousness.',
-              inclusions: [
-                '1 Certified Acharya',
-                'Complete Sacred Havan & Samagri Kit'
-              ],
-              chantingDetails: [
-                'Vishnu Sahasranama Stotram',
-                '108 Gayatri Mantra'
-              ],
-              standardPrice: 2100.0,
-              samagriPrice: 525.0,
-              originalPrice: 3150.0,
-            );
-        return PoojaBookingFlowScreen(pooja: pooja);
+        PoojaDetail? pooja;
+        String mode = state.uri.queryParameters['mode'] ?? 'offline';
+        if (state.extra is Map<String, dynamic>) {
+          final map = state.extra as Map<String, dynamic>;
+          pooja = map['pooja'] as PoojaDetail?;
+          if (map.containsKey('mode') && map['mode'] != null) {
+            mode = map['mode'].toString();
+          }
+        } else if (state.extra is PoojaDetail) {
+          pooja = state.extra as PoojaDetail;
+        }
+
+        pooja ??= const PoojaDetail(
+          id: 'satyanarayan_katha',
+          title: 'Satyanarayan Katha',
+          category: 'Ghar & Jeevan',
+          imageUrl:
+              'https://images.unsplash.com/photo-1605152276897-4f618f831968?w=500',
+          isPopular: true,
+          duration: '1-3 Hour',
+          durationBreakdown: '30 mins setup • 2.0 hours main ritual by 1 Pandit',
+          description:
+              'Shri Satyanarayan Pooja is performed to seek divine blessings of Lord Vishnu for prosperity and health.',
+          spiritualSignificance:
+              'Reciting Satyanarayan Katha invokes truth and divine consciousness.',
+          inclusions: [
+            '1 Certified Acharya',
+            'Complete Sacred Havan & Samagri Kit'
+          ],
+          chantingDetails: [
+            'Vishnu Sahasranama Stotram',
+            '108 Gayatri Mantra'
+          ],
+          standardPrice: 2100.0,
+          samagriPrice: 525.0,
+          originalPrice: 3150.0,
+        );
+        return PoojaBookingFlowScreen(pooja: pooja, bookingMode: mode);
       },
     ),
     GoRoute(
@@ -157,11 +169,11 @@ class PanditSetuApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Pandit Setu',
+      title: 'SARV MANGALS',
       debugShowCheckedModeBanner: false,
       routerConfig: _router,
       theme: ThemeData(
-        colorSchemeSeed: const Color(0xFFC0392B),
+        colorSchemeSeed: const Color(0xFFE65100),
         useMaterial3: true,
       ),
     );

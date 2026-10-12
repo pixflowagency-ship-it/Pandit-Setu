@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/pooja_detail_modal.dart';
 import '../widgets/pandit_chat_modal.dart';
+import '../widgets/consultation_flow_modal.dart';
 import '../widgets/app_bottom_nav_bar.dart';
 import '../widgets/app_side_drawer.dart';
 import '../widgets/neumorphic_button.dart';
@@ -40,7 +41,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<Map<String, dynamic>> _bookings = [];
-  bool _isLoadingBookings = true;
   Timer? _countdownTimer;
   Timer? _carouselTimer;
   Timer? _rarestTimer;
@@ -159,13 +159,10 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) {
         setState(() {
           _bookings = list;
-          _isLoadingBookings = false;
         });
       }
     } catch (_) {
-      if (mounted) {
-        setState(() => _isLoadingBookings = false);
-      }
+      // Ignore error for now
     }
   }
 
@@ -323,26 +320,53 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             children: [
               Container(
-                width: 36,
-                height: 36,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFE8920A),
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFFE65100), width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFE65100).withValues(alpha: 0.2),
+                      blurRadius: 6,
+                    ),
+                  ],
                 ),
-                child: const Icon(
-                  Icons.self_improvement,
-                  color: Colors.white,
-                  size: 20,
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/images/sarvmangal_logo.png',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: const Color(0xFFE65100),
+                      child: const Icon(Icons.self_improvement, color: Colors.white, size: 22),
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(width: 8),
-              Text(
-                isHindi ? 'पंडित सेतु' : 'Pandit Setu',
-                style: GoogleFonts.lato(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF2D1A00),
-                ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    isHindi ? 'सर्व मंगल' : 'SARV MANGALS',
+                    style: GoogleFonts.cinzel(
+                      fontSize: 16.5,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.8,
+                      color: const Color(0xFF2D1A00),
+                    ),
+                  ),
+                  Text(
+                    isHindi ? 'वैदिक अनुष्ठान एवं ज्योतिष' : 'Vedic Rituals & Astrology',
+                    style: GoogleFonts.lato(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFFE65100),
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -546,22 +570,389 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // 2. SIX BOX GRID WITH REAL IMAGES & BILINGUAL SUPPORT
+  void _showBookPoojaTypeDialog(BuildContext context) {
+    final isHindi = languageService.isHindi;
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: const Color(0xFFFFFDF8),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Padding(
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE65100).withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.temple_hindu, color: Color(0xFFE65100), size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isHindi ? 'पूजा का माध्यम चुनें' : 'Select Pooja Format',
+                          style: GoogleFonts.cinzel(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF3D2200),
+                          ),
+                        ),
+                        Text(
+                          isHindi ? 'सर्व मंगल वैदिक सेवाएं' : 'SARV MANGALS Vedic Services',
+                          style: GoogleFonts.lato(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFFE65100),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Color(0xFF8A7060), size: 20),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Text(
+                isHindi
+                    ? 'कृपया चुनें कि आप पूजा अपने स्थान पर कराना चाहते हैं या लाइव ई-पूजा:'
+                    : 'Choose whether you want the Vedic ritual performed in-person at your place or live online via Video Call:',
+                style: GoogleFonts.lato(fontSize: 13, color: const Color(0xFF5A4A3A), height: 1.35),
+              ),
+              const SizedBox(height: 18),
+
+              // Option 1: Offline Pooja
+              GestureDetector(
+                onTap: () {
+                  Navigator.pop(ctx);
+                  context.push('/book?mode=offline');
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE8D5A3), width: 1.4),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFE65100).withValues(alpha: 0.06),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF3E0),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(Icons.home_work_rounded, color: Color(0xFFE65100), size: 26),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  isHindi ? '1. ऑफलाइन पूजा' : '1. Offline Pooja',
+                                  style: GoogleFonts.lato(
+                                    fontSize: 15.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF3D2200),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE65100).withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    isHindi ? 'घर / कार्यालय' : 'Home / Office',
+                                    style: GoogleFonts.lato(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFFE65100),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              isHindi
+                                  ? 'पंडित जी आपके घर आकर अनुष्ठान संपन्न करेंगे। सामग्री चयन व पंडित चयन की पूरी सुविधा।'
+                                  : 'Acharyas visit your address. Choose Samagri inclusion, auto/manual Pandit allocation.',
+                              style: GoogleFonts.lato(
+                                fontSize: 11.5,
+                                color: const Color(0xFF7A604D),
+                                height: 1.25,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios, size: 15, color: Color(0xFFE65100)),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              // Option 2: Online Pooja
+              GestureDetector(
+                onTap: () {
+                  Navigator.pop(ctx);
+                  context.push('/book?mode=online');
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFFF8EE), Color(0xFFFFF0DC)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE65100).withValues(alpha: 0.35), width: 1.4),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFE65100).withValues(alpha: 0.08),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE65100),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(Icons.videocam_rounded, color: Colors.white, size: 26),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  isHindi ? '2. ऑनलाइन पूजा' : '2. Online Pooja',
+                                  style: GoogleFonts.lato(
+                                    fontSize: 15.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF3D2200),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF16A34A),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    isHindi ? 'लाइव वीडियो' : 'LIVE VIDEO',
+                                    style: GoogleFonts.lato(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              isHindi
+                                  ? 'लाइव वीडियो कॉल पर संकल्प सहित ई-पूजा। मंदिर गर्भगृह सामग्री किट स्वतः शामिल।'
+                                  : 'HD Live Stream via Google Meet/Zoom with personalized Gotra Sankalp. Samagri pre-included.',
+                              style: GoogleFonts.lato(
+                                fontSize: 11.5,
+                                color: const Color(0xFF7A604D),
+                                height: 1.25,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios, size: 15, color: Color(0xFFE65100)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showNearestTempleComingSoonDialog(BuildContext context) {
+    final isHindi = languageService.isHindi;
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: const Color(0xFFFFFDF8),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE65100).withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.temple_hindu_rounded, color: Color(0xFFE65100), size: 34),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE65100),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  isHindi ? 'जल्द आ रहा है' : 'COMING SOON',
+                  style: GoogleFonts.lato(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.0,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                isHindi ? 'निकटतम मंदिर व गुरुकुल दर्शन' : 'Nearest Temple & Gurukul Darshan',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.cinzel(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF3D2200),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                isHindi
+                    ? 'सर्व मंगल टीम आपके शहर के प्राचीन एवं प्रमाणित मंदिरों, आरती समय, एवं गुरुकुलों की जानकारी को जियो-टैग कर रही है। यह सुविधा अगले अपडेट में उपलब्ध होगी!'
+                    : 'We are currently geotagging verified ancient temples, pujari schedules, live Aarti streams, and Gurukuls in your locality. Stay tuned for our upcoming launch!',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.lato(
+                  fontSize: 13,
+                  color: const Color(0xFF6B5848),
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 22),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFE65100),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    isHindi ? 'ठीक है' : 'Got It',
+                    style: GoogleFonts.lato(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 2. SIX BOX GRID WITH REAL IMAGES & BILINGUAL SUPPORT (STRICT SEQUENCE 1-6)
   Widget _buildSixBoxServiceGrid() {
     final isHindi = languageService.isHindi;
     final gridItems = [
       {
-        'id': 'A',
+        'id': '1_book_pooja',
         'image': 'https://images.unsplash.com/photo-1605152276897-4f618f831968?w=300&q=80',
         'icon': Icons.menu_book,
         'label': isHindi ? 'पूजा बुक करें' : 'Book Pooja',
-        'sublabel': isHindi ? '26 शास्त्रोक्त अनुष्ठान' : '26 Shastra Rituals',
+        'sublabel': isHindi ? 'ऑफलाइन व ऑनलाइन' : 'Offline & Online',
         'badge': '',
-        'color': const Color(0xFFD97706),
-        'onTap': () => context.go('/book'),
+        'color': const Color(0xFFE65100),
+        'onTap': () => _showBookPoojaTypeDialog(context),
       },
       {
-        'id': 'B',
+        'id': '2_consultation',
+        'image': 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=300&q=80',
+        'icon': Icons.support_agent_rounded,
+        'label': isHindi ? 'परामर्श' : 'Consultation',
+        'sublabel': isHindi ? 'ऑनलाइन व ऑफलाइन' : 'Online & Offline',
+        'badge': isHindi ? 'लोकप्रिय' : 'POPULAR',
+        'color': const Color(0xFFD97706),
+        'onTap': () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) => const ConsultationFlowModal(),
+          );
+        },
+      },
+      {
+        'id': '3_handmade_kundali',
+        'image': 'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=300&q=80',
+        'icon': Icons.auto_graph,
+        'label': isHindi ? 'हस्तनिर्मित कुंडली' : 'Handmade Kundali',
+        'sublabel': isHindi ? 'पारंपरिक हस्तलेख' : 'Traditional Patrika',
+        'badge': isHindi ? 'पारंपरिक' : 'TRADITIONAL',
+        'color': const Color(0xFFC25E00),
+        'onTap': () => context.push('/kundli'),
+      },
+      {
+        'id': '4_phool_mala',
+        'image': 'https://images.unsplash.com/photo-1567684014761-b65e2e59b9eb?w=300&q=80',
+        'icon': Icons.local_florist,
+        'label': isHindi ? 'फूल माला' : 'Phool Mala',
+        'sublabel': isHindi ? 'दैनिक व मासिक' : 'Daily & Subs',
+        'badge': '',
+        'color': const Color(0xFFE65100),
+        'onTap': () => context.push('/phool-mala'),
+      },
+      {
+        'id': '5_instant_delivery',
         'image': 'https://images.unsplash.com/photo-1596704017254-9b121068fb31?w=300&q=80',
         'icon': Icons.flash_on,
         'label': isHindi ? 'त्वरित डिलीवरी' : 'Instant Delivery',
@@ -571,50 +962,14 @@ class _HomeScreenState extends State<HomeScreen> {
         'onTap': () => context.go('/shop'),
       },
       {
-        'id': 'C',
-        'image': 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=300&q=80',
-        'icon': Icons.videocam,
-        'label': isHindi ? 'ऑनलाइन पूजा' : 'Online Pooja',
-        'sublabel': isHindi ? 'लाइव आचार्य द्वारा' : 'Live Virtual Pandits',
-        'badge': isHindi ? 'लाइव' : 'LIVE',
-        'color': const Color(0xFFC25E00),
-        'onTap': () {
-          final pooja = _trendingRituals.firstWhere(
-            (r) => r.id == 'satyanarayan_katha',
-            orElse: () => _trendingRituals[0],
-          );
-          showPoojaDetailBottomSheet(context, pooja);
-        },
-      },
-      {
-        'id': 'D',
-        'image': 'https://images.unsplash.com/photo-1567684014761-b65e2e59b9eb?w=300&q=80',
-        'icon': Icons.local_florist,
-        'label': isHindi ? 'फूल माला' : 'Phool Mala',
-        'sublabel': isHindi ? 'मासिक माला सेवा' : 'Garlands & Subs',
-        'badge': isHindi ? 'दैनिक' : 'DAILY',
-        'color': const Color(0xFFD97706),
-        'onTap': () => context.push('/phool-mala'),
-      },
-      {
-        'id': 'E',
-        'image': 'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=300&q=80',
-        'icon': Icons.auto_graph,
-        'label': isHindi ? 'कुंडली' : 'Kundli',
-        'sublabel': isHindi ? 'कुंडली एवं ज्योतिष' : 'Kundli & Handmade',
-        'badge': isHindi ? 'हस्तनिर्मित' : 'HANDMADE',
-        'color': const Color(0xFFE28A00),
-        'onTap': () => context.push('/kundli'),
-      },
-      {
-        'id': 'F',
+        'id': '6_nearest_temple',
         'image': 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=300&q=80',
         'icon': Icons.temple_hindu,
-        'label': isHindi ? 'निकटतम मंदिर' : 'Nearest Temple',
-        'sublabel': isHindi ? 'दर्शन एवं समय' : 'Map & Darshan',
-        'badge': isHindi ? 'मानचित्र' : 'MAPS',
-        'color': const Color(0xFFC25E00),
-        'onTap': () => context.push('/nearest-temple'),
+        'label': isHindi ? 'निकटतम मंदिर' : 'Nearest temple',
+        'sublabel': isHindi ? 'जल्द आ रहा है' : 'Coming soon',
+        'badge': isHindi ? 'शीघ्र' : 'SOON',
+        'color': const Color(0xFF9E5B00),
+        'onTap': () => _showNearestTempleComingSoonDialog(context),
       },
     ];
 

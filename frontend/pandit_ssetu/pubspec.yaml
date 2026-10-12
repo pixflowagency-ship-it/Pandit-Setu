@@ -64,6 +64,8 @@ flutter:
 
   assets:
     - assets/images/splash_bg.png
+    - assets/images/sarvmangal_logo.png
+    - assets/images/sarvmangal_logo.jpg
     - assets/images/role_select_bg.png
     - assets/images/kundli.jpg
     - assets/images/book_pooja.jpg
@@ -74,6 +76,10 @@ flutter:
     - assets/images/hawan_samagri.jpg
     - assets/images/marriage_kit.jpg
     - assets/images/talk_pandit.png
+    - assets/pandit_1.jpeg
+    - assets/pandit_2.jpeg
+    - assets/data/pandits.json
+    - assets/data/products.json
 
   # To add assets to your application, add an assets section, like this:
   # assets:

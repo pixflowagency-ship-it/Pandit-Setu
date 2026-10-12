@@ -7,8 +7,13 @@ import '../user_data.dart';
 
 class PoojaBookingFlowScreen extends StatefulWidget {
   final PoojaDetail pooja;
+  final String bookingMode; // 'offline' or 'online'
 
-  const PoojaBookingFlowScreen({super.key, required this.pooja});
+  const PoojaBookingFlowScreen({
+    super.key,
+    required this.pooja,
+    this.bookingMode = 'offline',
+  });
 
   @override
   State<PoojaBookingFlowScreen> createState() => _PoojaBookingFlowScreenState();
@@ -23,6 +28,17 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
   final _cityController = TextEditingController(text: 'Mumbai');
   final _pincodeController = TextEditingController(text: '400001');
   final _landmarkController = TextEditingController(text: 'Near City Park');
+
+  // Online Fields
+  final _onlineNameController =
+      TextEditingController(text: UserData.name.isNotEmpty ? UserData.name : 'Rahul Sharma');
+  final _onlineGotraController =
+      TextEditingController(text: UserData.gotra.isNotEmpty ? UserData.gotra : 'Kashyap');
+  final _onlinePhoneController =
+      TextEditingController(text: UserData.phone.isNotEmpty ? UserData.phone : '+91 9876543210');
+  String _onlinePlatform = 'Google Meet';
+  String _selectedKitType = 'standard';
+
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
   String _selectedTimeSlot = '09:30 AM';
 
@@ -42,6 +58,10 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
     final id = widget.pooja.id.toLowerCase();
     return cat.contains('online') || title.contains('online') || id.contains('online');
   }
+
+  bool get isOnlineMode =>
+      widget.bookingMode.toLowerCase() == 'online' || isOnlinePooja;
+
   final List<String> _samagriItems = [
     'Pure Desi Cow Ghee (500g)',
     'Bhimseni Camphor & Pure Sandalwood Paste',
@@ -86,11 +106,22 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
     _cityController.dispose();
     _pincodeController.dispose();
     _landmarkController.dispose();
+    _onlineNameController.dispose();
+    _onlineGotraController.dispose();
+    _onlinePhoneController.dispose();
     super.dispose();
   }
 
-  double get _samagriCost =>
-      _includeSamagriKit ? widget.pooja.samagriPrice : 0.0;
+  double get _samagriCost {
+    if (isOnlineMode) {
+      return _selectedKitType == 'premium' ? 1050.0 : widget.pooja.samagriPrice;
+    }
+    if (!_includeSamagriKit || _selectedKitType == 'none') {
+      return 0.0;
+    }
+    return _selectedKitType == 'premium' ? 1050.0 : widget.pooja.samagriPrice;
+  }
+
   double get _convenienceFee => 99.0;
   double get _totalPrice =>
       widget.pooja.standardPrice + _samagriCost + _convenienceFee;
@@ -288,8 +319,8 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
                   _buildStep1LocationAndDate(),
-                  _buildStep2SamagriToggle(),
                   _buildStep3PanditAllocation(),
+                  _buildStep2SamagriToggle(),
                   _buildStep4OrderReviewAndPayment(),
                 ],
               ),
@@ -303,7 +334,7 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
   }
 
   Widget _buildStepperHeader() {
-    final steps = ['Address', 'Samagri', 'Pandit', 'Payment'];
+    final steps = ['Details', 'Pandit', 'Items', 'Payment'];
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -390,53 +421,122 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
       padding: const EdgeInsets.all(20),
       children: [
 
-        Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 8,
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.location_on,
-                      color: Color(0xFFD97706), size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Pooja Location Address',
-                    style: GoogleFonts.lato(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF1F2937),
+        if (isOnlineMode)
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 8,
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.videocam, color: Color(0xFFE65100), size: 22),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Live E-Pooja & Sankalp Details',
+                      style: GoogleFonts.lato(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF1F2937),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              _buildInputField('Street Address / House No.', _streetController),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                      child: _buildInputField('City', _cityController)),
-                  const SizedBox(width: 10),
-                  Expanded(
-                      child: _buildInputField('Postal Code', _pincodeController)),
-                ],
-              ),
-              const SizedBox(height: 10),
-              _buildInputField('Landmark (Optional)', _landmarkController),
-            ],
+                  ],
+                ),
+                const SizedBox(height: 14),
+                _buildInputField('Devotee Name for Sankalp (संकल्प जातक)', _onlineNameController),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(child: _buildInputField('Gotra (गोत्र)', _onlineGotraController)),
+                    const SizedBox(width: 10),
+                    Expanded(child: _buildInputField('WhatsApp / Video Link Phone', _onlinePhoneController)),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Preferred Video Platform:',
+                  style: GoogleFonts.lato(fontSize: 12.5, fontWeight: FontWeight.bold, color: const Color(0xFF5A4A3A)),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: ['Google Meet', 'Zoom', 'WhatsApp Video'].map((plat) {
+                    final isSel = _onlinePlatform == plat;
+                    return ChoiceChip(
+                      label: Text(plat),
+                      selected: isSel,
+                      onSelected: (val) {
+                        if (val) setState(() => _onlinePlatform = plat);
+                      },
+                      selectedColor: const Color(0xFFE65100),
+                      labelStyle: GoogleFonts.lato(
+                        color: isSel ? Colors.white : const Color(0xFF1F2937),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          )
+        else
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 8,
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.location_on,
+                        color: Color(0xFFD97706), size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Pooja Location Address',
+                      style: GoogleFonts.lato(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF1F2937),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                _buildInputField('Street Address / House No.', _streetController),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                        child: _buildInputField('City', _cityController)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                        child: _buildInputField('Postal Code', _pincodeController)),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                _buildInputField('Landmark (Optional)', _landmarkController),
+              ],
+            ),
           ),
-        ),
 
         const SizedBox(height: 16),
 
@@ -612,119 +712,390 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
     );
   }
 
+  void _showSelectPoojaKitModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (modalCtx, setModalState) {
+          return Container(
+            padding: const EdgeInsets.all(22),
+            decoration: const BoxDecoration(
+              color: Color(0xFFFAF6EE),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 44,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD4C2AA),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE65100).withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.inventory_2, color: Color(0xFFE65100), size: 24),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Select the Pooja Kit',
+                            style: GoogleFonts.lato(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF3D2200),
+                            ),
+                          ),
+                          Text(
+                            isOnlineMode
+                                ? 'Consecrated Sacred Kit for Live E-Pooja'
+                                : 'Choose sacred samagri kit for your ritual',
+                            style: GoogleFonts.lato(fontSize: 12, color: const Color(0xFF8A7060)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+
+                // Option 1: Standard Vedic Kit
+                GestureDetector(
+                  onTap: () {
+                    setModalState(() => _selectedKitType = 'standard');
+                    setState(() {
+                      _selectedKitType = 'standard';
+                      _includeSamagriKit = true;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: _selectedKitType == 'standard' ? const Color(0xFFFFF3E0) : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: _selectedKitType == 'standard' ? const Color(0xFFE65100) : const Color(0xFFE5E7EB),
+                        width: _selectedKitType == 'standard' ? 2 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _selectedKitType == 'standard' ? Icons.radio_button_checked : Icons.radio_button_off,
+                          color: const Color(0xFFE65100),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    'Standard Vedic Pooja Kit',
+                                    style: GoogleFonts.lato(fontWeight: FontWeight.bold, fontSize: 14),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFE65100),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: const Text(
+                                      'POPULAR',
+                                      style: TextStyle(fontSize: 8.5, color: Colors.white, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Text(
+                                'Complete Sacred Hawan herbs, Desi Ghee, Mauli, Kumkum & Akshat grains.',
+                                style: GoogleFonts.lato(fontSize: 11.5, color: const Color(0xFF6B5B52)),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          '₹${widget.pooja.samagriPrice.toInt()}',
+                          style: GoogleFonts.lato(fontWeight: FontWeight.bold, fontSize: 15, color: const Color(0xFFE65100)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // Option 2: Premium Sanctum Gold Kit
+                GestureDetector(
+                  onTap: () {
+                    setModalState(() => _selectedKitType = 'premium');
+                    setState(() {
+                      _selectedKitType = 'premium';
+                      _includeSamagriKit = true;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: _selectedKitType == 'premium' ? const Color(0xFFFFF3E0) : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: _selectedKitType == 'premium' ? const Color(0xFFE65100) : const Color(0xFFE5E7EB),
+                        width: _selectedKitType == 'premium' ? 2 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _selectedKitType == 'premium' ? Icons.radio_button_checked : Icons.radio_button_off,
+                          color: const Color(0xFFE65100),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Premium Gold Vedic Kit',
+                                style: GoogleFonts.lato(fontWeight: FontWeight.bold, fontSize: 14),
+                              ),
+                              Text(
+                                'Adds Pure Silver Coin, Kashi Gangajal, Panchamrit, Lotus flowers & Purnahuti vastram.',
+                                style: GoogleFonts.lato(fontSize: 11.5, color: const Color(0xFF6B5B52)),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          '₹1,050',
+                          style: GoogleFonts.lato(fontWeight: FontWeight.bold, fontSize: 15, color: const Color(0xFFE65100)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                if (!isOnlineMode) ...[
+                  const SizedBox(height: 12),
+                  // Option 3: Arrange Own Samagri
+                  GestureDetector(
+                    onTap: () {
+                      setModalState(() => _selectedKitType = 'none');
+                      setState(() {
+                        _selectedKitType = 'none';
+                        _includeSamagriKit = false;
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: _selectedKitType == 'none' ? const Color(0xFFFFF3E0) : Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: _selectedKitType == 'none' ? const Color(0xFFE65100) : const Color(0xFFE5E7EB),
+                          width: _selectedKitType == 'none' ? 2 : 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            _selectedKitType == 'none' ? Icons.radio_button_checked : Icons.radio_button_off,
+                            color: const Color(0xFFE65100),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Arrange My Own Items',
+                                  style: GoogleFonts.lato(fontWeight: FontWeight.bold, fontSize: 14),
+                                ),
+                                Text(
+                                  'I will prepare all sacred items before Pandit Ji arrives.',
+                                  style: GoogleFonts.lato(fontSize: 11.5, color: const Color(0xFF6B5B52)),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            '₹0',
+                            style: GoogleFonts.lato(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 22),
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(ctx).pop();
+                      _nextStep();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFE65100),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: Text(
+                      'Confirm Kit & Proceed to Payment',
+                      style: GoogleFonts.lato(fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildStep2SamagriToggle() {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        GestureDetector(
-          onTap: () {
-            if (isOnlinePooja) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Samagri Kit is compulsory for Online Poojas.'),
-                  backgroundColor: Color(0xFFD97706),
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            } else {
-              setState(() {
-                _includeSamagriKit = !_includeSamagriKit;
-              });
-            }
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.all(18),
+        if (isOnlineMode)
+          // ONLINE POOJA: User is NOT allowed to select items
+          Container(
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: const Color(0xFFE8F5E9),
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: _includeSamagriKit
-                    ? const Color(0xFFD97706)
-                    : const Color(0xFFE5E7EB),
-                width: _includeSamagriKit ? 2 : 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 8,
+              border: Border.all(color: const Color(0xFF81C784)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.lock, color: Color(0xFF2E7D32), size: 22),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Online E-Pooja: Sacred Samagri Included',
+                        style: GoogleFonts.lato(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF1B5E20),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'All sacred havan samagri, desi cow ghee, herbs, kalash, and offerings are consecrated and provided directly at the Vedic altar by the Acharya. Devotees are not allowed or required to select/unselect items.',
+                        style: GoogleFonts.lato(
+                          fontSize: 12,
+                          color: const Color(0xFF2E7D32),
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          _includeSamagriKit
-                              ? Icons.shopping_bag
-                              : Icons.shopping_bag_outlined,
-                          color: _includeSamagriKit
-                              ? const Color(0xFFD97706)
-                              : Colors.grey,
-                          size: 22,
-                        ),
-                        const SizedBox(width: 10),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Pure Vedic Samagri Kit',
-                              style: GoogleFonts.lato(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF1F2937),
+          )
+        else
+          // OFFLINE POOJA: User CAN select items whether to include or not
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _includeSamagriKit = !_includeSamagriKit;
+              });
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: _includeSamagriKit
+                      ? const Color(0xFFE65100)
+                      : const Color(0xFFE5E7EB),
+                  width: _includeSamagriKit ? 2 : 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 8,
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            _includeSamagriKit
+                                ? Icons.shopping_bag
+                                : Icons.shopping_bag_outlined,
+                            color: _includeSamagriKit
+                                ? const Color(0xFFE65100)
+                                : Colors.grey,
+                            size: 22,
+                          ),
+                          const SizedBox(width: 10),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Pure Vedic Samagri Kit',
+                                style: GoogleFonts.lato(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF1F2937),
+                                ),
                               ),
-                            ),
-                            Text(
-                              _includeSamagriKit
-                                  ? '+₹${widget.pooja.samagriPrice.toInt()}'
-                                  : 'Excluded (Bring Own Samagri)',
-                              style: GoogleFonts.lato(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: _includeSamagriKit
-                                    ? const Color(0xFFD97706)
-                                    : Colors.grey,
+                              Text(
+                                _includeSamagriKit
+                                    ? '+₹${widget.pooja.samagriPrice.toInt()}'
+                                    : 'Excluded (Bring Own Samagri)',
+                                style: GoogleFonts.lato(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: _includeSamagriKit
+                                      ? const Color(0xFFE65100)
+                                      : Colors.grey,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-
-                    if (isOnlinePooja)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFDCFCE7),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFF86EFAC)),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.lock, size: 13, color: Color(0xFF15803D)),
-                            const SizedBox(width: 4),
-                            Text(
-                              'COMPULSORY',
-                              style: GoogleFonts.lato(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w900,
-                                color: const Color(0xFF15803D),
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    else
+                            ],
+                          ),
+                        ],
+                      ),
                       Switch(
                         value: _includeSamagriKit,
-                        activeTrackColor: const Color(0xFFD97706),
+                        activeTrackColor: const Color(0xFFE65100),
                         activeThumbColor: Colors.white,
                         onChanged: (val) {
                           setState(() {
@@ -732,28 +1103,27 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
                           });
                         },
                       ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  isOnlinePooja
-                      ? 'Vedic Samagri Kit is mandatory for Online Live Poojas so that Pandit Ji performs the consecrated Havan & rituals with 100% authentic pure items on your behalf.'
-                      : (_includeSamagriKit
-                          ? 'Pandit Ji brings 100% pure, lab-tested, organic Samagri kit directly to your doorstep so you don\'t need to purchase anything.'
-                          : 'You have chosen to arrange Samagri yourself. Please prepare all required sacred items before Pandit Ji arrives.'),
-                  style: GoogleFonts.lato(
-                    fontSize: 12.5,
-                    height: 1.45,
-                    color: const Color(0xFF6B5B52),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 12),
+                  Text(
+                    _includeSamagriKit
+                        ? 'Pandit Ji brings 100% pure, lab-tested, organic Samagri kit directly to your doorstep so you don\'t need to purchase anything.'
+                        : 'You have chosen to arrange Samagri yourself. Please prepare all required sacred items before Pandit Ji arrives.',
+                    style: GoogleFonts.lato(
+                      fontSize: 12.5,
+                      height: 1.45,
+                      color: const Color(0xFF6B5B52),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
 
         const SizedBox(height: 16),
 
+        // List of items in the Kit
         Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
@@ -769,43 +1139,66 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Items Included in Kit:',
-                style: GoogleFonts.lato(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF1F2937),
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Items Included in Kit:',
+                    style: GoogleFonts.lato(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF1F2937),
+                    ),
+                  ),
+                  if (isOnlineMode)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8F5E9),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'LOCKED FOR ONLINE',
+                        style: GoogleFonts.lato(
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF2E7D32),
+                        ),
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(height: 12),
-              ..._samagriItems.map((item) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: Row(
-                      children: [
-                        Icon(
-                          _includeSamagriKit
-                              ? Icons.check_box
-                              : Icons.check_box_outline_blank,
-                          color: _includeSamagriKit
-                              ? const Color(0xFFD97706)
-                              : Colors.grey,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            item,
-                            style: GoogleFonts.lato(
-                              fontSize: 13,
-                              color: _includeSamagriKit
-                                  ? const Color(0xFF1F2937)
-                                  : Colors.grey,
-                            ),
+              ..._samagriItems.map((item) {
+                final bool isChecked = isOnlineMode || _includeSamagriKit;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isOnlineMode
+                            ? Icons.verified
+                            : (isChecked ? Icons.check_box : Icons.check_box_outline_blank),
+                        color: isOnlineMode
+                            ? const Color(0xFF2E7D32)
+                            : (isChecked ? const Color(0xFFE65100) : Colors.grey),
+                        size: 18,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          item,
+                          style: GoogleFonts.lato(
+                            fontSize: 13,
+                            color: isChecked ? const Color(0xFF1F2937) : Colors.grey,
+                            fontWeight: isOnlineMode ? FontWeight.w600 : FontWeight.normal,
                           ),
                         ),
-                      ],
-                    ),
-                  )),
+                      ),
+                    ],
+                  ),
+                );
+              }),
             ],
           ),
         ),
@@ -844,14 +1237,29 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
             child: Row(
               children: [
 
-                Radio<String>(
-                  value: 'auto',
-
-                  groupValue: _allocationMode,
-                  activeColor: const Color(0xFFD97706),
-
-                  onChanged: (val) =>
-                      setState(() => _allocationMode = val!),
+                Container(
+                  width: 22,
+                  height: 22,
+                  margin: const EdgeInsets.only(left: 6, right: 6),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: _allocationMode == 'auto' ? const Color(0xFFD97706) : Colors.grey.shade400,
+                      width: 2,
+                    ),
+                  ),
+                  child: _allocationMode == 'auto'
+                      ? Center(
+                          child: Container(
+                            width: 10,
+                            height: 10,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(0xFFD97706),
+                            ),
+                          ),
+                        )
+                      : null,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -922,14 +1330,29 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
             child: Row(
               children: [
 
-                Radio<String>(
-                  value: 'manual',
-
-                  groupValue: _allocationMode,
-                  activeColor: const Color(0xFFD97706),
-
-                  onChanged: (val) =>
-                      setState(() => _allocationMode = val!),
+                Container(
+                  width: 22,
+                  height: 22,
+                  margin: const EdgeInsets.only(left: 6, right: 6),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: _allocationMode == 'manual' ? const Color(0xFFD97706) : Colors.grey.shade400,
+                      width: 2,
+                    ),
+                  ),
+                  child: _allocationMode == 'manual'
+                      ? Center(
+                          child: Container(
+                            width: 10,
+                            height: 10,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(0xFFD97706),
+                            ),
+                          ),
+                        )
+                      : null,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -1278,14 +1701,29 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
               ),
             ),
 
-            Radio<String>(
-              value: value,
-
-              groupValue: _selectedPaymentMethod,
-              activeColor: const Color(0xFFD97706),
-
-              onChanged: (val) =>
-                  setState(() => _selectedPaymentMethod = val!),
+            Container(
+              width: 22,
+              height: 22,
+              margin: const EdgeInsets.only(left: 6, right: 6),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected ? const Color(0xFFD97706) : Colors.grey.shade400,
+                  width: 2,
+                ),
+              ),
+              child: isSelected
+                  ? Center(
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Color(0xFFD97706),
+                        ),
+                      ),
+                    )
+                  : null,
             ),
           ],
         ),
@@ -1337,7 +1775,9 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
                 onPressed: _isSubmitting
                     ? null
                     : () {
-                        if (_currentStep < 3) {
+                        if (_currentStep == 2) {
+                          _showSelectPoojaKitModal();
+                        } else if (_currentStep < 3) {
                           _nextStep();
                         } else {
                           _handleConfirmAndPay();

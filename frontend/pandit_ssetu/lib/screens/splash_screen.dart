@@ -81,23 +81,55 @@ class _SplashScreenState extends State<SplashScreen>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  Container(
+                    width: 140,
+                    height: 140,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFE65100).withValues(alpha: 0.35),
+                          blurRadius: 28,
+                          spreadRadius: 4,
+                        ),
+                      ],
+                    ),
+                    child: ClipOval(
+                      child: Image.asset(
+                        'assets/images/sarvmangal_logo.png',
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
                   Text(
-                    'Pandit Setu',
-                    style: GoogleFonts.dancingScript(
-                      fontSize: 48,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFFB22222),
+                    'SARV MANGALS',
+                    style: GoogleFonts.cinzel(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 2.0,
+                      color: const Color(0xFF8A1E04),
                       height: 1.1,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 6),
                   Text(
-                    'connecting pandits with yajmans',
-                    style: GoogleFonts.lato(
+                    'सर्व मंगल मांगल्ये शिवे सर्वार्थ साधिके',
+                    style: GoogleFonts.rozhaOne(
                       fontSize: 15,
                       fontWeight: FontWeight.w400,
-                      color: const Color(0xFF8A7060),
-                      letterSpacing: 0.4,
+                      color: const Color(0xFFD97706),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Sacred Vedic Rituals & Astrological Guidance',
+                    style: GoogleFonts.lato(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF7A604D),
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ],

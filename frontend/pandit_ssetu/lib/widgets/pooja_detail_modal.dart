@@ -40,20 +40,21 @@ class PoojaDetail {
   double get totalPrice => standardPrice + samagriPrice;
 }
 
-void showPoojaDetailBottomSheet(BuildContext context, PoojaDetail detail) {
+void showPoojaDetailBottomSheet(BuildContext context, PoojaDetail detail, {String mode = 'offline'}) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     barrierColor: Colors.black.withValues(alpha: 0.6),
-    builder: (ctx) => PoojaDetailBottomSheet(detail: detail),
+    builder: (ctx) => PoojaDetailBottomSheet(detail: detail, mode: mode),
   );
 }
 
 class PoojaDetailBottomSheet extends StatelessWidget {
   final PoojaDetail detail;
+  final String mode;
 
-  const PoojaDetailBottomSheet({super.key, required this.detail});
+  const PoojaDetailBottomSheet({super.key, required this.detail, this.mode = 'offline'});
 
   @override
   Widget build(BuildContext context) {
@@ -716,7 +717,7 @@ class PoojaDetailBottomSheet extends StatelessWidget {
 
               Navigator.of(context).pop();
 
-              context.push('/book-flow', extra: detail);
+              context.push('/book-flow?mode=$mode', extra: {'pooja': detail, 'mode': mode});
             },
 
             style: ElevatedButton.styleFrom(
