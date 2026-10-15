@@ -103,7 +103,7 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    'SARV MANGALS',
+                    'SARV MANGAL',
                     style: GoogleFonts.cinzel(
                       fontSize: 32,
                       fontWeight: FontWeight.w800,

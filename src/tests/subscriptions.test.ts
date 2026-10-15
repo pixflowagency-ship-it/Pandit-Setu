@@ -63,6 +63,8 @@ vi.mock("razorpay", () => {
 describe("POST /api/v1/subscriptions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv("RAZORPAY_KEY_ID", "test_key_id");
+    vi.stubEnv("RAZORPAY_KEY_SECRET", "test_key_secret");
   });
 
   it("200 – creates a Razorpay subscription correctly", async () => {

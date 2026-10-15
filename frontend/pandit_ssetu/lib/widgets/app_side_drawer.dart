@@ -46,7 +46,7 @@ class AppSideDrawer extends StatelessWidget {
               child: ListView(
                 children: const [
                   _FaqTile(
-                    question: 'How are Pandits verified on Pandit Setu?',
+                    question: 'How are Pandits verified on SARV MANGAL?',
                     answer:
                         'All Acharyas undergo strict background checks, Vedic Shastra certification verification, and mandatory oral examination by senior Gurus.',
                   ),
@@ -283,7 +283,7 @@ class AppSideDrawer extends StatelessWidget {
                     const Icon(Icons.verified, size: 14, color: Color(0xFFD97706)),
                     const SizedBox(width: 6),
                     Text(
-                      'Pandit Setu • v1.2.4',
+                      'SARV MANGAL • v1.2.4',
                       style: GoogleFonts.lato(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,

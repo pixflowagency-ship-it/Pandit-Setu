@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../widgets/pooja_detail_modal.dart';
 import '../services/api_service.dart';
 import '../user_data.dart';
+import '../utils/booking_date_time_helper.dart';
 
 class PoojaBookingFlowScreen extends StatefulWidget {
   final PoojaDetail pooja;
@@ -79,9 +81,17 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
   String _selectedPaymentMethod = 'upi';
   bool _isSubmitting = false;
 
+  late Razorpay _razorpay;
+  String? _activeBookingId;
+  String? _activeOrderId;
+
   @override
   void initState() {
     super.initState();
+    _razorpay = Razorpay();
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
     _loadPandits();
   }
 
@@ -101,6 +111,7 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
 
   @override
   void dispose() {
+    _razorpay.clear();
     _pageController.dispose();
     _streetController.dispose();
     _cityController.dispose();
@@ -149,33 +160,174 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
   }
 
   Future<void> _handleConfirmAndPay() async {
+    if (_isSubmitting) return;
+
+    if (_selectedTimeSlot.trim().isEmpty) {
+      _showErrorSnackBar('Please select a valid ritual time slot.');
+      return;
+    }
+
     setState(() => _isSubmitting = true);
 
-    final bookingData = {
-      'poojaId': widget.pooja.id,
-      'poojaTitle': widget.pooja.title,
-      'address':
-          '${_streetController.text}, ${_cityController.text} - ${_pincodeController.text}',
-      'date':
-          '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-      'timeSlot': _selectedTimeSlot,
-      'samagriIncluded': _includeSamagriKit,
-      'allocationMode': _allocationMode,
-      'panditName': _allocationMode == 'auto'
-          ? 'Auto-Allocated Acharya'
-          : (_selectedPandit?['name'] ?? 'Assigned Pandit'),
-      'paymentMethod': _selectedPaymentMethod.toUpperCase(),
-      'totalAmount': _totalPrice.toInt(),
-      'userName': UserData.name.isNotEmpty ? UserData.name : 'Yajman',
-      'userPhone': UserData.phone.isNotEmpty ? UserData.phone : '+91 9876543210',
-    };
+    try {
+      final bookingTimeIso = BookingDateTimeHelper.formatToIsoUtc(
+        date: _selectedDate,
+        timeSlot: _selectedTimeSlot,
+      );
 
-    final response = await ApiService.createBooking(bookingData);
+      final bookingData = {
+        'poojaId': widget.pooja.id,
+        'poojaTitle': widget.pooja.title,
+        'bookingTime': bookingTimeIso,
+        'address':
+            '${_streetController.text}, ${_cityController.text} - ${_pincodeController.text}',
+        'venueAddress':
+            '${_streetController.text}, ${_cityController.text} - ${_pincodeController.text}',
+        'date':
+            '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+        'timeSlot': _selectedTimeSlot,
+        'samagriIncluded': _includeSamagriKit,
+        'allocationMode': _allocationMode,
+        'panditName': _allocationMode == 'auto'
+            ? 'Auto-Allocated Acharya'
+            : (_selectedPandit?['name'] ?? 'Assigned Pandit'),
+        'paymentMethod': _selectedPaymentMethod.toUpperCase(),
+        'totalAmount': _totalPrice.toInt(),
+        'userName': UserData.name.isNotEmpty ? UserData.name : 'Yajman',
+        'userPhone': UserData.phone.isNotEmpty ? UserData.phone : '+91 9876543210',
+        'mode': widget.bookingMode.toUpperCase(),
+      };
 
+      // 1. Create booking record on backend
+      final response = await ApiService.createBooking(bookingData);
+      final bookingId = response['data']?['booking']?['id'] ??
+          response['data']?['id'];
+
+      if (bookingId == null) {
+        throw Exception('Server did not return a valid booking ID');
+      }
+
+      _activeBookingId = bookingId;
+
+      // 2. Create Razorpay Payment Order on backend (server-calculated pricing)
+      final order = await ApiService.createPaymentOrder(bookingId);
+      final orderId = order['id']?.toString();
+      final amount = order['amount'];
+
+      if (orderId == null || amount == null) {
+        throw Exception('Server failed to initialize payment order');
+      }
+
+      _activeOrderId = orderId;
+
+      // 3. Initiate Razorpay Checkout in TEST MODE
+      final razorpayKey = const String.fromEnvironment(
+        'RAZORPAY_KEY_ID',
+        defaultValue: 'rzp_test_placeholder',
+      );
+
+      final options = {
+        'key': razorpayKey,
+        'amount': amount,
+        'name': 'Sarvmangal Pooja',
+        'description': widget.pooja.title,
+        'order_id': orderId,
+        'timeout': 180,
+        'prefill': {
+          'contact': UserData.phone.isNotEmpty ? UserData.phone : '+91 9876543210',
+          'name': UserData.name.isNotEmpty ? UserData.name : 'Yajman',
+        },
+        'external': {
+          'wallets': ['paytm']
+        }
+      };
+
+      _razorpay.open(options);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        _showErrorSnackBar(e.toString().replaceAll('Exception: ', ''));
+      }
+    }
+  }
+
+  Future<void> _handlePaymentSuccess(PaymentSuccessResponse response) async {
+    // IMPORTANT: A client callback is NOT authoritative proof of payment!
+    // We MUST verify signature on backend before showing confirmation.
+    try {
+      if (mounted) setState(() => _isSubmitting = true);
+
+      final verifiedBooking = await ApiService.verifyPaymentSignature(
+        orderId: response.orderId ?? _activeOrderId ?? '',
+        paymentId: response.paymentId ?? '',
+        signature: response.signature ?? '',
+      );
+
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        final paymentStatus = verifiedBooking['paymentStatus']?.toString().toUpperCase();
+        final bookingStatus = verifiedBooking['status']?.toString().toUpperCase();
+
+        if (paymentStatus == 'PAID' || bookingStatus == 'CONFIRMED') {
+          _showSuccessDialog(_activeBookingId ?? 'PS-BK-CONFIRMED');
+        } else {
+          _showErrorSnackBar('Payment pending verification. Please check your bookings.');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        _showErrorSnackBar(
+          'Payment verification failed: ${e.toString().replaceAll('Exception: ', '')}. Contact support with Payment ID: ${response.paymentId}',
+        );
+      }
+    }
+  }
+
+  void _handlePaymentError(PaymentFailureResponse response) {
     if (mounted) {
       setState(() => _isSubmitting = false);
-      _showSuccessDialog(response['data']?['id'] ?? 'PS-BK-9901');
+      final isCancelled = response.code == Razorpay.PAYMENT_CANCELLED;
+      final msg = isCancelled
+          ? 'Payment cancelled. Your booking remains pending.'
+          : 'Payment failed (${response.code}): ${response.message ?? 'Transaction could not be completed'}.';
+      _showErrorSnackBar(msg);
     }
+  }
+
+  void _handleExternalWallet(ExternalWalletResponse response) {
+    if (mounted) {
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Selected external wallet: ${response.walletName}. Please complete payment in wallet app.',
+            style: GoogleFonts.lato(color: Colors.white),
+          ),
+          backgroundColor: const Color(0xFFD97706),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: GoogleFonts.lato(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: Colors.red.shade700,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
   }
 
   void _showSuccessDialog(String bookingId) {
@@ -1402,9 +1554,38 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
                 child: CircularProgressIndicator(color: Color(0xFFD97706)),
               ),
             )
+          else if (_nearbyPandits.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(16),
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFFBEB),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFFDE68A)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline, color: Color(0xFFD97706)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'No specific pandits nearby right now. Select "Auto Allocate" above to automatically match a verified Vedic Pandit.',
+                      style: GoogleFonts.lato(fontSize: 12.5, color: const Color(0xFF92400E)),
+                    ),
+                  ),
+                ],
+              ),
+            )
           else
             ..._nearbyPandits.map((pandit) {
               final isSelected = _selectedPandit?['id'] == pandit['id'];
+              final photoUrl = pandit['photoUrl']?.toString() ??
+                  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150';
+              final name = pandit['name']?.toString() ?? 'Vedic Acharya';
+              final experience = pandit['experience']?.toString() ?? 'Vedic Scholar';
+              final rating = pandit['rating']?.toString() ?? '4.9 ★';
+              final languages = pandit['languages']?.toString() ?? 'Sanskrit, Hindi';
+
               return GestureDetector(
                 onTap: () => setState(() => _selectedPandit = pandit),
                 child: Container(
@@ -1425,12 +1606,11 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
                       ClipRRect(
                         borderRadius: BorderRadius.circular(25),
                         child: Image.network(
-                          pandit['photoUrl'],
+                          photoUrl,
                           width: 50,
                           height: 50,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) => Container(
-
                             width: 50,
                             height: 50,
                             color: const Color(0xFFFFF3E0),
@@ -1445,7 +1625,7 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              pandit['name'],
+                              name,
                               style: GoogleFonts.lato(
                                 fontSize: 14.5,
                                 fontWeight: FontWeight.bold,
@@ -1454,7 +1634,7 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              '${pandit['experience']} • ${pandit['rating']}',
+                              '$experience • $rating',
                               style: GoogleFonts.lato(
                                 fontSize: 12,
                                 color: const Color(0xFFD97706),
@@ -1462,7 +1642,7 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
                               ),
                             ),
                             Text(
-                              pandit['languages'],
+                              languages,
                               style: GoogleFonts.lato(
                                 fontSize: 11.5,
                                 color: const Color(0xFF6B5B52),

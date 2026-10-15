@@ -61,7 +61,7 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
                                       ),
                                       const SizedBox(width: 10),
                                       Text(
-                                        'Pandit Setu',
+                                        'SARV MANGAL',
                                         style: GoogleFonts.lato(
                                           fontSize: 22,
                                           fontWeight: FontWeight.w800,
@@ -98,7 +98,7 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
                                       children: const [
                                         TextSpan(text: 'How would you like to\nuse\n'),
                                         TextSpan(
-                                          text: 'Pandit Setu?',
+                                          text: 'SARV MANGAL?',
                                           style: TextStyle(color: Color(0xFFE8920A)),
                                         ),
                                       ],

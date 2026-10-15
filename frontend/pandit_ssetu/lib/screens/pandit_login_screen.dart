@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import '../services/api_service.dart';
+import '../user_data.dart';
 
 class PanditLoginScreen extends StatefulWidget {
   const PanditLoginScreen({super.key});
@@ -48,8 +50,9 @@ class _PanditLoginScreenState extends State<PanditLoginScreen> {
     });
   }
 
-  void _sendOtp() {
-    if (_phoneController.text.trim().length < 10) {
+  Future<void> _sendOtp() async {
+    final rawPhone = _phoneController.text.trim();
+    if (rawPhone.length < 10) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -63,21 +66,26 @@ class _PanditLoginScreenState extends State<PanditLoginScreen> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
-    Future.delayed(const Duration(milliseconds: 800), () {
+    try {
+      final res = await ApiService.sendOtp(rawPhone);
       if (mounted) {
         setState(() {
           _isLoading = false;
           _isOtpSent = true;
         });
         _startTimer();
+
+        final devOtp = res['data']?['mockOtp'] ?? res['mockOtp'];
+        final message = (devOtp != null)
+            ? 'OTP sent! (Dev Code: $devOtp)'
+            : 'OTP sent successfully to your mobile number';
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '🔑 Dev Mode OTP sent! (Code: 123456)',
+              message,
               style: GoogleFonts.lato(fontWeight: FontWeight.bold),
             ),
             backgroundColor: const Color(0xFFF18C16),
@@ -85,21 +93,155 @@ class _PanditLoginScreenState extends State<PanditLoginScreen> {
           ),
         );
       }
-    });
-  }
-
-  void _verifyOtp() {
-    setState(() => _isLoading = true);
-    Future.delayed(const Duration(milliseconds: 600), () {
+    } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        context.go('/pandit-dashboard');
+        final cleanMsg = e.toString().replaceAll('Exception: ', '');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              cleanMsg,
+              style: GoogleFonts.lato(),
+            ),
+            backgroundColor: Colors.red[700],
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
-    });
+    }
   }
 
-  void _enterDemoDashboard() {
-    context.go('/pandit-dashboard');
+  Future<void> _verifyOtp() async {
+    final otp = _otpControllers.map((c) => c.text.trim()).join();
+    if (otp.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Please enter the full 6-digit OTP code',
+            style: GoogleFonts.lato(),
+          ),
+          backgroundColor: Colors.red[700],
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final rawPhone = _phoneController.text.trim();
+      final res = await ApiService.verifyOtp(rawPhone, otp, 'Vedic Acharya', role: 'PANDIT');
+      if (res == null || res['data'] == null || res['data']['token'] == null) {
+        throw Exception('Invalid OTP code. Please try again.');
+      }
+
+      // Check if user is registered only as Yajman and needs to apply (Case A & E)
+      if (res['data']?['requiresApplication'] == true) {
+        if (mounted) {
+          setState(() => _isLoading = false);
+          _showApplyDialog();
+        }
+        return;
+      }
+
+      final userData = res['data']?['user'] as Map<String, dynamic>? ?? {};
+
+      UserData.save(
+        name: userData['fullName'] ?? userData['name'] ?? 'Vedic Acharya',
+        phone: userData['phone'] ?? rawPhone,
+        email: userData['email'] ?? '',
+        city: userData['city'] ?? '',
+      );
+
+      // Check authoritative backend onboarding status (NEVER bypass dashboard)
+      final status = await ApiService.getPanditOnboardingStatus();
+      final isApproved = status['verificationStatus'] == 'APPROVED' && status['canAccessDashboard'] == true;
+
+      if (mounted) {
+        setState(() => _isLoading = false);
+        if (isApproved) {
+          context.go('/pandit-dashboard');
+        } else {
+          context.go('/pandit-onboarding');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        final cleanMsg = e.toString().replaceAll('Exception: ', '');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              cleanMsg,
+              style: GoogleFonts.lato(fontWeight: FontWeight.bold),
+            ),
+            backgroundColor: Colors.red[700],
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showApplyDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFFFFF8EE),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Apply for Pandit Role',
+          style: GoogleFonts.cinzel(
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF3D2200),
+          ),
+        ),
+        content: Text(
+          'This mobile number is currently registered as a Yajman devotee account.\n\nWould you like to apply for the Pandit Acharya role without creating a separate phone identity?',
+          style: GoogleFonts.lato(fontSize: 14, color: const Color(0xFF5D4037)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.go('/role-select');
+            },
+            child: Text('Cancel', style: GoogleFonts.lato(color: Colors.grey[700])),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFF18C16),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              setState(() => _isLoading = true);
+              try {
+                await ApiService.applyForPandit();
+                if (mounted) {
+                  setState(() => _isLoading = false);
+                  context.go('/pandit-onboarding');
+                }
+              } catch (e) {
+                if (mounted) {
+                  setState(() => _isLoading = false);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to apply for Pandit role: $e'),
+                      backgroundColor: Colors.red[700],
+                    ),
+                  );
+                }
+              }
+            },
+            child: Text('Apply for Pandit', style: GoogleFonts.lato(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -120,7 +262,7 @@ class _PanditLoginScreenState extends State<PanditLoginScreen> {
           },
         ),
         title: Text(
-          'Pandit Partner Portal',
+          'SARV MANGAL • Acharya Portal',
           style: GoogleFonts.cinzel(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -182,7 +324,7 @@ class _PanditLoginScreenState extends State<PanditLoginScreen> {
               Text(
                 _isOtpSent
                     ? 'Enter 6-digit verification code sent to +91 ${_phoneController.text}'
-                    : 'Join Pandit Setu Acharya Fleet to receive instant online & doorstep Pooja requests.',
+                    : 'Join SARV MANGAL Acharya Fleet to receive instant online & doorstep Pooja requests.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.lato(
                   fontSize: 14,
@@ -387,61 +529,6 @@ class _PanditLoginScreenState extends State<PanditLoginScreen> {
                 ),
               ],
 
-              const SizedBox(height: 36),
-
-              // Divider with ornament
-              Row(
-                children: [
-                  Expanded(child: Container(height: 1, color: const Color(0xFFE8DCCB))),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(
-                      'OR DEMO ACCESS',
-                      style: GoogleFonts.lato(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF8C7355),
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                  ),
-                  Expanded(child: Container(height: 1, color: const Color(0xFFE8DCCB))),
-                ],
-              ),
-
-              const SizedBox(height: 24),
-
-              // Instant Demo Portal Access Button (Rapido / Uber style Quick Start)
-              OutlinedButton(
-                onPressed: _enterDemoDashboard,
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  side: const BorderSide(color: Color(0xFFF18C16), width: 1.8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  backgroundColor: Colors.white,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.play_circle_fill,
-                      color: Color(0xFFF18C16),
-                      size: 22,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Enter Pandit Partner Interface (Demo)',
-                      style: GoogleFonts.lato(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF3D2200),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
 
               const SizedBox(height: 32),
 

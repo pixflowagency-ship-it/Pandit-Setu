@@ -16,6 +16,9 @@ export const verificationStageEnum = pgEnum("verification_stage", [
 export const bookingStatusEnum = pgEnum("booking_status", [
   "PENDING",
   "CONFIRMED",
+  "HEADING_TO_VENUE",
+  "ARRIVED",
+  "PUJA_STARTED",
   "IN_PROGRESS",
   "COMPLETED",
   "CANCELLED",

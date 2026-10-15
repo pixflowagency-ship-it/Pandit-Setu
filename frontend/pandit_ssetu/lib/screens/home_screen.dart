@@ -10,6 +10,7 @@ import '../widgets/app_side_drawer.dart';
 import '../widgets/neumorphic_button.dart';
 import '../services/api_service.dart';
 import '../services/language_service.dart';
+import '../utils/carousel_pooja_mapper.dart';
 
 class ArcClipShape extends CustomClipper<Path> {
   @override
@@ -56,28 +57,32 @@ class _HomeScreenState extends State<HomeScreen> {
       'subtitle': 'Book Authentic Vedic Chandi Path & Havan by Certified Acharyas',
       'tag': 'FESTIVAL SPECIAL',
       'image': 'https://images.unsplash.com/photo-1608306448197-e83633f1261c?w=900',
-      'poojaId': 'navratri_pooja',
+      'poojaId': '67e77a47-8ffb-403a-bc64-c948ab5e2abc',
+      'slug': 'navratri-pooja',
     },
     {
       'title': 'Shri Satyanarayan Vrat Katha',
       'subtitle': 'Invite Infinite Health, Peace & Family Harmony',
       'tag': 'MOST POPULAR',
       'image': 'https://images.unsplash.com/photo-1605152276897-4f618f831968?w=900',
-      'poojaId': 'satyanarayan_katha',
+      'poojaId': '92086a65-41a9-4545-9588-6f35c8bb8b6b',
+      'slug': 'satyanarayan-katha',
     },
     {
       'title': 'Griha Pravesh & Vastu Shanti',
       'subtitle': 'Purify Your New Residence with Vedic Mantras & Havan',
       'tag': 'HOUSEWARMING',
       'image': 'https://images.unsplash.com/photo-1621252179027-94459d278660?w=900',
-      'poojaId': 'griha_pravesh_pooja',
+      'poojaId': '9ae802b2-95f9-4461-af5a-e7c32d6fb1af',
+      'slug': 'griha-pravesh-pooja',
     },
     {
       'title': 'Mahamrityunjaya Healing Havan',
       'subtitle': 'Conquer Illness & Invoke Divine Life Energy of Bhagwan Shiva',
       'tag': 'SACRED FIRE RITUAL',
       'image': 'https://images.unsplash.com/photo-1604882737079-7dc3df3e09ac?w=900',
-      'poojaId': 'mahamrityunjaya_jaap',
+      'poojaId': '9484cd34-05de-4b00-9621-b190d075be33',
+      'slug': 'mahamrityunjaya-jaap',
     },
   ];
 
@@ -168,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   static const List<PoojaDetail> _trendingRituals = [
     PoojaDetail(
-      id: 'griha_pravesh_pooja',
+      id: '9ae802b2-95f9-4461-af5a-e7c32d6fb1af',
       title: 'Griha Pravesh Pooja',
       category: 'Ghar & Jeevan',
       imageUrl:
@@ -197,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
       availability: 'Available Tomorrow',
     ),
     PoojaDetail(
-      id: 'satyanarayan_katha',
+      id: '92086a65-41a9-4545-9588-6f35c8bb8b6b',
       title: 'Satyanarayan Katha',
       category: 'Ghar & Jeevan',
       imageUrl:
@@ -227,7 +232,7 @@ class _HomeScreenState extends State<HomeScreen> {
       availability: 'Available Daily',
     ),
     PoojaDetail(
-      id: 'vastu_shanti_pooja',
+      id: 'ec3b0465-06c0-4621-addc-d2e6fbcb2291',
       title: 'Vastu Shanti Pooja',
       category: 'Ghar & Jeevan',
       imageUrl:
@@ -252,6 +257,53 @@ class _HomeScreenState extends State<HomeScreen> {
       samagriPrice: 12750.0,
       originalPrice: 76500.0,
       availability: 'Book 3 Days Prior',
+    ),
+    PoojaDetail(
+      id: '67e77a47-8ffb-403a-bc64-c948ab5e2abc',
+      title: 'Navratri Pooja',
+      category: 'Festival Special Pooja',
+      imageUrl: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=500',
+      isPopular: true,
+      duration: '9 Days',
+      durationBreakdown: 'Daily Kalash Sthapana, Chandi Path & Grand Havan by certified Acharyas',
+      description: 'Nine-day auspicious invocation of Goddess Durga for spiritual empowerment and family protection.',
+      spiritualSignificance: 'Purifies inner and outer obstacles, invoking Shakti and peace.',
+      inclusions: [
+        'Certified Vedic Acharyas',
+        'Navratri Kalash Sthapana Samagri',
+        'Daily Durga Saptashati Path Guidance',
+      ],
+      chantingDetails: [
+        'Durga Suktam',
+        'Saptashati Chandi Mantras',
+      ],
+      standardPrice: 21000.0,
+      samagriPrice: 5250.0,
+      originalPrice: 31500.0,
+      availability: 'Festival Special',
+    ),
+    PoojaDetail(
+      id: '9484cd34-05de-4b00-9621-b190d075be33',
+      title: 'Mahamrityunjaya Jaap',
+      category: 'Dosh Nivaran & Special Pooja',
+      imageUrl: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=500',
+      isPopular: true,
+      duration: '1-3 Hour',
+      durationBreakdown: 'Setup • 108 Rudra Jaap & healing Havan recitation',
+      description: 'Sacred fire ritual and mantra chanting to invoke Lord Shiva for health, longevity, and healing.',
+      spiritualSignificance: 'Conquers severe health afflictions and instills vitality.',
+      inclusions: [
+        'Senior Vedic Scholar',
+        'Authentic Havan Herbs & Ghee Kit',
+      ],
+      chantingDetails: [
+        'Maha Mrityunjaya Mantra (108 chants)',
+        'Rudra Gayatri',
+      ],
+      standardPrice: 11000.0,
+      samagriPrice: 2750.0,
+      originalPrice: 16500.0,
+      availability: 'Available Daily',
     ),
   ];
 
@@ -527,12 +579,32 @@ class _HomeScreenState extends State<HomeScreen> {
                               icon: Icons.auto_awesome,
                               height: 40,
                               onTap: () {
-                                final poojaId = slide['poojaId'];
-                                final match = _trendingRituals.firstWhere(
-                                  (r) => r.id == poojaId,
-                                  orElse: () => _trendingRituals[0],
+                                final match = CarouselPoojaMapper.findPoojaForSlide(
+                                  slide,
+                                  _trendingRituals,
                                 );
-                                showPoojaDetailBottomSheet(context, match);
+                                if (match != null) {
+                                  showPoojaDetailBottomSheet(context, match);
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        isHindi
+                                            ? 'यह पूजा वर्तमान में ऑनलाइन बुकिंग के लिए उपलब्ध नहीं है।'
+                                            : 'This ritual is currently unavailable for direct booking.',
+                                        style: GoogleFonts.lato(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      backgroundColor: const Color(0xFFD97706),
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                  );
+                                }
                               },
                             ),
                           ],

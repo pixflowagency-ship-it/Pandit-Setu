@@ -15,4 +15,23 @@ export const env = {
   otpExpirySeconds: Number(process.env.OTP_EXPIRY_SECONDS ?? 300),
   otpLength: 6,
   redisUrl: process.env.REDIS_URL ?? "redis://localhost:6379",
+  razorpayKeyId: process.env.RAZORPAY_KEY_ID ?? "",
+  razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET ?? "",
+  razorpayWebhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET ?? "",
 } as const;
+
+export function validateProductionConfig(): void {
+  if (env.nodeEnv === "production") {
+    const missing: string[] = [];
+    if (!process.env.RAZORPAY_KEY_ID) missing.push("RAZORPAY_KEY_ID");
+    if (!process.env.RAZORPAY_KEY_SECRET) missing.push("RAZORPAY_KEY_SECRET");
+    if (!process.env.RAZORPAY_WEBHOOK_SECRET) missing.push("RAZORPAY_WEBHOOK_SECRET");
+    if (missing.length > 0) {
+      throw new Error(`Production payment configuration error: Missing required environment variables [${missing.join(", ")}]`);
+    }
+  }
+}
+
+// Automatically validate on startup
+validateProductionConfig();
+

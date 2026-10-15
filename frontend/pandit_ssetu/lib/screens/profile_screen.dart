@@ -68,21 +68,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadUserProfile() async {
     try {
       final response = await ApiService.getProfile();
-      final user = response['data']?['user'] ?? response['user'] ?? {};
-      UserData.save(
-        name: user['name'] ?? user['fullName'] ?? '',
-        phone: user['phone'] ?? '',
-        email: user['email'] ?? '',
-        dob: user['dob'] ?? '',
-        tob: user['tob'] ?? '',
-        pob: user['pob'] ?? '',
-        gotra: user['gotra'] ?? '',
-        zodiac: user['zodiac'] ?? '',
-        city: user['city'] ?? '',
-      );
-      setState(() {
-        _resetBuffers();
-      });
+      if (response['success'] == true && response['data'] != null) {
+        final Map<String, dynamic> user = response['data'] is Map<String, dynamic>
+            ? (response['data']['user'] is Map<String, dynamic>
+                ? response['data']['user']
+                : response['data'])
+            : {};
+
+        if (user.isNotEmpty) {
+          final fetchedName = (user['name'] ?? user['fullName'])?.toString();
+          final fetchedPhone = user['phone']?.toString();
+          final fetchedEmail = user['email']?.toString();
+          final fetchedDob = user['dob']?.toString();
+          final fetchedTob = user['tob']?.toString();
+          final fetchedPob = user['pob']?.toString();
+          final fetchedGotra = user['gotra']?.toString();
+          final fetchedZodiac = user['zodiac']?.toString();
+          final fetchedCity = user['city']?.toString();
+
+          UserData.save(
+            name: (fetchedName != null && fetchedName.trim().isNotEmpty) ? fetchedName : UserData.name,
+            phone: (fetchedPhone != null && fetchedPhone.trim().isNotEmpty) ? fetchedPhone : UserData.phone,
+            email: (fetchedEmail != null && fetchedEmail.trim().isNotEmpty) ? fetchedEmail : UserData.email,
+            dob: (fetchedDob != null && fetchedDob.trim().isNotEmpty) ? fetchedDob : UserData.dob,
+            tob: (fetchedTob != null && fetchedTob.trim().isNotEmpty) ? fetchedTob : UserData.tob,
+            pob: (fetchedPob != null && fetchedPob.trim().isNotEmpty) ? fetchedPob : UserData.pob,
+            gotra: (fetchedGotra != null && fetchedGotra.trim().isNotEmpty) ? fetchedGotra : UserData.gotra,
+            zodiac: (fetchedZodiac != null && fetchedZodiac.trim().isNotEmpty) ? fetchedZodiac : UserData.zodiac,
+            city: (fetchedCity != null && fetchedCity.trim().isNotEmpty) ? fetchedCity : UserData.city,
+          );
+          if (mounted) {
+            setState(() {
+              _resetBuffers();
+            });
+          }
+        }
+      }
     } catch (e) {
       debugPrint('Failed to load profile: $e');
     }
@@ -161,7 +182,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(width: 12),
             Text(
-              'Pandit Setu',
+              'SARV MANGAL',
               style: GoogleFonts.lato(
                 fontWeight: FontWeight.bold,
                 fontSize: 22,
@@ -1433,7 +1454,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         content: Text(
-          'Are you sure you want to log out of your Pandit Setu devotee account?',
+          'Are you sure you want to log out of your SARV MANGAL devotee account?',
           style: GoogleFonts.lato(color: _C.mediumAmber),
         ),
         actions: [
@@ -1652,7 +1673,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         width: double.infinity,
                         height: 50,
                         child: ElevatedButton.icon(
-                          onPressed: () {
+                          onPressed: () async {
                             setState(() {
                               _savedName = _name;
                               _savedPhone = _phone;
@@ -1674,6 +1695,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               gotra: _gotra,
                               zodiac: _zodiac,
                             );
+                            try {
+                              await ApiService.updateProfile({
+                                'fullName': _name,
+                                if (_email.isNotEmpty) 'email': _email,
+                                if (_dob.isNotEmpty) 'dob': _dob,
+                                if (_tob.isNotEmpty) 'tob': _tob,
+                                if (_pob.isNotEmpty) 'pob': _pob,
+                                if (_gotra.isNotEmpty) 'gotra': _gotra,
+                                if (_zodiac.isNotEmpty) 'zodiac': _zodiac,
+                              });
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Devotee profile saved to server 🙏'),
+                                    backgroundColor: Color(0xFFD97706),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              debugPrint('Error persisting profile to server: $e');
+                              if (context.mounted) {
+                                final cleanMsg = e.toString().replaceAll('Exception: ', '');
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Failed to update profile: $cleanMsg'),
+                                    backgroundColor: Colors.red[700],
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            }
                           },
                           icon: const Icon(Icons.check, size: 18),
                           label: Text(

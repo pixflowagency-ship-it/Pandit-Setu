@@ -17,8 +17,9 @@ async function startServer() {
   // Initialize WebSocket Server
   initializeSocket(httpServer);
 
-  httpServer.listen(env.port, () => {
-    logger.info(`Poojapaath API running on http://localhost:${env.port}`);
+  const host = process.env.HOST || "0.0.0.0";
+  httpServer.listen(env.port, host, () => {
+    logger.info(`Poojapaath API running on http://${host === "0.0.0.0" ? "localhost" : host}:${env.port}`);
   });
 }
 

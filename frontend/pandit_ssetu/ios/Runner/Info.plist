@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Pandit Ssetu</string>
+	<string>SARV MANGAL</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -65,6 +65,7 @@
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>SARV MANGAL requires location access to find nearby devotees and assign Pooja rituals within your service area.</string>
 </dict>
 </plist>

@@ -37,6 +37,23 @@ export interface VerifyOtpResponse {
     id: string;
     phone: string;
     name: string;
+    fullName?: string;
     role: UserRole;
+    dob?: string | null;
+    tob?: string | null;
+    pob?: string | null;
+    gotra?: string | null;
+    zodiac?: string | null;
+    city?: string | null;
+    email?: string | null;
+  };
+  isPandit?: boolean;
+  requiresApplication?: boolean;
+  hasPanditProfile?: boolean;
+  pandit?: {
+    id: string;
+    verificationStatus: string;
+    verificationStage: string;
+    isVerified: boolean;
   };
 }

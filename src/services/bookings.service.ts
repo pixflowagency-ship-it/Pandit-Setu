@@ -1,4 +1,4 @@
-import { db, bookings, poojas } from "../db/index.js";
+import { db, bookings, poojas, pandits } from "../db/index.js";
 import { eq } from "drizzle-orm";
 import { AppError } from "../utils/api-error.js";
 import type { CreateBookingInput } from "../validators/bookings.validator.js";
@@ -252,16 +252,6 @@ export async function updateBookingStatus(
 ) {
   const { and } = await import("drizzle-orm");
 
-  const validTransitions: Record<string, string[]> = {
-    PENDING: ["CONFIRMED", "CANCELLED"],
-    CONFIRMED: ["IN_PROGRESS", "CANCELLED"],
-    IN_PROGRESS: ["COMPLETED"],
-  };
-
-  if (!validTransitions[expectedStatus]?.includes(newStatus)) {
-    throw new AppError(400, "BAD_REQUEST", `Invalid status transition from ${expectedStatus} to ${newStatus}`);
-  }
-
   const booking = await db.query.bookings.findFirst({
     where: eq(bookings.id, bookingId),
   });
@@ -270,22 +260,105 @@ export async function updateBookingStatus(
     throw new AppError(404, "NOT_FOUND", "Booking not found");
   }
 
-  // Only assigned Pandit can update status
+  // 1. Ensure booking has an assigned Pandit
+  if (!booking.panditId) {
+    throw new AppError(400, "BAD_REQUEST", "Booking is not assigned to any Pandit");
+  }
+
+  // 2. Only assigned Pandit can update status (Yajmans or unassigned/wrong Pandits forbidden)
   if (booking.panditId !== userId) {
     throw new AppError(403, "FORBIDDEN", "Only the assigned Pandit can update the status");
   }
 
-  // Atomic update
+  // 3. Verify that the assigned Pandit is approved
+  const pandit = await db.query.pandits.findFirst({
+    where: eq(pandits.userId, userId),
+  });
+
+  if (!pandit || pandit.verificationStatus !== "APPROVED" || !pandit.isVerified) {
+    throw new AppError(
+      403,
+      "PANDIT_NOT_APPROVED",
+      "Your Pandit profile must be approved before updating booking lifecycle"
+    );
+  }
+
+  // 4. Idempotency: If booking is already in newStatus, return existing record safely
+  if (booking.status === newStatus) {
+    return booking;
+  }
+
+  // 5. Ineligible states
+  if (booking.status === "CANCELLED") {
+    throw new AppError(400, "INVALID_STATUS_TRANSITION", "Cannot transition a cancelled booking");
+  }
+
+  if (booking.status === "COMPLETED") {
+    throw new AppError(400, "INVALID_STATUS_TRANSITION", "Booking is already completed");
+  }
+
+  // 6. Expected status mismatch check
+  if (booking.status !== expectedStatus) {
+    throw new AppError(
+      409,
+      "STATUS_CONFLICT",
+      `Booking is currently ${booking.status}, expected ${expectedStatus}`
+    );
+  }
+
+  // 7. Lifecycle state machine transitions
+  const validTransitions: Record<string, string[]> = {
+    PENDING: ["CONFIRMED", "CANCELLED"],
+    CONFIRMED: ["HEADING_TO_VENUE", "IN_PROGRESS", "CANCELLED"],
+    HEADING_TO_VENUE: ["ARRIVED", "CANCELLED"],
+    ARRIVED: ["PUJA_STARTED", "IN_PROGRESS"],
+    PUJA_STARTED: ["COMPLETED"],
+    IN_PROGRESS: ["COMPLETED"],
+  };
+
+  if (!validTransitions[expectedStatus]?.includes(newStatus)) {
+    throw new AppError(
+      400,
+      "INVALID_STATUS_TRANSITION",
+      `Invalid status transition from ${expectedStatus} to ${newStatus}`
+    );
+  }
+
+  // 8. Enforce that Dakshina has been confirmed before completing booking
+  if (newStatus === "COMPLETED") {
+    const { dakshinaCollections } = await import("../db/schema/dakshina_collections.js");
+    const paidDakshina = await db.query.dakshinaCollections.findFirst({
+      where: and(
+        eq(dakshinaCollections.bookingId, bookingId),
+        eq(dakshinaCollections.paymentStatus, "PAID")
+      ),
+    });
+
+    if (!paidDakshina) {
+      throw new AppError(
+        400,
+        "DAKSHINA_NOT_COLLECTED",
+        "Cannot complete booking: Dakshina collection must be confirmed (Cash or Online) before closure."
+      );
+    }
+  }
+
+  // 9. Atomic conditional update enforcing row-level lock and expected status
   const [updatedBooking] = await db.update(bookings)
-    .set({ status: newStatus as any, updatedAt: new Date() }) // cast to any because TS enum type inference via drizzle might complain, but validation passed
+    .set({ status: newStatus as any, updatedAt: new Date() })
     .where(and(
       eq(bookings.id, bookingId),
-      eq(bookings.status, expectedStatus as any)
+      eq(bookings.status, expectedStatus as any),
+      eq(bookings.panditId, userId)
     ))
     .returning();
 
   if (!updatedBooking) {
-    throw new AppError(409, "CONFLICT", "Booking status mismatch or was updated concurrently. Please refresh.");
+    throw new AppError(
+      409,
+      "STATUS_CONFLICT",
+      "Booking status mismatch or was updated concurrently. Please refresh."
+    );
   }
 
   return updatedBooking;

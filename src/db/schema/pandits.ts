@@ -8,6 +8,7 @@ import {
   doublePrecision,
   timestamp,
   jsonb,
+  varchar,
   primaryKey,
   index,
 } from "drizzle-orm/pg-core";
@@ -30,6 +31,19 @@ export const pandits = pgTable("pandits", {
   verificationStatus: verificationStatusEnum("verification_status")
     .notNull()
     .default("PENDING"),
+  verificationStage: varchar("verification_stage", { length: 50 })
+    .notNull()
+    .default("STAGE_1_COMPLETE"),
+  rejectionReason: text("rejection_reason"),
+  videoCallStatus: varchar("video_call_status", { length: 50 })
+    .notNull()
+    .default("PENDING"),
+  videoScheduledAt: timestamp("video_scheduled_at", { withTimezone: true }),
+  videoCallRoomId: text("video_call_room_id"),
+  videoVerifierId: uuid("video_verifier_id"),
+  videoVerifierNotes: text("video_verifier_notes"),
+  approvedAt: timestamp("approved_at", { withTimezone: true }),
+  approvedBy: uuid("approved_by"),
   serviceRadiusKm: integer("service_radius_km").notNull().default(15),
   latitude: doublePrecision("latitude"),
   longitude: doublePrecision("longitude"),
@@ -61,6 +75,11 @@ export const panditDocuments = pgTable("pandit_documents", {
     .references(() => pandits.id, { onDelete: "cascade" }),
   docType: docTypeEnum("doc_type").notNull(),
   docUrl: text("doc_url").notNull(),
+  docNumber: varchar("doc_number", { length: 100 }),
+  fileName: varchar("file_name", { length: 255 }),
+  fileSize: integer("file_size"),
+  mimeType: varchar("mime_type", { length: 100 }),
+  rejectionReason: text("rejection_reason"),
   status: docStatusEnum("status")
     .notNull()
     .default("PENDING"),

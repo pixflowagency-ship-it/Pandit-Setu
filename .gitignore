@@ -13,3 +13,4 @@ coverage/
 *.pem
 .nyc_output/
 *.log
+storage/

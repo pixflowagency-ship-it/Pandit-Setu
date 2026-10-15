@@ -12,6 +12,9 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "seed": "tsx src/db/seed.ts",
+    "import:poojas": "tsx --env-file=.env src/db/import_pooja_excel.ts",
+    "import:products": "tsx --env-file=.env src/db/import_store_products_excel.ts",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
   },

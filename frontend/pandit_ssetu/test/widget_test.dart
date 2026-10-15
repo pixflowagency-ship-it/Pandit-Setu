@@ -8,9 +8,9 @@ void main() {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const PanditSetuApp());
 
-    // Verify that the title 'Pandit Setu' and subtitle are displayed.
-    expect(find.text('Pandit Setu'), findsOneWidget);
-    expect(find.text('connecting pandits with yajmans'), findsOneWidget);
+    // Verify that the title 'SARV MANGAL' and subtitle are displayed.
+    expect(find.text('SARV MANGAL'), findsOneWidget);
+    expect(find.text('Sacred Vedic Rituals & Astrological Guidance'), findsOneWidget);
 
     // Pump to trigger animation and let the 2-second timer fire.
     await tester.pump(const Duration(seconds: 2));

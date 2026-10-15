@@ -169,7 +169,7 @@ class _PanchangScreenState extends State<PanchangScreen> {
             ),
             const SizedBox(width: 8),
             Text(
-              'Pandit Setu',
+              'SARV MANGAL',
               style: GoogleFonts.lato(
                 fontWeight: FontWeight.bold,
                 fontSize: 20,

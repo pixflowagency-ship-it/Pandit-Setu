@@ -23,4 +23,12 @@ paymentsRouter.post(
   asyncHandler(verifyPaymentHandler)
 );
 
+paymentsRouter.post(
+  "/verify-signature",
+  strictLimiter,
+  verifyToken,
+  validateBody(verifyPaymentSchema),
+  asyncHandler(verifyPaymentHandler)
+);
+
 export default paymentsRouter;

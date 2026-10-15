@@ -35,7 +35,12 @@ export async function getNearbyPandits(lat: number, lng: number, radiusKm: numbe
   return nearby;
 }
 
-export async function updateDutyStatus(panditUserId: string, isAvailable: boolean) {
+export async function updateDutyStatus(
+  panditUserId: string,
+  isAvailable: boolean,
+  lat?: number,
+  lng?: number
+) {
   const pandit = await db.query.pandits.findFirst({
     where: eq(pandits.userId, panditUserId),
   });
@@ -44,13 +49,25 @@ export async function updateDutyStatus(panditUserId: string, isAvailable: boolea
     throw new AppError(404, "NOT_FOUND", "Pandit profile not found");
   }
 
-  // If attempting to go available, ensure they have location coordinates
-  if (isAvailable && (!pandit.latitude || !pandit.longitude)) {
+  // If attempting to go available, ensure coordinates are provided or already stored
+  const hasCoordinates = (lat !== undefined && lng !== undefined) || (pandit.latitude && pandit.longitude);
+  if (isAvailable && !hasCoordinates) {
     throw new AppError(400, "BAD_REQUEST", "You must set your location before becoming available.");
   }
 
+  const updateData: Record<string, any> = {
+    isAvailable,
+    updatedAt: new Date(),
+  };
+
+  if (lat !== undefined && lng !== undefined) {
+    updateData.latitude = lat;
+    updateData.longitude = lng;
+    updateData.location = sql`ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)`;
+  }
+
   const [updatedPandit] = await db.update(pandits)
-    .set({ isAvailable, updatedAt: new Date() })
+    .set(updateData)
     .where(eq(pandits.id, pandit.id))
     .returning();
 
@@ -58,8 +75,11 @@ export async function updateDutyStatus(panditUserId: string, isAvailable: boolea
   const redis = await getRedis();
   if (redis) {
     const geoKey = "pandits:live";
-    if (isAvailable && updatedPandit.longitude && updatedPandit.latitude) {
-      await redis.geoadd(geoKey, updatedPandit.longitude, updatedPandit.latitude, updatedPandit.id);
+    const finalLat = lat ?? updatedPandit.latitude;
+    const finalLng = lng ?? updatedPandit.longitude;
+
+    if (isAvailable && finalLat && finalLng) {
+      await redis.geoadd(geoKey, finalLng, finalLat, updatedPandit.id);
     } else {
       await redis.zrem(geoKey, updatedPandit.id);
     }
@@ -77,11 +97,48 @@ export async function acceptBooking(panditUserId: string, bookingId: string) {
     throw new AppError(404, "NOT_FOUND", "Pandit profile not found");
   }
 
+  if (pandit.verificationStatus !== "APPROVED" || !pandit.isVerified) {
+    throw new AppError(
+      403,
+      "PANDIT_NOT_APPROVED",
+      "Your Pandit profile is not yet approved. Please complete onboarding and verification."
+    );
+  }
+
   // To prevent circular import dependencies if bookings.ts imports pandits.ts
-  // it's safer to import it locally or from index.js here
   const { bookings } = await import("../db/schema/bookings.js");
 
-  // Atomic update to prevent race conditions
+  // Verify booking exists before attempting update
+  const existingBooking = await db.query.bookings.findFirst({
+    where: eq(bookings.id, bookingId),
+  });
+
+  if (!existingBooking) {
+    throw new AppError(404, "NOT_FOUND", "Booking not found");
+  }
+
+  // Idempotent: If this authenticated pandit already accepted this booking, return it cleanly
+  if (existingBooking.panditId === panditUserId && existingBooking.status === "CONFIRMED") {
+    return existingBooking;
+  }
+
+  // Check if already assigned to another Pandit
+  if (existingBooking.panditId && existingBooking.panditId !== panditUserId) {
+    throw new AppError(409, "CONFLICT", "BOOKING_ALREADY_TAKEN");
+  }
+
+  // Verify booking status eligibility (must be PENDING)
+  if (existingBooking.status !== "PENDING") {
+    if (["CONFIRMED", "HEADING_TO_VENUE", "ARRIVED", "PUJA_STARTED", "IN_PROGRESS", "COMPLETED"].includes(existingBooking.status)) {
+      throw new AppError(409, "CONFLICT", "BOOKING_ALREADY_TAKEN");
+    }
+    if (existingBooking.status === "CANCELLED") {
+      throw new AppError(400, "BAD_REQUEST", "BOOKING_ALREADY_CANCELLED: Cannot accept a cancelled booking");
+    }
+    throw new AppError(400, "BAD_REQUEST", `BOOKING_INELIGIBLE: Booking status is ${existingBooking.status}`);
+  }
+
+  // Atomic conditional update with PostgreSQL row-level locks
   const [updatedBooking] = await db.update(bookings)
     .set({ 
       panditId: panditUserId, // Note: bookings.panditId is a FK to users.id, which matches panditUserId
@@ -90,11 +147,13 @@ export async function acceptBooking(panditUserId: string, bookingId: string) {
     })
     .where(and(
       eq(bookings.id, bookingId),
-      eq(bookings.status, "PENDING")
+      eq(bookings.status, "PENDING"),
+      sql`${bookings.panditId} IS NULL`
     ))
     .returning();
 
   if (!updatedBooking) {
+    // Another concurrent transaction won the assignment race in PostgreSQL
     throw new AppError(409, "CONFLICT", "BOOKING_ALREADY_TAKEN");
   }
 
@@ -108,6 +167,95 @@ export async function acceptBooking(panditUserId: string, bookingId: string) {
   ).catch(console.error);
 
   return updatedBooking;
+}
+
+export async function declineBooking(
+  panditUserId: string,
+  bookingId: string,
+  reason: "TOO_FAR" | "BUSY" | "SCHEDULE_CONFLICT" | "OTHER" = "OTHER",
+  notes?: string
+) {
+  const pandit = await db.query.pandits.findFirst({
+    where: eq(pandits.userId, panditUserId),
+  });
+
+  if (!pandit) {
+    throw new AppError(404, "NOT_FOUND", "Pandit profile not found");
+  }
+
+  if (pandit.verificationStatus !== "APPROVED" || !pandit.isVerified) {
+    throw new AppError(
+      403,
+      "PANDIT_NOT_APPROVED",
+      "Your Pandit profile is not yet approved. Please complete onboarding and verification."
+    );
+  }
+
+  const { bookings } = await import("../db/schema/bookings.js");
+  const { bookingDeclines } = await import("../db/schema/booking_declines.js");
+
+  // Verify booking exists before attempting decline
+  const booking = await db.query.bookings.findFirst({
+    where: eq(bookings.id, bookingId),
+  });
+
+  if (!booking) {
+    throw new AppError(404, "NOT_FOUND", "Booking not found");
+  }
+
+  // Check booking eligibility
+  if (booking.status === "CANCELLED") {
+    throw new AppError(400, "BAD_REQUEST", "BOOKING_ALREADY_CANCELLED: Cannot decline a cancelled booking");
+  }
+  if (booking.status === "COMPLETED") {
+    throw new AppError(400, "BAD_REQUEST", "BOOKING_INELIGIBLE: Cannot decline a completed booking");
+  }
+  if (booking.panditId === panditUserId) {
+    throw new AppError(400, "BAD_REQUEST", "BOOKING_ALREADY_ACCEPTED: Cannot decline an already accepted booking");
+  }
+  if (booking.panditId !== null && booking.panditId !== panditUserId) {
+    throw new AppError(409, "CONFLICT", "BOOKING_ALREADY_TAKEN");
+  }
+
+  // Check if already declined by this Pandit (Idempotent)
+  const existingDecline = await db.query.bookingDeclines.findFirst({
+    where: and(
+      eq(bookingDeclines.bookingId, bookingId),
+      eq(bookingDeclines.panditId, panditUserId)
+    ),
+  });
+
+  let declineRecord = existingDecline;
+
+  if (!declineRecord) {
+    const [created] = await db.insert(bookingDeclines)
+      .values({
+        bookingId,
+        panditId: panditUserId,
+        reason: reason || "OTHER",
+        notes,
+      })
+      .onConflictDoNothing()
+      .returning();
+
+    declineRecord = created || (await db.query.bookingDeclines.findFirst({
+      where: and(
+        eq(bookingDeclines.bookingId, bookingId),
+        eq(bookingDeclines.panditId, panditUserId)
+      ),
+    }));
+  }
+
+  // Fast Redis caching for dispatch candidate filtering
+  try {
+    const redis = await getRedis();
+    if (redis) {
+      await redis.set(`dispatch:declined:${bookingId}:${pandit.id}`, "1", "EX", 86400);
+      await redis.set(`dispatch:notified:${bookingId}:${pandit.id}`, "1", "EX", 86400);
+    }
+  } catch (_) {}
+
+  return declineRecord;
 }
 
 export async function getPanditDashboard(panditUserId: string) {
@@ -165,9 +313,11 @@ export async function getPanditDashboard(panditUserId: string) {
   });
 
   return {
+    isAvailable: pandit.isAvailable ?? false,
     todayCount,
     totalEarnings: totalEarnings.toFixed(2),
     rating: pandit.rating || "0.00",
     pendingRequests,
   };
 }
+

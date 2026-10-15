@@ -6,10 +6,13 @@ import { bookings } from "../db/schema/bookings.js";
 import { AppError } from "../utils/api-error.js";
 import { getRedis } from "../config/redis.js";
 
-// Initialize Razorpay conditionally based on env (so tests don't crash if omitted)
-const getRazorpayInstance = () => {
-  const key_id = process.env.RAZORPAY_KEY_ID || "test_key_id";
-  const key_secret = process.env.RAZORPAY_KEY_SECRET || "test_key_secret";
+// Initialize Razorpay strictly requiring valid environment configuration
+export const getRazorpayInstance = () => {
+  const key_id = process.env.RAZORPAY_KEY_ID;
+  const key_secret = process.env.RAZORPAY_KEY_SECRET;
+  if (!key_id || !key_secret) {
+    throw new AppError(500, "CONFIGURATION_ERROR", "Razorpay credentials are not configured");
+  }
   return new Razorpay({ key_id, key_secret });
 };
 
@@ -58,7 +61,10 @@ export async function createRazorpayOrder(userId: string, bookingId: string) {
 }
 
 export async function verifyPaymentSignature(userId: string, orderId: string, paymentId: string, signature: string) {
-  const secret = process.env.RAZORPAY_KEY_SECRET || "test_key_secret";
+  const secret = process.env.RAZORPAY_KEY_SECRET;
+  if (!secret) {
+    throw new AppError(500, "CONFIGURATION_ERROR", "Razorpay key secret is not configured");
+  }
   
   const generatedSignature = crypto
     .createHmac("sha256", secret)
@@ -86,6 +92,11 @@ export async function verifyPaymentSignature(userId: string, orderId: string, pa
 
   if (!booking) {
     throw new AppError(404, "NOT_FOUND", "Associated booking not found");
+  }
+
+  // Idempotency: If already verified and marked PAID, return existing record
+  if (booking.paymentStatus === "PAID") {
+    return booking;
   }
 
   // Update payment status safely
@@ -131,7 +142,10 @@ export async function createRazorpaySubscription(userId: string, planId: string)
 }
 
 export async function handleWebhookEvent(event: any, signature: string, rawBody: Buffer) {
-  const secret = process.env.RAZORPAY_WEBHOOK_SECRET || "test_webhook_secret";
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+  if (!secret) {
+    throw new AppError(500, "CONFIGURATION_ERROR", "Razorpay webhook secret is not configured");
+  }
 
   const generatedSignature = crypto
     .createHmac("sha256", secret)
@@ -178,6 +192,41 @@ export async function handleWebhookEvent(event: any, signature: string, rawBody:
           updatedAt: new Date()
         })
         .where(eq(bookings.id, booking.id));
+    } else if (!booking) {
+      const { productOrders } = await import("../db/schema/product_orders.js");
+      const pOrder = await db.query.productOrders.findFirst({
+        where: eq(productOrders.razorpayOrderId, orderId),
+      });
+
+      if (pOrder && pOrder.paymentStatus !== "PAID") {
+        const paymentId = payload?.id || payload?.payment_id;
+        await db.update(productOrders)
+          .set({
+            paymentStatus: "PAID",
+            status: "PROCESSING",
+            razorpayPaymentId: paymentId || pOrder.razorpayPaymentId,
+            paidAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(eq(productOrders.id, pOrder.id));
+      } else if (!pOrder) {
+        const { dakshinaCollections } = await import("../db/schema/dakshina_collections.js");
+        const dakshina = await db.query.dakshinaCollections.findFirst({
+          where: eq(dakshinaCollections.razorpayOrderId, orderId),
+        });
+
+        if (dakshina && dakshina.paymentStatus !== "PAID") {
+          const paymentId = payload?.id || payload?.payment_id;
+          await db.update(dakshinaCollections)
+            .set({
+              paymentStatus: "PAID",
+              razorpayPaymentId: paymentId || dakshina.razorpayPaymentId,
+              collectedAt: new Date(),
+              updatedAt: new Date(),
+            })
+            .where(eq(dakshinaCollections.id, dakshina.id));
+        }
+      }
     }
   }
 

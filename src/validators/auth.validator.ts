@@ -16,6 +16,7 @@ export const verifyOtpSchema = z.object({
     .trim()
     .regex(/^\d{6}$/, "OTP must be a 6-digit code"),
   name: z.string().trim().min(2).max(255).optional(),
+  role: z.enum(["YAJMAN", "PANDIT"]).optional(),
 }).strict();
 
 export type SendOtpInput = z.infer<typeof sendOtpSchema>;

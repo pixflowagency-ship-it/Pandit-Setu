@@ -13,6 +13,7 @@ import templesRouter from "./temples.routes.js";
 import paymentsRouter from "./payments.routes.js";
 import subscriptionsRouter from "./subscriptions.routes.js";
 import trackingRouter from "./tracking.routes.js";
+import productOrdersRouter from "./product-orders.routes.js";
 import { apiLimiter } from "../middleware/rate-limit.js";
 
 const apiRouter = Router();
@@ -31,6 +32,7 @@ apiRouter.use("/temples", templesRouter);
 apiRouter.use("/payments", paymentsRouter);
 apiRouter.use("/subscriptions", subscriptionsRouter);
 apiRouter.use("/tracking", trackingRouter);
+apiRouter.use("/product-orders", productOrdersRouter);
 
 apiRouter.get(
   "/me",

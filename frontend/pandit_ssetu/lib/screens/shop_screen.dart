@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 
-import 'dart:convert';
-import 'package:flutter/services.dart';
+import '../services/api_service.dart';
+import '../services/cart_service.dart';
 import '../widgets/app_bottom_nav_bar.dart';
 import '../widgets/app_side_drawer.dart';
 
@@ -17,85 +19,173 @@ class _ShopScreenState extends State<ShopScreen> {
   String _selectedCategory = 'All';
   String _sortBy = 'Category';
   bool _showSortMenu = false;
-  int _cartCount = 0;
   final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
+  final ScrollController _scrollController = ScrollController();
+  Timer? _debounceTimer;
+
+  // Pagination state
+  int _currentPage = 1;
+  static const int _pageSize = 30;
+  bool _hasMore = true;
+  bool _isLoading = true;
+  bool _isLoadingMore = false;
+  String? _errorMessage;
 
   List<Map<String, dynamic>> _allProducts = [];
-  bool _isLoading = true;
+
+  // Available curated categories in store catalog
+  final List<String> _baseCategories = [
+    'All',
+    'Havan Samagri',
+    'Idols & Murtis',
+    'Dhoop & Agarbatti',
+    'Diya & Batti',
+    'Pooja Thali & Kalash',
+    'Sacred Threads & Vastra',
+    'General Pooja Material',
+  ];
 
   @override
   void initState() {
     super.initState();
-    _loadProducts();
+    _scrollController.addListener(_onScroll);
+    _loadProducts(page: 1);
   }
 
-  Future<void> _loadProducts() async {
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    _searchController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 250) {
+      if (!_isLoading && !_isLoadingMore && _hasMore) {
+        _loadMore();
+      }
+    }
+  }
+
+  void _onSearchChanged(String query) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 350), () {
+      _resetAndFetch();
+    });
+  }
+
+  Future<void> _resetAndFetch() async {
+    setState(() {
+      _currentPage = 1;
+      _hasMore = true;
+      _errorMessage = null;
+      _allProducts = [];
+    });
+    await _loadProducts(page: 1);
+  }
+
+  Future<void> _loadMore() async {
+    if (_isLoadingMore || !_hasMore) return;
+    setState(() => _isLoadingMore = true);
+    await _loadProducts(page: _currentPage + 1, isNextPage: true);
+  }
+
+  Future<void> _loadProducts({required int page, bool isNextPage = false}) async {
+    if (!isNextPage) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
+
     try {
-      final String response = await rootBundle.loadString('assets/data/products.json');
-      final List<dynamic> data = json.decode(response);
+      final queryCategory = _selectedCategory == 'All' ? null : _selectedCategory;
+      final querySearch = _searchController.text.trim().isNotEmpty ? _searchController.text.trim() : null;
+
+      final rawItems = await ApiService.getProducts(
+        page: page,
+        limit: _pageSize,
+        category: queryCategory,
+        search: querySearch,
+      );
+
       final List<Map<String, dynamic>> loadedProducts = [];
 
-      for (var i = 0; i < data.length; i++) {
-        var item = data[i];
+      for (var item in rawItems) {
+        final double price = double.tryParse(item['price']?.toString() ?? '150') ?? 150.0;
+        final bool isActive = item['isActive'] == true || item['status'] == 'Active';
+        final List<dynamic> rawSamagri = item['samagri'] is List ? item['samagri'] : [];
+        final List<String> samagriList = rawSamagri.map((e) => e.toString()).toList();
+        if (samagriList.isEmpty && item['unit'] != null) {
+          samagriList.add('Unit: ${item['unit']}');
+        }
+
         loadedProducts.add({
-          'id': item['Product_ID'] ?? i.toString(),
-          'name': item['Item_Name'] ?? 'Unknown Item',
-          'description': item['Product_Description'] ?? 'No description available',
-          'price': 150.0 + (i % 10) * 20, // Dummy price since the sheet doesn't seem to have one
-          'category': item['Category'] ?? 'General',
-          'badge': item['Status'] == 'Active' ? 'AVAILABLE' : 'OUT OF STOCK',
-          'badgeColor': item['Status'] == 'Active' ? 4280926393 : 4294020118,
-          'samagri': [(item['Unit'] != null ? "Unit: ${item['Unit']}" : 'Standard')],
-          'imageUrl': 'https://images.unsplash.com/photo-1608306448197-e83633f1261c?w=500', // Default generic image
+          'id': item['id']?.toString() ?? item['productId']?.toString() ?? '',
+          'productId': item['productId']?.toString() ?? '',
+          'name': item['name']?.toString() ?? 'Pooja Samagri',
+          'description': item['description']?.toString() ?? '',
+          'price': price,
+          'category': item['category']?.toString() ?? 'General Pooja Material',
+          'subCategory': item['subCategory']?.toString() ?? '',
+          'badge': item['badge']?.toString() ?? (isActive ? 'AVAILABLE' : 'OUT OF STOCK'),
+          'badgeColor': isActive ? 4280926393 : 4294020118,
+          'samagri': samagriList,
+          'imageUrl': item['imageUrl']?.toString() ?? '',
+          'unit': item['unit']?.toString(),
         });
       }
 
-      setState(() {
-        _allProducts = loadedProducts;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          if (isNextPage) {
+            // Deduplicate items
+            final Set<String> existingIds = _allProducts.map((p) => p['id'].toString()).toSet();
+            for (var item in loadedProducts) {
+              if (!existingIds.contains(item['id'].toString())) {
+                _allProducts.add(item);
+                existingIds.add(item['id'].toString());
+              }
+            }
+            _currentPage = page;
+            _isLoadingMore = false;
+          } else {
+            _allProducts = loadedProducts;
+            _currentPage = 1;
+            _isLoading = false;
+          }
+
+          if (loadedProducts.length < _pageSize) {
+            _hasMore = false;
+          }
+        });
+      }
     } catch (e) {
-      debugPrint('Error loading products: $e');
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString().replaceAll('Exception: ', '');
+          _isLoading = false;
+          _isLoadingMore = false;
+        });
+      }
     }
   }
 
-  List<Map<String, dynamic>> get _filteredProducts {
-    List<Map<String, dynamic>> list = _allProducts;
-
-    if (_selectedCategory != 'All') {
-      list = list.where((p) => p['category'] == _selectedCategory).toList();
-    }
-
-    if (_searchQuery.isNotEmpty) {
-      list = list
-          .where(
-            (p) =>
-                (p['name'] as String).toLowerCase().contains(
-                  _searchQuery.toLowerCase(),
-                ) ||
-                (p['description'] as String).toLowerCase().contains(
-                  _searchQuery.toLowerCase(),
-                ),
-          )
-          .toList();
-    }
+  List<Map<String, dynamic>> get _sortedProducts {
+    List<Map<String, dynamic>> list = [..._allProducts];
 
     if (_sortBy == 'Category') {
-      list = [...list]..sort((a, b) {
+      list.sort((a, b) {
         int catCompare = (a['category'] as String? ?? '').compareTo(b['category'] as String? ?? '');
         if (catCompare != 0) return catCompare;
         return (a['name'] as String? ?? '').compareTo(b['name'] as String? ?? '');
       });
     } else if (_sortBy == 'Lowest Price') {
-      list = [...list]..sort((a, b) => (a['price'] as double).compareTo(b['price'] as double));
+      list.sort((a, b) => (a['price'] as double).compareTo(b['price'] as double));
     } else if (_sortBy == 'Highest Price') {
-      list = [...list]..sort((a, b) => (b['price'] as double).compareTo(a['price'] as double));
-    } else {
-      list = [...list];
+      list.sort((a, b) => (b['price'] as double).compareTo(a['price'] as double));
     }
 
     return list;
@@ -107,36 +197,51 @@ class _ShopScreenState extends State<ShopScreen> {
       backgroundColor: const Color(0xFFFFF8EE),
       drawer: const AppSideDrawer(),
       body: SafeArea(
-        child: Stack(
-          children: [
-            Column(
+        child: RefreshIndicator(
+          color: const Color(0xFFF18C16),
+          onRefresh: _resetAndFetch,
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 16,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildTopBar(),
-                        const SizedBox(height: 20),
-                        _buildSearchBar(),
-                        const SizedBox(height: 18),
-                        _buildOccasionRow(),
-                        const SizedBox(height: 14),
-                        _buildSortRow(),
-                        const SizedBox(height: 16),
-                        ..._buildProductCards(),
-                        const SizedBox(height: 80),
-                      ],
+                _buildTopBar(),
+                const SizedBox(height: 20),
+                _buildSearchBar(),
+                const SizedBox(height: 18),
+                _buildOccasionRow(),
+                const SizedBox(height: 14),
+                _buildSortRow(),
+                const SizedBox(height: 16),
+                ..._buildProductCards(),
+                if (_isLoadingMore) ...[
+                  const SizedBox(height: 20),
+                  const Center(
+                    child: CircularProgressIndicator(
+                      color: Color(0xFFF18C16),
+                      strokeWidth: 2.5,
                     ),
                   ),
-                ),
+                ],
+                if (!_hasMore && _allProducts.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  Center(
+                    child: Text(
+                      'Showing all ${_allProducts.length} sacred items',
+                      style: GoogleFonts.lato(
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                        color: const Color(0xFF8A7060),
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 80),
               ],
             ),
-          ],
+          ),
         ),
       ),
       bottomNavigationBar: const AppBottomNavBar(currentPath: '/shop'),
@@ -180,37 +285,43 @@ class _ShopScreenState extends State<ShopScreen> {
             ),
           ],
         ),
-        Stack(
-          children: [
-            IconButton(
-              icon: const Icon(
-                Icons.shopping_cart_outlined,
-                size: 26,
-                color: Color(0xFF3D2200),
-              ),
-              onPressed: () {},
-            ),
-            if (_cartCount > 0)
-              Positioned(
-                right: 6,
-                top: 6,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF18C16),
-                    shape: BoxShape.circle,
+        ListenableBuilder(
+          listenable: CartService.instance,
+          builder: (context, _) {
+            final cartCount = CartService.instance.totalItemCount;
+            return Stack(
+              children: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.shopping_cart_outlined,
+                    size: 26,
+                    color: Color(0xFF3D2200),
                   ),
-                  child: Text(
-                    '$_cartCount',
-                    style: GoogleFonts.lato(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+                  onPressed: () => context.push('/cart'),
+                ),
+                if (cartCount > 0)
+                  Positioned(
+                    right: 6,
+                    top: 6,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF18C16),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        '$cartCount',
+                        style: GoogleFonts.lato(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-          ],
+              ],
+            );
+          },
         ),
       ],
     );
@@ -225,15 +336,24 @@ class _ShopScreenState extends State<ShopScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: TextField(
         controller: _searchController,
-        onChanged: (val) => setState(() => _searchQuery = val),
+        onChanged: _onSearchChanged,
         decoration: InputDecoration(
-          hintText: 'Search 156+ sacred items & samagri...',
+          hintText: 'Search 1,200+ sacred items & samagri...',
           hintStyle: GoogleFonts.lato(fontSize: 14, color: Colors.grey),
           prefixIcon: const Icon(
             Icons.search,
             color: Color(0xFFE8920A),
             size: 22,
           ),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear, size: 18, color: Color(0xFF8A7060)),
+                  onPressed: () {
+                    _searchController.clear();
+                    _resetAndFetch();
+                  },
+                )
+              : null,
           filled: false,
           contentPadding: const EdgeInsets.symmetric(
             vertical: 14,
@@ -248,13 +368,14 @@ class _ShopScreenState extends State<ShopScreen> {
   }
 
   Widget _buildOccasionRow() {
-    final Set<String> uniqueCategories = {'All'};
+    final Set<String> uniqueCategories = {..._baseCategories};
     for (var p in _allProducts) {
       if (p['category'] != null && (p['category'] as String).isNotEmpty) {
         uniqueCategories.add(p['category'] as String);
       }
     }
     final categories = uniqueCategories.toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -274,7 +395,12 @@ class _ShopScreenState extends State<ShopScreen> {
             children: categories.map((cat) {
               final isActive = _selectedCategory == cat;
               return GestureDetector(
-                onTap: () => setState(() => _selectedCategory = cat),
+                onTap: () {
+                  if (_selectedCategory != cat) {
+                    setState(() => _selectedCategory = cat);
+                    _resetAndFetch();
+                  }
+                },
                 child: Container(
                   margin: const EdgeInsets.only(right: 10),
                   padding: const EdgeInsets.symmetric(
@@ -285,17 +411,13 @@ class _ShopScreenState extends State<ShopScreen> {
                     color: isActive ? const Color(0xFFF18C16) : Colors.white,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: isActive
-                          ? const Color(0xFFF18C16)
-                          : const Color(0xFFE8D5A3),
+                      color: isActive ? const Color(0xFFF18C16) : const Color(0xFFE8D5A3),
                       width: 1,
                     ),
                     boxShadow: isActive
                         ? [
                             BoxShadow(
-                              color: const Color(
-                                0xFFF18C16,
-                              ).withValues(alpha: 0.3),
+                              color: const Color(0xFFF18C16).withValues(alpha: 0.3),
                               blurRadius: 6,
                               offset: const Offset(0, 2),
                             ),
@@ -395,12 +517,75 @@ class _ShopScreenState extends State<ShopScreen> {
         const Center(
           child: Padding(
             padding: EdgeInsets.symmetric(vertical: 48),
-            child: CircularProgressIndicator(color: Color(0xFFF18C16)),
+            child: Column(
+              children: [
+                CircularProgressIndicator(color: Color(0xFFF18C16)),
+                SizedBox(height: 12),
+                Text(
+                  'Loading sacred store products...',
+                  style: TextStyle(color: Color(0xFF7A6251)),
+                ),
+              ],
+            ),
           ),
         ),
       ];
     }
-    final products = _filteredProducts;
+
+    if (_errorMessage != null) {
+      return [
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 40),
+            child: Column(
+              children: [
+                const Icon(
+                  Icons.cloud_off,
+                  color: Color(0xFFD97706),
+                  size: 54,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Failed to Load Products',
+                  style: GoogleFonts.lato(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: const Color(0xFF3D2200),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Text(
+                    _errorMessage!,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.lato(
+                      fontSize: 13,
+                      color: Colors.red.shade700,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: _resetAndFetch,
+                  icon: const Icon(Icons.refresh, size: 18),
+                  label: const Text('Retry'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF18C16),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ];
+    }
+
+    final products = _sortedProducts;
     if (products.isEmpty) {
       return [
         Center(
@@ -422,11 +607,27 @@ class _ShopScreenState extends State<ShopScreen> {
                     color: const Color(0xFF3D2200),
                   ),
                 ),
+                const SizedBox(height: 6),
                 Text(
-                  'Try adjusting your category or search filter.',
+                  'Try searching for another item or resetting the filter.',
                   style: GoogleFonts.lato(
                     fontSize: 13,
                     color: const Color(0xFF8A7060),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                TextButton(
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() => _selectedCategory = 'All');
+                    _resetAndFetch();
+                  },
+                  child: Text(
+                    'Reset Search & Filters',
+                    style: GoogleFonts.lato(
+                      color: const Color(0xFFF18C16),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -443,7 +644,15 @@ class _ShopScreenState extends State<ShopScreen> {
             child: _ProductCard(
               product: p,
               onAddToCart: () {
-                setState(() => _cartCount++);
+                CartService.instance.addItem(
+                  productId: p['id'].toString(),
+                  name: p['name'].toString(),
+                  price: (p['price'] as num).toDouble(),
+                  imageUrl: p['imageUrl'].toString(),
+                  unit: p['unit']?.toString(),
+                  quantity: 1,
+                );
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
@@ -456,6 +665,11 @@ class _ShopScreenState extends State<ShopScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
+                    action: SnackBarAction(
+                      label: 'VIEW CART',
+                      textColor: Colors.white,
+                      onPressed: () => context.push('/cart'),
+                    ),
                   ),
                 );
               },
@@ -464,8 +678,6 @@ class _ShopScreenState extends State<ShopScreen> {
         )
         .toList();
   }
-
-
 }
 
 class _ProductCard extends StatelessWidget {
@@ -483,7 +695,7 @@ class _ProductCard extends StatelessWidget {
     }
     final cat = (product['category'] as String? ?? '');
     final name = (product['name'] as String? ?? '');
-    
+
     if (cat.contains('Kalash') || name.contains('कलश')) {
       return 'https://images.unsplash.com/photo-1608306448197-e83633f1261c?w=400&q=80';
     } else if (name.contains('नारियल') || name.contains('अक्षत') || name.contains('चावल')) {
@@ -508,12 +720,13 @@ class _ProductCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFF2E6D0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -524,24 +737,19 @@ class _ProductCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: Image.network(
-                  _getProductImageUrl(product),
-                  width: 85,
-                  height: 85,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    width: 85,
-                    height: 85,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFFFF3E0),
-                      borderRadius: BorderRadius.all(Radius.circular(14)),
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.inventory_2_outlined,
-                        color: Color(0xFFF18C16),
-                        size: 36,
+                borderRadius: BorderRadius.circular(12),
+                child: SizedBox(
+                  width: 90,
+                  height: 90,
+                  child: Image.network(
+                    _getProductImageUrl(product),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: const Color(0xFFFAF0DC),
+                      child: const Icon(
+                        Icons.image_not_supported,
+                        color: Color(0xFFD4A373),
+                        size: 32,
                       ),
                     ),
                   ),
@@ -553,7 +761,7 @@ class _ProductCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
                           child: Text(

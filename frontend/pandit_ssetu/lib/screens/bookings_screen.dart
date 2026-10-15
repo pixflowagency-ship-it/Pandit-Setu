@@ -241,7 +241,7 @@ class _BookingsScreenState extends State<BookingsScreen>
           const SizedBox(height: 12),
 
           Text(
-            booking['poojaTitle'] ?? 'Vedic Ritual',
+            booking['pooja']?['title'] ?? booking['poojaTitle'] ?? 'Vedic Ritual',
             style: GoogleFonts.lato(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -254,13 +254,19 @@ class _BookingsScreenState extends State<BookingsScreen>
             bool isAllocating = false;
             int remainingSecs = 0;
             if (booking['allocationMode'] == 'auto' && createdAtStr != null) {
-              final createdAt = DateTime.parse(createdAtStr);
-              final diff = DateTime.now().difference(createdAt);
-              if (diff.inSeconds < 180) {
-                isAllocating = true;
-                remainingSecs = 180 - diff.inSeconds;
+              final createdAt = DateTime.tryParse(createdAtStr);
+              if (createdAt != null) {
+                final diff = DateTime.now().difference(createdAt);
+                if (diff.inSeconds < 180) {
+                  isAllocating = true;
+                  remainingSecs = 180 - diff.inSeconds;
+                }
               }
             }
+
+            final panditDisplayName = booking['pandit']?['name'] ??
+                booking['panditName'] ??
+                (booking['panditId'] != null ? 'Vedic Pandit' : 'Auto-Allocating Acharya');
 
             return Row(
               children: [
@@ -273,7 +279,7 @@ class _BookingsScreenState extends State<BookingsScreen>
                 Text(
                   isAllocating
                       ? 'Allocating Acharya (${remainingSecs ~/ 60}m ${remainingSecs % 60}s)'
-                      : (booking['panditName'] ?? 'Assigned Pandit'),
+                      : panditDisplayName,
                   style: GoogleFonts.lato(
                     fontSize: 13,
                     fontWeight: isAllocating ? FontWeight.bold : FontWeight.w600,
@@ -289,7 +295,11 @@ class _BookingsScreenState extends State<BookingsScreen>
               const Icon(Icons.event, size: 16, color: Color(0xFFD97706)),
               const SizedBox(width: 6),
               Text(
-                '${booking['date']} at ${booking['timeSlot']}',
+                booking['bookingTime'] != null
+                    ? (booking['bookingTime'].toString().contains('T')
+                        ? '${booking['bookingTime'].toString().split('T').first} at ${booking['bookingTime'].toString().split('T').last.substring(0, 5)}'
+                        : booking['bookingTime'].toString())
+                    : '${booking['date'] ?? 'Scheduled Date'} ${booking['timeSlot'] ?? ''}',
                 style: GoogleFonts.lato(
                   fontSize: 13,
                   color: const Color(0xFF6B5B52),
@@ -305,7 +315,7 @@ class _BookingsScreenState extends State<BookingsScreen>
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
-                  booking['address'] ?? 'Location Address',
+                  booking['venueAddress'] ?? booking['address'] ?? (booking['mode'] == 'ONLINE' ? 'Online E-Pooja Session' : 'Devotee Residence'),
                   style: GoogleFonts.lato(
                     fontSize: 12.5,
                     color: const Color(0xFF6B5B52),
@@ -355,8 +365,30 @@ class _BookingsScreenState extends State<BookingsScreen>
                   }
                 }
 
+                final canTrack = ['CONFIRMED', 'HEADING_TO_VENUE', 'ARRIVED', 'PUJA_STARTED', 'IN_PROGRESS'].contains(booking['status']);
                 return Row(
                   children: [
+                    if (canTrack && !isAllocating) ...[
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          final id = booking['id']?.toString() ?? '';
+                          context.push('/tracking?bookingId=$id');
+                        },
+                        icon: const Icon(Icons.location_on, size: 14),
+                        label: Text(
+                          'Track Live',
+                          style: GoogleFonts.lato(fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFD97706),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          minimumSize: const Size(0, 36),
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
                     OutlinedButton(
                       onPressed: isAllocating
                           ? null

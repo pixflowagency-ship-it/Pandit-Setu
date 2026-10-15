@@ -40,17 +40,53 @@ export const initializeSocket = (httpServer: HttpServer) => {
   });
 
   const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
-  // Create TWO distinct clients per Redis Adapter requirements
-  const pubClient = new Redis(redisUrl);
-  const subClient = pubClient.duplicate();
+  try {
+    const pubClient = new Redis(redisUrl, {
+      lazyConnect: true,
+      maxRetriesPerRequest: null,
+      retryStrategy(times) {
+        if (times > 3) return null;
+        return Math.min(times * 200, 2000);
+      },
+    });
+    const subClient = pubClient.duplicate();
 
-  io.adapter(createAdapter(pubClient, subClient));
+    pubClient.on("error", (err) => {
+      // Non-fatal error handling for Redis pub client
+    });
+    subClient.on("error", (err) => {
+      // Non-fatal error handling for Redis sub client
+    });
+
+    if (typeof pubClient.connect === "function") {
+      pubClient.connect().then(() => {
+        if (typeof subClient.connect === "function") {
+          return subClient.connect();
+        }
+      }).then(() => {
+        io.adapter(createAdapter(pubClient, subClient));
+        console.log("Socket.IO Redis adapter connected");
+      }).catch((err) => {
+        console.warn("Socket.IO Redis adapter connection failed, using in-memory adapter");
+      });
+    } else {
+      io.adapter(createAdapter(pubClient, subClient));
+    }
+  } catch (err: any) {
+    console.warn("Socket.IO Redis adapter initialization failed, using in-memory adapter:", err?.message);
+  }
 
   // Authentication Middleware
   io.use(socketAuthMiddleware);
 
   io.on("connection", (socket: Socket) => {
     console.log(`Socket connected: ${socket.id} (User: ${socket.data.user.id}, Role: ${socket.data.user.role})`);
+
+    // Authenticated private rooms for targeted dispatches and notifications
+    socket.join(`user:${socket.data.user.id}`);
+    if (socket.data.user.role === "PANDIT") {
+      socket.join(`pandit:user:${socket.data.user.id}`);
+    }
 
     // Pandit emitting location updates
     socket.on("pandit:location-update", async (data: { bookingId: string; lat: number; lng: number }) => {
@@ -64,7 +100,7 @@ export const initializeSocket = (httpServer: HttpServer) => {
       await processLocationUpdate(socket.data.user.id, bookingId, lat, lng).catch(console.error);
     });
 
-    // Yajman subscribing to track the Pandit
+    // Yajman subscribing to track the Pandit (backward compatibility)
     socket.on("yajman:track-pandit", async (data: { bookingId: string }, callback: (res: any) => void) => {
       try {
         const { bookingId } = data;
@@ -89,6 +125,34 @@ export const initializeSocket = (httpServer: HttpServer) => {
         if (callback) callback({ success: true });
       } catch (error) {
         console.error("Error in yajman:track-pandit:", error);
+        if (callback) callback({ error: "Internal server error" });
+      }
+    });
+
+    // Authorized booking participants (Yajman or Pandit) subscribing to real-time status updates
+    socket.on("booking:subscribe", async (data: { bookingId: string }, callback: (res: any) => void) => {
+      try {
+        const { bookingId } = data;
+        if (!bookingId) {
+          if (callback) callback({ error: "bookingId is required" });
+          return;
+        }
+
+        const booking = await db.query.bookings.findFirst({
+          where: eq(bookings.id, bookingId),
+          columns: { yajmanId: true, panditId: true },
+        });
+
+        if (!booking || (booking.yajmanId !== socket.data.user.id && booking.panditId !== socket.data.user.id)) {
+          if (callback) callback({ error: "Unauthorized: You are not a participant in this booking" });
+          return;
+        }
+
+        socket.join(`booking:${bookingId}`);
+        console.log(`User ${socket.data.user.id} joined room booking:${bookingId}`);
+        if (callback) callback({ success: true, bookingId });
+      } catch (error) {
+        console.error("Error in booking:subscribe:", error);
         if (callback) callback({ error: "Internal server error" });
       }
     });

@@ -21,7 +21,12 @@ import 'screens/phool_mala_screen.dart';
 import 'screens/nearest_temple_screen.dart';
 
 import 'screens/pandit_login_screen.dart';
+import 'screens/pandit_onboarding_screen.dart';
 import 'screens/pandit_dashboard_screen.dart';
+import 'screens/cart_screen.dart';
+import 'screens/checkout_screen.dart';
+import 'constants/branding.dart';
+import 'user_data.dart';
 
 final _router = GoRouter(
   initialLocation: '/',
@@ -51,6 +56,10 @@ final _router = GoRouter(
     GoRoute(
       path: '/pandit-login',
       builder: (context, state) => const PanditLoginScreen(),
+    ),
+    GoRoute(
+      path: '/pandit-onboarding',
+      builder: (context, state) => const PanditOnboardingScreen(),
     ),
     GoRoute(
       path: '/pandit-dashboard',
@@ -84,7 +93,7 @@ final _router = GoRouter(
         }
 
         pooja ??= const PoojaDetail(
-          id: 'satyanarayan_katha',
+          id: '92086a65-41a9-4545-9588-6f35c8bb8b6b',
           title: 'Satyanarayan Katha',
           category: 'Ghar & Jeevan',
           imageUrl:
@@ -124,6 +133,14 @@ final _router = GoRouter(
       builder: (context, state) => const ShopScreen(),
     ),
     GoRoute(
+      path: '/cart',
+      builder: (context, state) => const CartScreen(),
+    ),
+    GoRoute(
+      path: '/checkout',
+      builder: (context, state) => const CheckoutScreen(),
+    ),
+    GoRoute(
       path: '/profile',
       builder: (context, state) => const ProfileScreen(),
     ),
@@ -137,7 +154,9 @@ final _router = GoRouter(
     ),
     GoRoute(
       path: '/tracking',
-      builder: (context, state) => const LivePoojaTrackingScreen(),
+      builder: (context, state) => LivePoojaTrackingScreen(
+        bookingId: state.uri.queryParameters['bookingId'],
+      ),
     ),
     GoRoute(
       path: '/notifications',
@@ -158,8 +177,9 @@ final _router = GoRouter(
   ],
 );
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await UserData.loadFromPrefs();
   runApp(const PanditSetuApp());
 }
 
@@ -169,7 +189,7 @@ class PanditSetuApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'SARV MANGALS',
+      title: AppBranding.appDisplayName,
       debugShowCheckedModeBanner: false,
       routerConfig: _router,
       theme: ThemeData(

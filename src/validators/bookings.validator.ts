@@ -55,8 +55,26 @@ export const getBookingParamsSchema = z
 
 export const updateBookingStatusSchema = z
   .object({
-    expectedStatus: z.enum(["PENDING", "CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED"]),
-    newStatus: z.enum(["PENDING", "CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED"]),
+    expectedStatus: z.enum([
+      "PENDING",
+      "CONFIRMED",
+      "HEADING_TO_VENUE",
+      "ARRIVED",
+      "PUJA_STARTED",
+      "IN_PROGRESS",
+      "COMPLETED",
+      "CANCELLED",
+    ]),
+    newStatus: z.enum([
+      "PENDING",
+      "CONFIRMED",
+      "HEADING_TO_VENUE",
+      "ARRIVED",
+      "PUJA_STARTED",
+      "IN_PROGRESS",
+      "COMPLETED",
+      "CANCELLED",
+    ]),
   })
   .strict();
 

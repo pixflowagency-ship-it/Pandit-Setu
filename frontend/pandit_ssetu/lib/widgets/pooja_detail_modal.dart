@@ -38,6 +38,52 @@ class PoojaDetail {
   });
 
   double get totalPrice => standardPrice + samagriPrice;
+
+  factory PoojaDetail.fromJson(Map<String, dynamic> json) {
+    final double standard = double.tryParse(json['basePrice']?.toString() ?? '0') ?? 0.0;
+    final double samagri = double.tryParse(json['samagriPrice']?.toString() ?? '0') ?? 0.0;
+    final double calculatedSamagri = samagri > 0 ? samagri : (standard * 0.25).roundToDouble();
+    final double original = (standard * 1.5).roundToDouble();
+    final String duration = json['duration']?.toString() ??
+        (json['durationMinutes'] != null ? '${json['durationMinutes']} mins' : '2-3 Hours');
+    final String panditCount = json['requiredPandits']?.toString() ?? '1';
+    final String title = json['title']?.toString() ?? 'Vedic Ritual';
+
+    return PoojaDetail(
+      id: json['id']?.toString() ?? '',
+      title: title,
+      category: json['category']?.toString() ?? '',
+      imageUrl: (json['imageUrl'] != null && json['imageUrl'].toString().isNotEmpty)
+          ? json['imageUrl'].toString()
+          : 'https://images.unsplash.com/photo-1605152276897-4f618f831968?w=500',
+      isPopular: json['slug'] == 'griha-pravesh-pooja' ||
+          json['slug'] == 'satyanarayan-katha' ||
+          json['slug'] == 'rudrabhishek' ||
+          json['slug'] == 'mahamrityunjaya-jaap' ||
+          standard >= 10000.0,
+      duration: duration,
+      durationBreakdown: '30 mins setup • $duration ritual with $panditCount Pandit(s)',
+      description: json['description']?.toString() ??
+          'Authentic $title ritual performed strictly according to Vedic Shastras by $panditCount certified Acharya(s).',
+      spiritualSignificance:
+          'Invokes divine peace, removes negative energy, and brings health, wealth, and prosperity to the devotee and family.',
+      inclusions: [
+        '$panditCount Certified Vedic Acharya(s)',
+        'Complete Sacred Havan & Samagri Kit Guidance',
+        'Kalash Sthapana & Panchamrit setup',
+        'Prashad & Blessing Rituals',
+      ],
+      chantingDetails: [
+        'Vedic Suktam & Mantra Recitation',
+        '108 Sacred Mantra Chanting',
+        'Aarti & Sankalpa',
+      ],
+      standardPrice: standard,
+      samagriPrice: calculatedSamagri,
+      originalPrice: original,
+      availability: 'Available Daily',
+    );
+  }
 }
 
 void showPoojaDetailBottomSheet(BuildContext context, PoojaDetail detail, {String mode = 'offline'}) {

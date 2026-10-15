@@ -14,6 +14,13 @@ export const createBookingHandler: RequestHandler = async (req, res) => {
 
   const booking = await createBooking(req.user.id, input, idempotencyKey);
 
+  // Trigger background dispatch to eligible Pandits without blocking HTTP 201 response
+  import("../services/dispatch.service.js").then(({ dispatchBooking }) => {
+    dispatchBooking(booking.id).catch((err) => {
+      console.error("Background booking dispatch failed:", err);
+    });
+  });
+
   // Return 201 Created
   sendSuccess(res, { booking }, 201);
 };
@@ -73,7 +80,18 @@ export const updateBookingStatusHandler: RequestHandler = async (req, res) => {
   // Phase 9 Realtime Service Integration
   import("../services/realtime.service.js").then(({ getIO }) => {
     try {
-      getIO().to(`booking:${booking.id}`).emit("booking:status-change", { status: body.newStatus });
+      const statusPayload = {
+        bookingId: booking.id,
+        status: booking.status,
+        timestamp: new Date().toISOString(),
+      };
+      const io = getIO();
+      io.to(`booking:${booking.id}`).emit("booking:status-change", statusPayload);
+      io.to(`booking:${booking.id}`).emit("booking:status-changed", statusPayload);
+      io.to(`user:${booking.yajmanId}`).emit("booking:status-change", statusPayload);
+      if (booking.panditId) {
+        io.to(`user:${booking.panditId}`).emit("booking:status-change", statusPayload);
+      }
     } catch (err) {
       console.warn("Socket.io emit failed (server might be running tests without socket init):", err);
     }
@@ -81,7 +99,28 @@ export const updateBookingStatusHandler: RequestHandler = async (req, res) => {
 
   // Phase 8 Notification Service Integration (Fire-and-forget)
   import("../services/notification.service.js").then(({ sendPush }) => {
-    if (body.newStatus === "IN_PROGRESS") {
+    if (body.newStatus === "HEADING_TO_VENUE") {
+      sendPush(
+        booking.yajmanId,
+        "Pandit En Route",
+        "Your Pandit Ji is on the way to the venue.",
+        { bookingId: booking.id }
+      ).catch(console.error);
+    } else if (body.newStatus === "ARRIVED") {
+      sendPush(
+        booking.yajmanId,
+        "Pandit Arrived",
+        "Your Pandit Ji has arrived at the venue.",
+        { bookingId: booking.id }
+      ).catch(console.error);
+    } else if (body.newStatus === "PUJA_STARTED") {
+      sendPush(
+        booking.yajmanId,
+        "Pooja Commenced",
+        "Sacred sankalpa and rituals have commenced.",
+        { bookingId: booking.id }
+      ).catch(console.error);
+    } else if (body.newStatus === "IN_PROGRESS") {
       sendPush(
         booking.yajmanId,
         "Pandit Arriving",
@@ -135,7 +174,8 @@ export const generateVideoTokenHandler: RequestHandler = async (req, res) => {
     throw new AppError(403, "FORBIDDEN", "You are not authorized to join this booking's video call");
   }
 
-  if (booking.status !== "CONFIRMED" && booking.status !== "IN_PROGRESS") {
+  const activeStatuses = ["CONFIRMED", "HEADING_TO_VENUE", "ARRIVED", "PUJA_STARTED", "IN_PROGRESS"];
+  if (!activeStatuses.includes(booking.status)) {
     throw new AppError(403, "FORBIDDEN", "Video calls are only allowed for active bookings");
   }
 
@@ -153,3 +193,64 @@ export const generateVideoTokenHandler: RequestHandler = async (req, res) => {
 
   sendSuccess(res, { token, channelName });
 };
+
+export const dispatchBookingHandler: RequestHandler = async (req, res) => {
+  if (!req.user) {
+    throw new AppError(401, "UNAUTHORIZED", "Authentication required");
+  }
+
+  const params = req.validatedParams as { id: string };
+  const { dispatchBooking } = await import("../services/dispatch.service.js");
+  const result = await dispatchBooking(params.id);
+
+  sendSuccess(res, { dispatch: result });
+};
+
+export const collectCashDakshinaHandler: RequestHandler = async (req, res) => {
+  if (!req.user) {
+    throw new AppError(401, "UNAUTHORIZED", "Authentication required");
+  }
+
+  const params = req.validatedParams as { id: string };
+  const { collectCashDakshina } = await import("../services/dakshina.service.js");
+  const result = await collectCashDakshina(params.id, req.user.id, req.body);
+
+  sendSuccess(res, result);
+};
+
+export const createDakshinaOrderHandler: RequestHandler = async (req, res) => {
+  if (!req.user) {
+    throw new AppError(401, "UNAUTHORIZED", "Authentication required");
+  }
+
+  const params = req.validatedParams as { id: string };
+  const { createDakshinaOrder } = await import("../services/dakshina.service.js");
+  const result = await createDakshinaOrder(params.id, req.user.id, req.body);
+
+  sendSuccess(res, result);
+};
+
+export const verifyDakshinaPaymentHandler: RequestHandler = async (req, res) => {
+  if (!req.user) {
+    throw new AppError(401, "UNAUTHORIZED", "Authentication required");
+  }
+
+  const params = req.validatedParams as { id: string };
+  const { verifyDakshinaPayment } = await import("../services/dakshina.service.js");
+  const result = await verifyDakshinaPayment(params.id, req.user.id, req.body);
+
+  sendSuccess(res, result);
+};
+
+export const getDakshinaStatusHandler: RequestHandler = async (req, res) => {
+  if (!req.user) {
+    throw new AppError(401, "UNAUTHORIZED", "Authentication required");
+  }
+
+  const params = req.validatedParams as { id: string };
+  const { getDakshinaStatus } = await import("../services/dakshina.service.js");
+  const result = await getDakshinaStatus(params.id, req.user.id);
+
+  sendSuccess(res, result);
+};
+

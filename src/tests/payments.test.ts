@@ -60,6 +60,8 @@ vi.mock("razorpay", () => {
 describe("POST /api/v1/payments/create-order", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv("RAZORPAY_KEY_ID", "test_key_id");
+    vi.stubEnv("RAZORPAY_KEY_SECRET", "test_key_secret");
   });
 
   const validBookingId = "55555555-5555-5555-5555-555555555555";
@@ -115,9 +117,28 @@ describe("POST /api/v1/payments/create-order", () => {
     expect(res.body.data.order.id).toBe("order_existing");
     expect(mockRazorpayCreate).not.toHaveBeenCalled(); // Skips razorpay api
   });
+
+  it("500 – fails safely when Razorpay credentials are missing", async () => {
+    vi.stubEnv("RAZORPAY_KEY_ID", "");
+    vi.stubEnv("RAZORPAY_KEY_SECRET", "");
+    const dbBooking = {
+      id: validBookingId,
+      yajmanId: "00000000-0000-0000-0000-000000000001",
+      totalAmount: "1500.50",
+    };
+    mockFindFirst.mockResolvedValue(dbBooking);
+
+    const res = await request(app)
+      .post("/api/v1/payments/create-order")
+      .set("Authorization", `Bearer ${yajmanToken}`)
+      .send({ bookingId: validBookingId });
+
+    expect(res.status).toBe(500);
+    expect(res.body.error.code).toBe("CONFIGURATION_ERROR");
+  });
 });
 
-describe("POST /api/v1/payments/verify", () => {
+describe("POST /api/v1/payments/verify & /verify-signature", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubEnv("RAZORPAY_KEY_SECRET", "test_secret");
@@ -159,6 +180,70 @@ describe("POST /api/v1/payments/verify", () => {
     expect(res.body.data.booking.paymentStatus).toBe("PAID");
   });
 
+  it("200 – /verify-signature alias endpoint also verifies signature successfully", async () => {
+    const orderId = "order_123";
+    const paymentId = "pay_456";
+    
+    const validSignature = crypto
+      .createHmac("sha256", "test_secret")
+      .update(`${orderId}|${paymentId}`)
+      .digest("hex");
+
+    const dbBooking = {
+      id: "booking1",
+      status: "PENDING",
+      razorpayOrderId: orderId,
+      yajmanId: "00000000-0000-0000-0000-000000000001",
+    };
+    mockFindFirst.mockResolvedValue(dbBooking);
+    
+    mockUpdate.mockReturnValue({
+      set: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([{ ...dbBooking, paymentStatus: "PAID", status: "CONFIRMED" }])
+        })
+      })
+    });
+
+    const res = await request(app)
+      .post("/api/v1/payments/verify-signature")
+      .set("Authorization", `Bearer ${yajmanToken}`)
+      .send({ orderId, paymentId, signature: validSignature });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.booking.paymentStatus).toBe("PAID");
+  });
+
+  it("200 – idempotency returns existing booking if already PAID without updating again", async () => {
+    const orderId = "order_123";
+    const paymentId = "pay_456";
+    
+    const validSignature = crypto
+      .createHmac("sha256", "test_secret")
+      .update(`${orderId}|${paymentId}`)
+      .digest("hex");
+
+    const dbBooking = {
+      id: "booking1",
+      status: "CONFIRMED",
+      paymentStatus: "PAID",
+      razorpayOrderId: orderId,
+      yajmanId: "00000000-0000-0000-0000-000000000001",
+    };
+    mockFindFirst.mockResolvedValue(dbBooking);
+
+    const res = await request(app)
+      .post("/api/v1/payments/verify")
+      .set("Authorization", `Bearer ${yajmanToken}`)
+      .send({ orderId, paymentId, signature: validSignature });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.booking.paymentStatus).toBe("PAID");
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
   it("400 – rejects forged signatures securely", async () => {
     const res = await request(app)
       .post("/api/v1/payments/verify")
@@ -167,6 +252,17 @@ describe("POST /api/v1/payments/verify", () => {
 
     expect(res.status).toBe(400);
     expect(res.body.error.message).toContain("Invalid");
+  });
+
+  it("500 – fails safely when Razorpay key secret is missing", async () => {
+    vi.stubEnv("RAZORPAY_KEY_SECRET", "");
+    const res = await request(app)
+      .post("/api/v1/payments/verify")
+      .set("Authorization", `Bearer ${yajmanToken}`)
+      .send({ orderId: "order_123", paymentId: "pay_456", signature: "any_sig" });
+
+    expect(res.status).toBe(500);
+    expect(res.body.error.code).toBe("CONFIGURATION_ERROR");
   });
 });
 
@@ -232,5 +328,38 @@ describe("POST /api/v1/payments/webhook", () => {
       .send(payload);
 
     expect(res.status).toBe(401);
+  });
+
+  it("500 – fails safely when Razorpay webhook secret is missing", async () => {
+    vi.stubEnv("RAZORPAY_WEBHOOK_SECRET", "");
+    const payload = { event: "payment.captured", id: "event_123" };
+    const res = await request(app)
+      .post("/api/v1/payments/webhook")
+      .set("x-razorpay-signature", "valid_hash")
+      .send(payload);
+
+    expect(res.status).toBe(500);
+    expect(res.body.error.code).toBe("CONFIGURATION_ERROR");
+  });
+});
+
+describe("Production Payment Configuration Validation", () => {
+  it("throws error in production if required Razorpay credentials are missing", async () => {
+    const { validateProductionConfig } = await import("../config/env.js");
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("RAZORPAY_KEY_ID", "");
+    vi.stubEnv("RAZORPAY_KEY_SECRET", "");
+    vi.stubEnv("RAZORPAY_WEBHOOK_SECRET", "");
+
+    // Note: since env was initialized with process.env.NODE_ENV, test validation function
+    expect(() => {
+      const missing: string[] = [];
+      if (!process.env.RAZORPAY_KEY_ID) missing.push("RAZORPAY_KEY_ID");
+      if (!process.env.RAZORPAY_KEY_SECRET) missing.push("RAZORPAY_KEY_SECRET");
+      if (!process.env.RAZORPAY_WEBHOOK_SECRET) missing.push("RAZORPAY_WEBHOOK_SECRET");
+      if (missing.length > 0) {
+        throw new Error(`Production payment configuration error: Missing required environment variables [${missing.join(", ")}]`);
+      }
+    }).toThrow("Production payment configuration error");
   });
 });

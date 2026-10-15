@@ -12,7 +12,13 @@ const app = express();
 app.post("/api/v1/payments/webhook", express.raw({ type: "application/json" }), webhookHandler);
 
 app.use(express.json());
-app.use(cors({ origin: '*', credentials: true }));
+const corsOrigin = process.env.CORS_ORIGIN || "*";
+app.use(
+  cors({
+    origin: corsOrigin === "*" ? true : corsOrigin.split(",").map((o) => o.trim()),
+    credentials: true,
+  })
+);
 app.get("/", (_req, res) => {
   res.status(200).json({
     success: true,

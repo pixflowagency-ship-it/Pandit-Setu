@@ -11,9 +11,28 @@ import { updateProfileSchema, fcmTokenSchema } from "../validators/users.validat
 const usersRouter = Router();
 
 usersRouter.get("/me", verifyToken, asyncHandler(getProfileHandler));
+usersRouter.get("/profile", verifyToken, asyncHandler(getProfileHandler));
 
 usersRouter.patch(
   "/me",
+  verifyToken,
+  validateBody(updateProfileSchema),
+  asyncHandler(updateProfileHandler)
+);
+usersRouter.put(
+  "/me",
+  verifyToken,
+  validateBody(updateProfileSchema),
+  asyncHandler(updateProfileHandler)
+);
+usersRouter.patch(
+  "/profile",
+  verifyToken,
+  validateBody(updateProfileSchema),
+  asyncHandler(updateProfileHandler)
+);
+usersRouter.put(
+  "/profile",
   verifyToken,
   validateBody(updateProfileSchema),
   asyncHandler(updateProfileHandler)

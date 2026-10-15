@@ -1,0 +1,3 @@
+ALTER TYPE "public"."booking_status" ADD VALUE IF NOT EXISTS 'HEADING_TO_VENUE';
+ALTER TYPE "public"."booking_status" ADD VALUE IF NOT EXISTS 'ARRIVED';
+ALTER TYPE "public"."booking_status" ADD VALUE IF NOT EXISTS 'PUJA_STARTED';

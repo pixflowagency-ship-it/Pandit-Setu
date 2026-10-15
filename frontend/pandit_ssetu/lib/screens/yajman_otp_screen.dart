@@ -138,17 +138,30 @@ class _YajmanOtpScreenState extends State<YajmanOtpScreen> {
     try {
 
       final response = await ApiService.verifyOtp(UserData.phone, otp, UserData.name);
-      final Map<String, dynamic> user = (response != null && response['data'] != null && response['data']['user'] != null) ? Map<String, dynamic>.from(response['data']['user']) : {};
+      final Map<String, dynamic> user = (response != null && response['data'] != null && response['data']['user'] != null)
+          ? Map<String, dynamic>.from(response['data']['user'])
+          : {};
+      
+      final fetchedName = (user['name'] ?? user['fullName'])?.toString();
+      final fetchedPhone = user['phone']?.toString();
+      final fetchedEmail = user['email']?.toString();
+      final fetchedDob = user['dob']?.toString();
+      final fetchedTob = user['tob']?.toString();
+      final fetchedPob = user['pob']?.toString();
+      final fetchedGotra = user['gotra']?.toString();
+      final fetchedZodiac = user['zodiac']?.toString();
+      final fetchedCity = user['city']?.toString();
+
       UserData.save(
-        name: user['name'] ?? user['fullName'] ?? '',
-        phone: user['phone'] ?? '',
-        email: user['email'] ?? '',
-        dob: user['dob'] ?? '',
-        tob: user['tob'] ?? '',
-        pob: user['pob'] ?? '',
-        gotra: user['gotra'] ?? '',
-        zodiac: user['zodiac'] ?? '',
-        city: user['city'] ?? '',
+        name: (fetchedName != null && fetchedName.trim().isNotEmpty) ? fetchedName : UserData.name,
+        phone: (fetchedPhone != null && fetchedPhone.trim().isNotEmpty) ? fetchedPhone : UserData.phone,
+        email: (fetchedEmail != null && fetchedEmail.trim().isNotEmpty) ? fetchedEmail : UserData.email,
+        dob: (fetchedDob != null && fetchedDob.trim().isNotEmpty) ? fetchedDob : UserData.dob,
+        tob: (fetchedTob != null && fetchedTob.trim().isNotEmpty) ? fetchedTob : UserData.tob,
+        pob: (fetchedPob != null && fetchedPob.trim().isNotEmpty) ? fetchedPob : UserData.pob,
+        gotra: (fetchedGotra != null && fetchedGotra.trim().isNotEmpty) ? fetchedGotra : UserData.gotra,
+        zodiac: (fetchedZodiac != null && fetchedZodiac.trim().isNotEmpty) ? fetchedZodiac : UserData.zodiac,
+        city: (fetchedCity != null && fetchedCity.trim().isNotEmpty) ? fetchedCity : UserData.city,
       );
 
       if (mounted) {
@@ -261,7 +274,7 @@ class _YajmanOtpScreenState extends State<YajmanOtpScreen> {
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      'Pandit Setu',
+                                      'SARV MANGAL',
                                       style: GoogleFonts.lato(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,

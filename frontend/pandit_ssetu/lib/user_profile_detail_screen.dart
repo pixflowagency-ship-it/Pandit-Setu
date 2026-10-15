@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'user_data.dart';
+import 'services/api_service.dart';
 
 class _C {
   static const parchmentBg = Color(0xFFFDFAF3);
@@ -38,6 +39,59 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
   void initState() {
     super.initState();
     _initControllers();
+    _fetchProfileFromServer();
+  }
+
+  Future<void> _fetchProfileFromServer() async {
+    try {
+      final response = await ApiService.getProfile();
+      if (response['success'] == true && response['data'] != null) {
+        final Map<String, dynamic> user = response['data'] is Map<String, dynamic>
+            ? (response['data']['user'] is Map<String, dynamic>
+                ? response['data']['user']
+                : response['data'])
+            : {};
+
+        if (user.isNotEmpty) {
+          final fetchedName = (user['name'] ?? user['fullName'])?.toString();
+          final fetchedPhone = user['phone']?.toString();
+          final fetchedEmail = user['email']?.toString();
+          final fetchedDob = user['dob']?.toString();
+          final fetchedTob = user['tob']?.toString();
+          final fetchedPob = user['pob']?.toString();
+          final fetchedGotra = user['gotra']?.toString();
+          final fetchedZodiac = user['zodiac']?.toString();
+          final fetchedCity = user['city']?.toString();
+
+          UserData.save(
+            name: (fetchedName != null && fetchedName.trim().isNotEmpty) ? fetchedName : UserData.name,
+            phone: (fetchedPhone != null && fetchedPhone.trim().isNotEmpty) ? fetchedPhone : UserData.phone,
+            email: (fetchedEmail != null && fetchedEmail.trim().isNotEmpty) ? fetchedEmail : UserData.email,
+            dob: (fetchedDob != null && fetchedDob.trim().isNotEmpty) ? fetchedDob : UserData.dob,
+            tob: (fetchedTob != null && fetchedTob.trim().isNotEmpty) ? fetchedTob : UserData.tob,
+            pob: (fetchedPob != null && fetchedPob.trim().isNotEmpty) ? fetchedPob : UserData.pob,
+            gotra: (fetchedGotra != null && fetchedGotra.trim().isNotEmpty) ? fetchedGotra : UserData.gotra,
+            zodiac: (fetchedZodiac != null && fetchedZodiac.trim().isNotEmpty) ? fetchedZodiac : UserData.zodiac,
+            city: (fetchedCity != null && fetchedCity.trim().isNotEmpty) ? fetchedCity : UserData.city,
+          );
+
+          if (mounted && !_isEditing) {
+            setState(() {
+              _nameCtrl.text = UserData.name;
+              _phoneCtrl.text = UserData.phone;
+              _emailCtrl.text = UserData.email;
+              _dobCtrl.text = UserData.dob;
+              _tobCtrl.text = UserData.tob;
+              _pobCtrl.text = UserData.pob;
+              _gotraCtrl.text = UserData.gotra;
+              _zodiacCtrl.text = UserData.zodiac;
+            });
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Failed to load profile in details: $e');
+    }
   }
 
   void _initControllers() {
@@ -64,31 +118,78 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
     super.dispose();
   }
 
-  void _saveChanges() {
-    UserData.save(
-      name:   _nameCtrl.text.trim(),
-      phone:  _phoneCtrl.text.trim(),
-      email:  _emailCtrl.text.trim(),
-      dob:    _dobCtrl.text.trim(),
-      tob:    _tobCtrl.text.trim(),
-      pob:    _pobCtrl.text.trim(),
-      gotra:  _gotraCtrl.text.trim(),
-      zodiac: _zodiacCtrl.text.trim(),
-    );
-    setState(() => _isEditing = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Profile updated successfully 🙏',
-          style: GoogleFonts.lato(
-              fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        backgroundColor: _C.saffronGold,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12)),
-      ),
-    );
+  Future<void> _saveChanges() async {
+    final name = _nameCtrl.text.trim();
+    final phone = _phoneCtrl.text.trim();
+    final email = _emailCtrl.text.trim();
+    final dob = _dobCtrl.text.trim();
+    final tob = _tobCtrl.text.trim();
+    final pob = _pobCtrl.text.trim();
+    final gotra = _gotraCtrl.text.trim();
+    final zodiac = _zodiacCtrl.text.trim();
+
+    try {
+      final updateData = <String, dynamic>{
+        'fullName': name.isNotEmpty ? name : UserData.name,
+        if (email.isNotEmpty) 'email': email,
+        if (dob.isNotEmpty) 'dob': dob,
+        if (tob.isNotEmpty) 'tob': tob,
+        if (pob.isNotEmpty) 'pob': pob,
+        if (gotra.isNotEmpty) 'gotra': gotra,
+        if (zodiac.isNotEmpty) 'zodiac': zodiac,
+      };
+
+      final response = await ApiService.updateProfile(updateData);
+      if (response['success'] != true) {
+        throw Exception(response['message'] ?? 'Failed to update profile');
+      }
+
+      UserData.save(
+        name: name.isNotEmpty ? name : UserData.name,
+        phone: phone.isNotEmpty ? phone : UserData.phone,
+        email: email,
+        dob: dob,
+        tob: tob,
+        pob: pob,
+        gotra: gotra,
+        zodiac: zodiac,
+      );
+
+      if (mounted) {
+        setState(() => _isEditing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Profile updated and saved to server 🙏',
+              style: GoogleFonts.lato(
+                  fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+            backgroundColor: _C.saffronGold,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error syncing profile update to backend: $e');
+      if (mounted) {
+        final cleanMsg = e.toString().replaceAll('Exception: ', '');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to update profile: $cleanMsg',
+              style: GoogleFonts.lato(
+                  fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+            backgroundColor: Colors.red[700],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    }
   }
 
   String get _initials {

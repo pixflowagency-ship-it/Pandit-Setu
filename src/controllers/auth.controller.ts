@@ -10,7 +10,7 @@ export const sendOtpHandler: RequestHandler = async (req, res) => {
 };
 
 export const verifyOtpHandler: RequestHandler = async (req, res) => {
-  const { phone, otp, name } = req.body as VerifyOtpInput;
-  const result = await verifyOtpAndLogin(phone, otp, name);
+  const { phone, otp, name, role } = req.body as VerifyOtpInput;
+  const result = await verifyOtpAndLogin(phone, otp, name, role);
   sendSuccess(res, result);
 };

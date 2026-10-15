@@ -165,7 +165,7 @@ class _YajmanRegisterScreenState extends State<YajmanRegisterScreen> {
                                     ),
                                     const SizedBox(width: 10),
                                     Text(
-                                      'Pandit Setu',
+                                      'SARV MANGAL',
                                       style: GoogleFonts.lato(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,

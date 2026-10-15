@@ -40,28 +40,28 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
 
   final List<Map<String, dynamic>> _sarvMangalOffices = [
     {
-      'name': 'SarvMangal Central Kendra - Ujjain',
+      'name': 'SARV MANGAL Central Kendra - Ujjain',
       'address': 'Plot 14, Mahakal Temple Marg, Near Ved Shala, Ujjain, MP - 456006',
       'distance': '0.8 km away',
       'hours': '08:00 AM - 08:00 PM',
       'phone': '+91 734 2551234',
     },
     {
-      'name': 'SarvMangal Vedic Bhavan - Mumbai',
+      'name': 'SARV MANGAL Vedic Bhavan - Mumbai',
       'address': 'Shop 4-5, Near Siddhivinayak Temple, SK Bole Marg, Dadar West, Mumbai - 400028',
       'distance': '2.4 km away',
       'hours': '09:00 AM - 08:30 PM',
       'phone': '+91 22 24305678',
     },
     {
-      'name': 'SarvMangal Kashi Kendra - Varanasi',
+      'name': 'SARV MANGAL Kashi Kendra - Varanasi',
       'address': 'Kashi Vishwanath Corridor Road, Godowlia, Varanasi, UP - 221001',
       'distance': '1.5 km away',
       'hours': '07:30 AM - 09:00 PM',
       'phone': '+91 542 2398765',
     },
     {
-      'name': 'SarvMangal Delhi Dham - New Delhi',
+      'name': 'SARV MANGAL Delhi Dham - New Delhi',
       'address': 'B-12, Inner Circle, Connaught Place, New Delhi - 110001',
       'distance': '3.2 km away',
       'hours': '09:30 AM - 07:30 PM',
@@ -423,7 +423,7 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
                       Text(
                         isHindi
                             ? 'सर्वमंगल कार्यालय में या आपके स्थान पर • समय एवं तारीख चयन'
-                            : 'At SarvMangal Office or At Your Place • Date & Time Selection',
+                            : 'At SARV MANGAL Office or At Your Place • Date & Time Selection',
                         style: GoogleFonts.lato(
                           fontSize: 12,
                           color: const Color(0xFF6B5B52),
@@ -455,7 +455,7 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
               const SizedBox(height: 8),
               _buildFeatureBullet(Icons.lock_outline, 'Strict Confidentiality & 1-on-1 Personalized Remedies'),
               const SizedBox(height: 8),
-              _buildFeatureBullet(Icons.admin_panel_settings, 'Pandit directly assigned from SarvMangal Admin Panel'),
+              _buildFeatureBullet(Icons.admin_panel_settings, 'Pandit directly assigned from SARV MANGAL Admin Panel'),
             ],
           ),
         ),
@@ -956,7 +956,7 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
                       const Icon(Icons.apartment, color: Color(0xFFE65100), size: 26),
                       const SizedBox(height: 6),
                       Text(
-                        'At SarvMangal Office',
+                        'At SARV MANGAL Office',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.lato(
                           fontWeight: FontWeight.bold,
@@ -1021,7 +1021,7 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                isHindi ? 'निकटतम सर्वमंगल कार्यालय' : 'Nearest SarvMangal Offices',
+                isHindi ? 'निकटतम सर्वमंगल कार्यालय' : 'Nearest SARV MANGAL Offices',
                 style: GoogleFonts.lato(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFFE65100)),
               ),
               Text(
@@ -1400,7 +1400,7 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Joining SarvMangal Google Meet consultation room...'),
+                              content: Text('Joining SARV MANGAL Google Meet consultation room...'),
                               backgroundColor: Color(0xFF1976D2),
                             ),
                           );
@@ -1565,7 +1565,7 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
         Text(
           isHindi
               ? 'प्रशासक द्वारा वरिष्ठ पंडित जी आवंटित कर दिए गए हैं।'
-              : 'Senior Acharya has been allotted from SarvMangal Admin Panel.',
+              : 'Senior Acharya has been allotted from SARV MANGAL Admin Panel.',
           textAlign: TextAlign.center,
           style: GoogleFonts.lato(fontSize: 13, color: const Color(0xFF6B5B52)),
         ),
@@ -1595,7 +1595,7 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
               ),
               _buildDetailRow(
                 'Venue Mode',
-                isOffice ? '🏢 At SarvMangal Office' : '🏡 At Your Place (Doorstep)',
+                isOffice ? '🏢 At SARV MANGAL Office' : '🏡 At Your Place (Doorstep)',
               ),
               if (isOffice) ...[
                 _buildDetailRow('Selected Kendra', office['name']!),

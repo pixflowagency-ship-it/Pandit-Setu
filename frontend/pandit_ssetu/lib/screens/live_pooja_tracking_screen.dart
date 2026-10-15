@@ -4,9 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:socket_io_client/socket_io_client.dart' as socket_io;
+import '../config/api_config.dart';
+import '../services/api_service.dart';
 
 class LivePoojaTrackingScreen extends StatefulWidget {
-  const LivePoojaTrackingScreen({super.key});
+  final String? bookingId;
+  const LivePoojaTrackingScreen({super.key, this.bookingId});
 
   @override
   State<LivePoojaTrackingScreen> createState() => _LivePoojaTrackingScreenState();
@@ -18,6 +22,7 @@ class _LivePoojaTrackingScreenState extends State<LivePoojaTrackingScreen> {
   bool _isLoadingBooking = true;
   Timer? _allocationTimer;
   int _allocationSecondsRemaining = 0;
+  socket_io.Socket? _socket;
 
   @override
   void initState() {
@@ -25,8 +30,60 @@ class _LivePoojaTrackingScreenState extends State<LivePoojaTrackingScreen> {
     _loadLatestBooking();
   }
 
+  int _stepFromStatus(String? status) {
+    switch (status) {
+      case 'PENDING':
+        return 0;
+      case 'CONFIRMED':
+        return 0; // Pandit Assigned
+      case 'HEADING_TO_VENUE':
+        return 2; // Pandit En Route
+      case 'ARRIVED':
+        return 2; // Arrived at Venue
+      case 'PUJA_STARTED':
+      case 'IN_PROGRESS':
+        return 3; // Pooja In Progress
+      case 'COMPLETED':
+        return 4; // Ritual Completed
+      default:
+        return 0;
+    }
+  }
+
   Future<void> _loadLatestBooking() async {
     try {
+      Map<String, dynamic>? booking;
+
+      if (widget.bookingId != null && widget.bookingId!.isNotEmpty) {
+        try {
+          booking = await ApiService.getBookingById(widget.bookingId!);
+        } catch (e) {
+          debugPrint('Failed to load booking by ID: $e');
+        }
+      }
+
+      if (booking == null) {
+        final list = await ApiService.getUserBookings();
+        if (list.isNotEmpty) {
+          booking = list.firstWhere(
+            (b) => ['PENDING', 'CONFIRMED', 'HEADING_TO_VENUE', 'ARRIVED', 'PUJA_STARTED', 'IN_PROGRESS'].contains(b['status']),
+            orElse: () => list.first,
+          );
+        }
+      }
+
+      if (booking != null) {
+        setState(() {
+          _latestBooking = booking;
+          _isLoadingBooking = false;
+          _currentProgressStep = _stepFromStatus(booking?['status']);
+        });
+        _connectSocketForBooking(booking['id']?.toString());
+        _checkAllocationTimer();
+        return;
+      }
+
+      // Offline fallback to SharedPreferences cache
       final prefs = await SharedPreferences.getInstance();
       final bookingsStr = prefs.getString('user_bookings') ?? '[]';
       final List bookingsList = jsonDecode(bookingsStr);
@@ -35,41 +92,74 @@ class _LivePoojaTrackingScreenState extends State<LivePoojaTrackingScreen> {
         setState(() {
           _latestBooking = latest;
           _isLoadingBooking = false;
-          // If we have a real booking, default progress step to 0 or 1 based on assignment
-          _currentProgressStep = 0;
+          _currentProgressStep = _stepFromStatus(latest['status']);
         });
+        _connectSocketForBooking(latest['id']?.toString());
         _checkAllocationTimer();
       } else {
         setState(() {
           _isLoadingBooking = false;
-          _currentProgressStep = 2; // fallback to en route
+          _currentProgressStep = 0;
         });
       }
     } catch (_) {
       setState(() {
         _isLoadingBooking = false;
-        _currentProgressStep = 2; // fallback to en route
+        _currentProgressStep = 0;
       });
+    }
+  }
+
+  Future<void> _connectSocketForBooking(String? bookingId) async {
+    if (bookingId == null || bookingId.isEmpty) return;
+    try {
+      final token = await ApiService.getToken();
+      if (token == null || token.isEmpty) return;
+
+      _socket?.dispose();
+      _socket = socket_io.io(
+        ApiConfig.socketUrl,
+        socket_io.OptionBuilder()
+            .setTransports(['websocket'])
+            .setAuth({'token': token})
+            .enableAutoConnect()
+            .enableReconnection()
+            .setReconnectionDelay(2000)
+            .build(),
+      );
+
+      _socket!.onConnect((_) {
+        _socket!.emit('booking:subscribe', {'bookingId': bookingId});
+      });
+
+      _socket!.on('booking:status-change', (data) {
+        if (!mounted || data is! Map) return;
+        final eventBookingId = data['bookingId']?.toString();
+        final newStatus = data['status']?.toString();
+        if (eventBookingId == bookingId && newStatus != null) {
+          setState(() {
+            if (_latestBooking != null) {
+              _latestBooking!['status'] = newStatus;
+            }
+            _currentProgressStep = _stepFromStatus(newStatus);
+          });
+        }
+      });
+    } catch (e) {
+      debugPrint('Error subscribing to booking realtime status: $e');
     }
   }
 
   void _checkAllocationTimer() {
     if (_latestBooking == null || _latestBooking!['allocationMode'] != 'auto') {
-      // Manual booking is allocated immediately, so progress can be Pt. Assigned (step 0 or more)
-      setState(() {
-        _currentProgressStep = 0;
-      });
       return;
     }
     final createdAtStr = _latestBooking!['createdAt'];
-    if (createdAtStr == null) {
-      setState(() {
-        _currentProgressStep = 0;
-      });
-      return;
-    }
+    if (createdAtStr == null) return;
 
-    final createdAt = DateTime.parse(createdAtStr);
+    final createdAt = DateTime.tryParse(createdAtStr.toString());
+    if (createdAt == null) return;
+
     final diff = DateTime.now().difference(createdAt);
     if (diff.inSeconds < 180) {
       setState(() {
@@ -92,6 +182,11 @@ class _LivePoojaTrackingScreenState extends State<LivePoojaTrackingScreen> {
   @override
   void dispose() {
     _allocationTimer?.cancel();
+    try {
+      _socket?.disconnect();
+      _socket?.dispose();
+      _socket = null;
+    } catch (_) {}
     super.dispose();
   }
 
@@ -611,7 +706,7 @@ class _LivePoojaTrackingScreenState extends State<LivePoojaTrackingScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    'Opening Pandit Setu Support Chat...',
+                    'Opening SARV MANGAL Support Chat...',
                     style: GoogleFonts.lato(),
                   ),
                   backgroundColor: const Color(0xFFD97706),
