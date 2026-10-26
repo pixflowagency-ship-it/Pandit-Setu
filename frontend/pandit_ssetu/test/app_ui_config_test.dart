@@ -72,7 +72,6 @@ void main() {
       };
 
       final customConfig = AppUiConfig.fromJson(customJson);
-      final service = AppConfigService();
       // Set internal config via JSON load
       SharedPreferences.setMockInitialValues({
         'sarv_cached_app_ui_config': jsonEncode(customConfig.toJson()),

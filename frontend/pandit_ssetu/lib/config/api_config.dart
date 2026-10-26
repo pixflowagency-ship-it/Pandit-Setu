@@ -6,12 +6,15 @@ class ApiConfig {
   static const String _envBaseUrl = String.fromEnvironment('API_BASE_URL');
 
   static String get baseUrl {
-    if (_envBaseUrl.isNotEmpty) {
-      return _envBaseUrl;
+    if (kIsWeb) {
+      if (_envBaseUrl.isNotEmpty && !_envBaseUrl.contains('10.0.2.2')) {
+        return _envBaseUrl;
+      }
+      return 'http://localhost:5000/api/v1';
     }
 
-    if (kIsWeb) {
-      return 'http://localhost:5000/api/v1';
+    if (_envBaseUrl.isNotEmpty) {
+      return _envBaseUrl;
     }
 
     switch (defaultTargetPlatform) {

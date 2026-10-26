@@ -65,6 +65,22 @@ try {
     # --------------------------------------------------------------------------
     # 3. Determine API URL for Flutter
     # --------------------------------------------------------------------------
+    if (-not $Device -and $Mode -eq "emulator") {
+        $hasAndroid = $false
+        try {
+            $adbDevices = (adb.exe devices 2>$null) | Where-Object { $_ -match "\bdevice\b" -and $_ -notmatch "List of devices" }
+            if ($adbDevices) {
+                $hasAndroid = $true
+            }
+        } catch {}
+
+        if (-not $hasAndroid) {
+            Write-Info "No running Android emulator detected. Auto-selecting Chrome Web browser..."
+            $Mode = "web"
+            $Device = "chrome"
+        }
+    }
+
     $targetApiUrl = ""
     switch ($Mode) {
         "emulator" {
