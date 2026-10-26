@@ -199,3 +199,108 @@ export const adminApprovePanditHandler: RequestHandler = async (req, res) => {
   sendSuccess(res, result);
 };
 
+export const recordPanditTelemetryHandler: RequestHandler = async (req, res) => {
+  if (!req.user) {
+    throw new AppError(401, "UNAUTHORIZED", "Authentication required");
+  }
+
+  const { recordPanditTelemetry } = await import("../services/tracking.service.js");
+  const result = await recordPanditTelemetry(req.user.id, req.body);
+
+  sendSuccess(res, result);
+};
+
+export const getApprovedMantrasHandler: RequestHandler = async (_req, res) => {
+  const { getApprovedMantras } = await import("../services/pandit-verification.service.js");
+  const mantras = await getApprovedMantras();
+  sendSuccess(res, { mantras });
+};
+
+export const setVerificationMethodHandler: RequestHandler = async (req, res) => {
+  if (!req.user) {
+    throw new AppError(401, "UNAUTHORIZED", "Authentication required");
+  }
+
+  const { setVerificationMethod } = await import("../services/pandit-verification.service.js");
+  const result = await setVerificationMethod(req.user.id, req.body.method);
+
+  sendSuccess(res, result);
+};
+
+export const uploadMantraRecordingHandler: RequestHandler = async (req, res) => {
+  if (!req.user) {
+    throw new AppError(401, "UNAUTHORIZED", "Authentication required");
+  }
+
+  const { uploadMantraRecording } = await import("../services/pandit-verification.service.js");
+  const recording = await uploadMantraRecording(req.user.id, req.body);
+
+  sendSuccess(res, { recording }, 201);
+};
+
+export const getPanditMantraRecordingsHandler: RequestHandler = async (req, res) => {
+  if (!req.user) {
+    throw new AppError(401, "UNAUTHORIZED", "Authentication required");
+  }
+
+  const { getPanditMantraRecordings } = await import("../services/pandit-verification.service.js");
+  const recordings = await getPanditMantraRecordings(req.user.id);
+
+  sendSuccess(res, { recordings });
+};
+
+export const streamPanditMantraRecordingHandler: RequestHandler = async (req, res) => {
+  if (!req.user) {
+    throw new AppError(401, "UNAUTHORIZED", "Authentication required");
+  }
+
+  const recordingId = req.params.recordingId as string;
+  const { db } = await import("../db/index.js");
+  const { pandits } = await import("../db/schema/pandits.js");
+  const { eq } = await import("drizzle-orm");
+
+  const pandit = await db.query.pandits.findFirst({
+    where: eq(pandits.userId, req.user.id),
+  });
+
+  if (!pandit) {
+    throw new AppError(404, "NOT_FOUND", "Pandit profile not found");
+  }
+
+  const { getPanditMantraStream } = await import("../services/pandit-verification.service.js");
+  const { filePath, mimeType, fileName, fileSize } = await getPanditMantraStream(
+    req.user.id,
+    req.user.role,
+    pandit.id,
+    recordingId
+  );
+
+  const effectiveSize = fileSize || 0;
+  const { createReadStream } = await import("fs");
+  const range = req.headers.range;
+
+  if (range) {
+    const parts = range.replace(/bytes=/, "").split("-");
+    const start = parseInt(parts[0], 10);
+    const end = parts[1] ? parseInt(parts[1], 10) : effectiveSize - 1;
+    const chunksize = end - start + 1;
+    const file = createReadStream(filePath, { start, end });
+    res.writeHead(206, {
+      "Content-Range": `bytes ${start}-${end}/${effectiveSize}`,
+      "Accept-Ranges": "bytes",
+      "Content-Length": chunksize,
+      "Content-Type": mimeType,
+    });
+    file.pipe(res);
+  } else {
+    res.writeHead(200, {
+      "Content-Length": effectiveSize,
+      "Content-Type": mimeType,
+      "Content-Disposition": `inline; filename="${fileName}"`,
+      "Accept-Ranges": "bytes",
+    });
+    createReadStream(filePath).pipe(res);
+  }
+};
+
+

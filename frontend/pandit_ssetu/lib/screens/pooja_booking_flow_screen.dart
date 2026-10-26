@@ -6,6 +6,7 @@ import '../widgets/pooja_detail_modal.dart';
 import '../services/api_service.dart';
 import '../user_data.dart';
 import '../utils/booking_date_time_helper.dart';
+import 'package:geolocator/geolocator.dart';
 
 class PoojaBookingFlowScreen extends StatefulWidget {
   final PoojaDetail pooja;
@@ -97,15 +98,43 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
 
   Future<void> _loadPandits() async {
     setState(() => _isLoadingPandits = true);
-    final pandits = await ApiService.getNearbyPandits();
-    if (mounted) {
-      setState(() {
-        _nearbyPandits = pandits;
-        if (pandits.isNotEmpty) {
-          _selectedPandit = pandits.first;
+    try {
+      double? lat;
+      double? lng;
+
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (serviceEnabled) {
+        var permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.denied) {
+          permission = await Geolocator.requestPermission();
         }
-        _isLoadingPandits = false;
-      });
+        if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+          final position = await Geolocator.getCurrentPosition(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.medium,
+              timeLimit: Duration(seconds: 5),
+            ),
+          );
+          lat = position.latitude;
+          lng = position.longitude;
+        }
+      }
+
+      final pandits = await ApiService.getNearbyPandits(lat: lat, lng: lng);
+      if (mounted) {
+        setState(() {
+          _nearbyPandits = pandits;
+          if (pandits.isNotEmpty) {
+            _selectedPandit = pandits.first;
+          }
+          _isLoadingPandits = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading nearby pandits: $e');
+      if (mounted) {
+        setState(() => _isLoadingPandits = false);
+      }
     }
   }
 
@@ -209,40 +238,58 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
 
       _activeBookingId = bookingId;
 
-      // 2. Create Razorpay Payment Order on backend (server-calculated pricing)
-      final order = await ApiService.createPaymentOrder(bookingId);
-      final orderId = order['id']?.toString();
-      final amount = order['amount'];
-
-      if (orderId == null || amount == null) {
-        throw Exception('Server failed to initialize payment order');
+      // 2. Handle Payment Method
+      if (_selectedPaymentMethod == 'pay_later') {
+        // Devotee chose to offer Dakshina in Cash/UPI after the ritual completion
+        if (mounted) {
+          setState(() => _isSubmitting = false);
+          _showSuccessDialog(bookingId, isCashPayLater: true);
+        }
+        return;
       }
 
-      _activeOrderId = orderId;
+      // 3. Initiate Razorpay Checkout for Advance Online Payment
+      try {
+        final order = await ApiService.createPaymentOrder(bookingId);
+        final orderId = order['id']?.toString();
+        final amount = order['amount'];
 
-      // 3. Initiate Razorpay Checkout in TEST MODE
-      final razorpayKey = const String.fromEnvironment(
-        'RAZORPAY_KEY_ID',
-        defaultValue: 'rzp_test_placeholder',
-      );
-
-      final options = {
-        'key': razorpayKey,
-        'amount': amount,
-        'name': 'Sarvmangal Pooja',
-        'description': widget.pooja.title,
-        'order_id': orderId,
-        'timeout': 180,
-        'prefill': {
-          'contact': UserData.phone.isNotEmpty ? UserData.phone : '+91 9876543210',
-          'name': UserData.name.isNotEmpty ? UserData.name : 'Yajman',
-        },
-        'external': {
-          'wallets': ['paytm']
+        if (orderId == null || amount == null) {
+          throw Exception('Server failed to initialize payment order');
         }
-      };
 
-      _razorpay.open(options);
+        _activeOrderId = orderId;
+
+        final razorpayKey = const String.fromEnvironment(
+          'RAZORPAY_KEY_ID',
+          defaultValue: 'rzp_test_placeholder',
+        );
+
+        final options = {
+          'key': razorpayKey,
+          'amount': amount,
+          'name': 'SARV MANGAL Pooja',
+          'description': widget.pooja.title,
+          'order_id': orderId,
+          'timeout': 180,
+          'prefill': {
+            'contact': UserData.phone.isNotEmpty ? UserData.phone : '+91 9876543210',
+            'name': UserData.name.isNotEmpty ? UserData.name : 'Yajman',
+          },
+          'external': {
+            'wallets': ['paytm']
+          }
+        };
+
+        _razorpay.open(options);
+      } catch (e) {
+        // The booking IS genuinely persisted in PostgreSQL with PENDING status!
+        debugPrint('Online payment gateway note: $e');
+        if (mounted) {
+          setState(() => _isSubmitting = false);
+          _showSuccessDialog(bookingId, isPendingOnlinePayment: true);
+        }
+      }
     } catch (e) {
       if (mounted) {
         setState(() => _isSubmitting = false);
@@ -330,7 +377,16 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
     );
   }
 
-  void _showSuccessDialog(String bookingId) {
+  void _showSuccessDialog(String bookingId, {bool isCashPayLater = false, bool isPendingOnlinePayment = false}) {
+    final String title = (isCashPayLater || isPendingOnlinePayment)
+        ? 'Booking Request Recorded!'
+        : 'Booking Confirmed!';
+    final String subtitle = isCashPayLater
+        ? 'Your ritual for ${widget.pooja.title} is recorded. You can offer Dakshina in cash or UPI directly to the Pandit after the ritual.'
+        : (isPendingOnlinePayment
+            ? 'Your ritual for ${widget.pooja.title} is recorded in the SARV MANGAL database. You can complete payment later from My Bookings or pay after the ritual.'
+            : 'Your ritual for ${widget.pooja.title} has been successfully booked.');
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -354,7 +410,7 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
             ),
             const SizedBox(height: 18),
             Text(
-              'Booking Confirmed!',
+              title,
               style: GoogleFonts.lato(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -363,7 +419,7 @@ class _PoojaBookingFlowScreenState extends State<PoojaBookingFlowScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Your ritual for ${widget.pooja.title} has been successfully booked.',
+              subtitle,
               textAlign: TextAlign.center,
               style: GoogleFonts.lato(
                 fontSize: 13,

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:geolocator/geolocator.dart';
+import '../services/api_service.dart';
 
 class NearestTempleScreen extends StatefulWidget {
   const NearestTempleScreen({super.key});
@@ -81,27 +83,110 @@ class _NearestTempleScreenState extends State<NearestTempleScreen> {
     },
   ];
 
-  void _detectLocation() {
-    setState(() => _isDetectingLocation = true);
-    Future.delayed(const Duration(seconds: 2), () {
+  List<Map<String, dynamic>> _liveTemples = [];
+  bool _isLoadingTemples = false;
+  String? _locationStatusMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _detectLocation();
+  }
+
+  Future<void> _detectLocation() async {
+    setState(() {
+      _isDetectingLocation = true;
+      _locationStatusMessage = null;
+    });
+
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        if (mounted) {
+          setState(() {
+            _isDetectingLocation = false;
+            _locationStatusMessage = 'Location services disabled. Showing curated Vedic pilgrimage shrines.';
+          });
+        }
+        return;
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          if (mounted) {
+            setState(() {
+              _isDetectingLocation = false;
+              _locationStatusMessage = 'Location permission denied. Showing curated Vedic pilgrimage shrines.';
+            });
+          }
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        if (mounted) {
+          setState(() {
+            _isDetectingLocation = false;
+            _locationStatusMessage = 'Location permission permanently denied. Showing curated Vedic pilgrimage shrines.';
+          });
+        }
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+          timeLimit: Duration(seconds: 7),
+        ),
+      );
+
+      if (mounted) {
+        setState(() {
+          _userLocation = '${position.latitude.toStringAsFixed(3)}°N, ${position.longitude.toStringAsFixed(3)}°E (GPS Active)';
+          _isDetectingLocation = false;
+        });
+      }
+
+      await _fetchNearbyTemples(position.latitude, position.longitude);
+    } catch (e) {
       if (mounted) {
         setState(() {
           _isDetectingLocation = false;
-          _userLocation = 'Ujjain City Center (GPS Active)';
+          _locationStatusMessage = 'Unable to acquire GPS coordinates ($e). Showing curated Vedic pilgrimage shrines.';
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Yajman Location Detected: $_userLocation'),
-            backgroundColor: const Color(0xFFF18C16),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
       }
-    });
+    }
+  }
+
+  Future<void> _fetchNearbyTemples(double lat, double lng) async {
+    setState(() => _isLoadingTemples = true);
+    try {
+      final results = await ApiService.getNearbyTemples(lat: lat, lng: lng, radiusKm: 15);
+      if (mounted) {
+        setState(() {
+          _liveTemples = results;
+          _isLoadingTemples = false;
+          if (_liveTemples.isEmpty) {
+            _locationStatusMessage = 'No live Google Places temples found in this 15km radius. Showing curated ancient Vedic shrines.';
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingTemples = false;
+          _locationStatusMessage = 'Temple search offline ($e). Showing curated ancient Vedic shrines.';
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final displayTemples = _liveTemples.isNotEmpty ? _liveTemples : _temples;
+
     return Scaffold(
       backgroundColor: const Color(0xFFFFF8EE),
       body: SafeArea(
@@ -110,15 +195,47 @@ class _NearestTempleScreenState extends State<NearestTempleScreen> {
             _buildTopBar(),
             const SizedBox(height: 12),
             _buildLocationBar(),
+            if (_locationStatusMessage != null) ...[
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF3E0),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFFFB74D)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info_outline, size: 16, color: Color(0xFFE65100)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _locationStatusMessage!,
+                          style: GoogleFonts.lato(fontSize: 11.5, color: const Color(0xFF8A5300)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 14),
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: _temples.length,
-                itemBuilder: (context, index) {
-                  return _buildTempleCard(_temples[index]);
-                },
-              ),
+              child: _isLoadingTemples
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFFF18C16),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: displayTemples.length,
+                      itemBuilder: (context, index) {
+                        return _buildTempleCard(displayTemples[index]);
+                      },
+                    ),
             ),
             _buildNavBar(context),
           ],
@@ -230,6 +347,16 @@ class _NearestTempleScreenState extends State<NearestTempleScreen> {
   }
 
   Widget _buildTempleCard(Map<String, dynamic> temple) {
+    final imageUrl = (temple['image'] ?? 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=400').toString();
+    final distanceStr = (temple['distance'] ?? temple['vicinity'] ?? 'Ancient Shrine').toString();
+    final crowdStatusStr = (temple['crowdStatus'] ?? 'Darshan Open').toString();
+    final crowdColorInt = (temple['crowdColor'] is int ? temple['crowdColor'] as int : 0xFF4CAF50);
+    final templeName = (temple['name'] ?? 'Vedic Temple').toString();
+    final ratingVal = (temple['rating'] != null ? temple['rating'].toString() : '4.8');
+    final deityStr = (temple['deity'] ?? 'Vedic Deity • Ancient Gurukul').toString();
+    final darshanTimings = (temple['darshanTimings'] ?? '05:00 AM - 09:30 PM').toString();
+    final specialAarti = (temple['bhasmaAarti'] ?? temple['vicinity'] ?? 'Daily Aarti & Darshan').toString();
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -251,7 +378,7 @@ class _NearestTempleScreenState extends State<NearestTempleScreen> {
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                 child: Image.network(
-                  temple['image'],
+                  imageUrl,
                   height: 140,
                   width: double.infinity,
                   fit: BoxFit.cover,
@@ -276,7 +403,7 @@ class _NearestTempleScreenState extends State<NearestTempleScreen> {
                       const Icon(Icons.near_me, color: Color(0xFFFFE082), size: 12),
                       const SizedBox(width: 4),
                       Text(
-                        temple['distance'],
+                        distanceStr,
                         style: GoogleFonts.lato(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
@@ -293,11 +420,11 @@ class _NearestTempleScreenState extends State<NearestTempleScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Color(temple['crowdColor'] as int),
+                    color: Color(crowdColorInt),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    temple['crowdStatus'],
+                    crowdStatusStr,
                     style: GoogleFonts.lato(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
@@ -318,7 +445,7 @@ class _NearestTempleScreenState extends State<NearestTempleScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                        temple['name'],
+                        templeName,
                         style: GoogleFonts.lato(
                           fontSize: 17,
                           fontWeight: FontWeight.bold,
@@ -331,7 +458,7 @@ class _NearestTempleScreenState extends State<NearestTempleScreen> {
                         const Icon(Icons.star, color: Color(0xFFFFB300), size: 16),
                         const SizedBox(width: 4),
                         Text(
-                          '${temple['rating']}',
+                          ratingVal,
                           style: GoogleFonts.lato(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
@@ -344,7 +471,7 @@ class _NearestTempleScreenState extends State<NearestTempleScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  temple['deity'],
+                  deityStr,
                   style: GoogleFonts.lato(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -357,7 +484,7 @@ class _NearestTempleScreenState extends State<NearestTempleScreen> {
                     const Icon(Icons.schedule, size: 14, color: Color(0xFF8A7060)),
                     const SizedBox(width: 6),
                     Text(
-                      'Darshan: ${temple['darshanTimings']}',
+                      'Darshan: $darshanTimings',
                       style: GoogleFonts.lato(
                         fontSize: 12,
                         color: const Color(0xFF5A4A3A),
@@ -371,7 +498,7 @@ class _NearestTempleScreenState extends State<NearestTempleScreen> {
                     const Icon(Icons.auto_awesome, size: 14, color: Color(0xFF8A7060)),
                     const SizedBox(width: 6),
                     Text(
-                      'Special: ${temple['bhasmaAarti']}',
+                      'Details: $specialAarti',
                       style: GoogleFonts.lato(
                         fontSize: 12,
                         color: const Color(0xFF5A4A3A),

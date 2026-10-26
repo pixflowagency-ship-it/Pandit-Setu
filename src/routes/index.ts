@@ -14,6 +14,9 @@ import paymentsRouter from "./payments.routes.js";
 import subscriptionsRouter from "./subscriptions.routes.js";
 import trackingRouter from "./tracking.routes.js";
 import productOrdersRouter from "./product-orders.routes.js";
+import adminRouter from "./admin.routes.js";
+import consultationsRouter from "./consultations.routes.js";
+import kundliOrdersRouter from "./kundli_orders.routes.js";
 import { apiLimiter } from "../middleware/rate-limit.js";
 
 const apiRouter = Router();
@@ -33,21 +36,15 @@ apiRouter.use("/payments", paymentsRouter);
 apiRouter.use("/subscriptions", subscriptionsRouter);
 apiRouter.use("/tracking", trackingRouter);
 apiRouter.use("/product-orders", productOrdersRouter);
+apiRouter.use("/consultations", consultationsRouter);
+apiRouter.use("/kundli-orders", kundliOrdersRouter);
+apiRouter.use("/admin", adminRouter);
 
 apiRouter.get(
   "/me",
   verifyToken,
   asyncHandler((req, res) => {
     sendSuccess(res, { user: req.user });
-  }),
-);
-
-apiRouter.get(
-  "/admin/health",
-  verifyToken,
-  requireRole(["ADMIN"]),
-  asyncHandler((_req, res) => {
-    sendSuccess(res, { status: "ok" });
   }),
 );
 

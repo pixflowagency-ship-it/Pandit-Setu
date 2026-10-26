@@ -87,7 +87,7 @@ export async function dispatchBooking(
 ): Promise<DispatchResult> {
   const dispatchAttemptId = randomUUID();
   const searchRadiusKm = options.searchRadiusKm ?? 15;
-  const maxLocationAgeMs = options.maxLocationAgeMs ?? 24 * 60 * 60 * 1000; // 24 hours
+  const maxLocationAgeMs = options.maxLocationAgeMs ?? 10 * 60 * 1000; // 10 minutes freshness threshold
   const redis = await getRedis();
 
   logger.info({ bookingId, dispatchAttemptId }, "Starting Pooja request dispatch attempt");

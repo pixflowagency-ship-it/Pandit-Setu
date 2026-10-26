@@ -23,6 +23,10 @@ class _LivePoojaTrackingScreenState extends State<LivePoojaTrackingScreen> {
   Timer? _allocationTimer;
   int _allocationSecondsRemaining = 0;
   socket_io.Socket? _socket;
+  double? _panditLat;
+  double? _panditLng;
+  double? _panditAccuracy;
+  DateTime? _locationUpdatedAt;
 
   @override
   void initState() {
@@ -79,6 +83,7 @@ class _LivePoojaTrackingScreenState extends State<LivePoojaTrackingScreen> {
           _currentProgressStep = _stepFromStatus(booking?['status']);
         });
         _connectSocketForBooking(booking['id']?.toString());
+        _fetchInitialTrackingLocation(booking['id']?.toString());
         _checkAllocationTimer();
         return;
       }
@@ -145,9 +150,96 @@ class _LivePoojaTrackingScreenState extends State<LivePoojaTrackingScreen> {
           });
         }
       });
+
+      _socket!.on('pandit:location-update', (data) {
+        if (!mounted || data is! Map) return;
+        final eventBookingId = data['bookingId']?.toString();
+        if (eventBookingId == bookingId) {
+          setState(() {
+            _panditLat = (data['lat'] as num?)?.toDouble();
+            _panditLng = (data['lng'] as num?)?.toDouble();
+            _panditAccuracy = (data['accuracy'] as num?)?.toDouble();
+            _locationUpdatedAt = DateTime.tryParse(data['updatedAt']?.toString() ?? '') ?? DateTime.now();
+          });
+        }
+      });
     } catch (e) {
       debugPrint('Error subscribing to booking realtime status: $e');
     }
+  }
+
+  Future<void> _fetchInitialTrackingLocation(String? bookingId) async {
+    if (bookingId == null || bookingId.isEmpty) return;
+    try {
+      final loc = await ApiService.getBookingTrackingLocation(bookingId);
+      if (loc != null && mounted) {
+        setState(() {
+          _panditLat = (loc['lat'] as num?)?.toDouble();
+          _panditLng = (loc['lng'] as num?)?.toDouble();
+          _panditAccuracy = (loc['accuracy'] as num?)?.toDouble();
+          _locationUpdatedAt = DateTime.tryParse(loc['updatedAt']?.toString() ?? '');
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching initial tracking location: $e');
+    }
+  }
+
+  Widget _buildGpsStatusBadge() {
+    if (_locationUpdatedAt == null) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFD1D5DB)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.location_off_outlined, size: 10, color: Color(0xFF6B7280)),
+            const SizedBox(width: 4),
+            Text(
+              'Awaiting GPS',
+              style: GoogleFonts.lato(fontSize: 9.5, fontWeight: FontWeight.bold, color: const Color(0xFF4B5563)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final diffSeconds = DateTime.now().difference(_locationUpdatedAt!).inSeconds;
+    final isLive = diffSeconds < 300; // Fresh within 5 minutes
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isLive ? const Color(0xFFECFDF5) : const Color(0xFFFFFBEB),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: isLive ? const Color(0xFF10B981) : const Color(0xFFF59E0B)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isLive ? Icons.gps_fixed : Icons.history,
+            size: 10,
+            color: isLive ? const Color(0xFF059669) : const Color(0xFFD97706),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            isLive
+                ? 'Live GPS${_panditAccuracy != null ? ' (±${_panditAccuracy!.toInt()}m)' : ''} • ${diffSeconds < 60 ? '${diffSeconds}s' : '${diffSeconds ~/ 60}m'} ago'
+                : 'Last Known • ${diffSeconds ~/ 60}m ago',
+            style: GoogleFonts.lato(
+              fontSize: 9.5,
+              fontWeight: FontWeight.bold,
+              color: isLive ? const Color(0xFF047857) : const Color(0xFFB45309),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _checkAllocationTimer() {
@@ -278,7 +370,9 @@ class _LivePoojaTrackingScreenState extends State<LivePoojaTrackingScreen> {
     } else if (_currentProgressStep == 2) {
       left = 160;
       top = 45;
-      statusText = 'En Route (12 Mins)';
+      statusText = _panditLat != null && _panditLng != null
+          ? 'En Route (${_panditLat!.toStringAsFixed(3)}, ${_panditLng!.toStringAsFixed(3)})'
+          : 'En Route (12 Mins)';
       arrivalOverlay = 'Arriving in 12 Mins';
     } else if (_currentProgressStep >= 3) {
       left = 265;
@@ -385,6 +479,12 @@ class _LivePoojaTrackingScreenState extends State<LivePoojaTrackingScreen> {
                 ),
               ],
             ),
+          ),
+
+          Positioned(
+            top: 12,
+            left: 12,
+            child: _buildGpsStatusBadge(),
           ),
 
           Positioned(

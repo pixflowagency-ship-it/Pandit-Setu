@@ -24,6 +24,7 @@ vi.mock("../db/index.js", () => ({
       users: { findFirst: (...args: any[]) => mockFindFirst(...args) },
       pandits: { findFirst: (...args: any[]) => mockFindFirst(...args), findMany: (...args: any[]) => mockFindMany(...args) },
       panditDocuments: { findFirst: (...args: any[]) => mockFindFirst(...args), findMany: (...args: any[]) => mockFindMany(...args) },
+      panditMantraRecordings: { findFirst: (...args: any[]) => mockFindFirst(...args), findMany: (...args: any[]) => mockFindMany(...args) },
     },
     insert: (...args: any[]) => mockInsert(...args),
     update: (...args: any[]) => mockUpdate(...args),
@@ -32,6 +33,7 @@ vi.mock("../db/index.js", () => ({
   users: {},
   pandits: {},
   panditDocuments: {},
+  panditMantraRecordings: {},
 }));
 
 describe("Pandit Onboarding & Verification Workflow", () => {
@@ -261,6 +263,7 @@ describe("Pandit Onboarding & Verification Workflow", () => {
       id: panditId,
       userId: panditUserId,
       verificationStage: "VIDEO_VERIFICATION_COMPLETED",
+      mantraRecordingStatus: "APPROVED",
     };
     mockFindFirst.mockResolvedValueOnce(reviewedPandit);
 

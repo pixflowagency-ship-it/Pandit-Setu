@@ -18,6 +18,12 @@ import {
   adminVerifyDocumentHandler,
   adminVerifyVideoHandler,
   adminApprovePanditHandler,
+  recordPanditTelemetryHandler,
+  getApprovedMantrasHandler,
+  setVerificationMethodHandler,
+  uploadMantraRecordingHandler,
+  getPanditMantraRecordingsHandler,
+  streamPanditMantraRecordingHandler,
 } from "../controllers/pandits.controller.js";
 import {
   nearbyQuerySchema,
@@ -30,7 +36,10 @@ import {
   adminVerifyDocumentSchema,
   adminVerifyVideoSchema,
   adminApprovePanditSchema,
+  setVerificationMethodSchema,
+  uploadMantraRecordingSchema,
 } from "../validators/pandits.validator.js";
+import { panditTelemetrySchema } from "../validators/tracking.validator.js";
 import { strictLimiter, nearbyLimiter, apiLimiter } from "../middleware/rate-limit.js";
 
 const panditsRouter = Router();
@@ -51,6 +60,14 @@ panditsRouter.patch(
   requireApprovedPandit,
   validateBody(dutyStatusSchema),
   asyncHandler(updateDutyStatusHandler)
+);
+
+panditsRouter.post(
+  "/me/telemetry",
+  verifyToken,
+  requireApprovedPandit,
+  validateBody(panditTelemetrySchema),
+  asyncHandler(recordPanditTelemetryHandler)
 );
 
 panditsRouter.post(
@@ -135,6 +152,45 @@ panditsRouter.post(
   verifyToken,
   requireRole(["PANDIT"]),
   asyncHandler(submitDocumentsForReviewHandler)
+);
+
+panditsRouter.get(
+  "/mantras",
+  apiLimiter,
+  asyncHandler(getApprovedMantrasHandler)
+);
+
+panditsRouter.put(
+  "/me/verification-method",
+  strictLimiter,
+  verifyToken,
+  requireRole(["PANDIT"]),
+  validateBody(setVerificationMethodSchema),
+  asyncHandler(setVerificationMethodHandler)
+);
+
+panditsRouter.post(
+  "/me/mantra-recordings",
+  strictLimiter,
+  verifyToken,
+  requireRole(["PANDIT"]),
+  validateBody(uploadMantraRecordingSchema),
+  asyncHandler(uploadMantraRecordingHandler)
+);
+
+panditsRouter.get(
+  "/me/mantra-recordings",
+  apiLimiter,
+  verifyToken,
+  requireRole(["PANDIT"]),
+  asyncHandler(getPanditMantraRecordingsHandler)
+);
+
+panditsRouter.get(
+  "/me/mantra-recordings/:recordingId/stream",
+  verifyToken,
+  requireRole(["PANDIT", "ADMIN"]),
+  asyncHandler(streamPanditMantraRecordingHandler)
 );
 
 panditsRouter.post(

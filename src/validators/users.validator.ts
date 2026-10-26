@@ -9,6 +9,7 @@ export const updateProfileSchema = z.object({
   gotra: z.string().optional(),
   zodiac: z.string().optional(),
   city: z.string().optional(),
+  address: z.string().max(1000).optional().nullable(),
 }).strict();
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;

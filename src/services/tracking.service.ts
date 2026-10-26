@@ -1,14 +1,163 @@
 import { db } from "../db/index.js";
 import { pandits } from "../db/schema/pandits.js";
 import { bookings } from "../db/schema/bookings.js";
-import { eq, sql } from "drizzle-orm";
+import { eq, and, inArray, sql } from "drizzle-orm";
 import { getRedis } from "../config/redis.js";
 import { AppError } from "../utils/api-error.js";
+import type { PanditTelemetryInput } from "../validators/tracking.validator.js";
 
 /**
- * High-frequency location update processor.
- * Includes: 1 req/sec strict rate-limiting, Redis GEO write-through, 
- * Socket broadcasting, and 30-second debounced Postgres batch-syncing.
+ * Continuous GPS telemetry ingestion for authenticated, approved, on-duty Pandits.
+ * Enforces duty check, timestamp freshness, 3s rate-limiting, Redis GEO caching,
+ * and real-time Socket.IO emission to assigned devotees.
+ */
+export async function recordPanditTelemetry(
+  panditUserId: string,
+  input: PanditTelemetryInput
+) {
+  const pandit = await db.query.pandits.findFirst({
+    where: eq(pandits.userId, panditUserId),
+  });
+
+  if (!pandit) {
+    throw new AppError(404, "NOT_FOUND", "Pandit profile not found");
+  }
+
+  if (pandit.verificationStatus !== "APPROVED" || !pandit.isVerified) {
+    throw new AppError(
+      403,
+      "PANDIT_NOT_APPROVED",
+      "Your Pandit profile is not yet approved. Please complete onboarding and verification."
+    );
+  }
+
+  if (!pandit.isAvailable) {
+    throw new AppError(
+      400,
+      "PANDIT_OFF_DUTY",
+      "Telemetry updates are only accepted when Pandit is on duty"
+    );
+  }
+
+  // Validate timestamp freshness if provided
+  if (input.timestamp !== undefined) {
+    const timestampMs =
+      typeof input.timestamp === "number"
+        ? input.timestamp
+        : new Date(input.timestamp).getTime();
+
+    if (isNaN(timestampMs)) {
+      throw new AppError(400, "INVALID_TIMESTAMP", "Provided timestamp is invalid");
+    }
+
+    const now = Date.now();
+    // Reject older than 5 minutes (300,000 ms)
+    if (now - timestampMs > 5 * 60 * 1000) {
+      throw new AppError(
+        400,
+        "STALE_LOCATION_UPDATE",
+        "Location update timestamp is older than 5 minutes"
+      );
+    }
+    // Reject future timestamps > 1 minute
+    if (timestampMs - now > 60 * 1000) {
+      throw new AppError(
+        400,
+        "INVALID_TIMESTAMP",
+        "Location update timestamp cannot be in the future"
+      );
+    }
+  }
+
+  const { lat, lng, accuracy, heading, speed } = input;
+  const now = new Date();
+  const redis = await getRedis();
+
+  if (redis) {
+    // 1. Strict Server-Side Rate Limiter (1 update per 3 seconds per Pandit)
+    const throttleKey = `telemetry:throttle:${pandit.id}`;
+    const acquired = await redis.set(throttleKey, "1", "EX", 3, "NX");
+    if (!acquired) {
+      return {
+        status: "THROTTLED",
+        message: "Telemetry update rate limit (1 per 3s)",
+        panditId: pandit.id,
+      };
+    }
+
+    // 2. Write-Through to Redis GEO
+    await redis.geoadd("pandits:live", lng, lat, pandit.id);
+
+    // 3. Cache latest location metadata with 10-minute TTL
+    const locationData = {
+      lat,
+      lng,
+      accuracy,
+      heading,
+      speed,
+      updatedAt: now.toISOString(),
+    };
+    await redis.set(`pandit:location:${pandit.id}`, JSON.stringify(locationData), "EX", 600);
+  }
+
+  // 4. Update Postgres pandits table
+  await db
+    .update(pandits)
+    .set({
+      latitude: lat,
+      longitude: lng,
+      location: sql`ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)`,
+      updatedAt: now,
+    })
+    .where(eq(pandits.id, pandit.id));
+
+  // 5. Emit real-time update to active bookings
+  try {
+    const activeBookings = await db.query.bookings.findMany({
+      where: and(
+        eq(bookings.panditId, panditUserId),
+        inArray(bookings.status, [
+          "CONFIRMED",
+          "HEADING_TO_VENUE",
+          "ARRIVED",
+          "PUJA_STARTED",
+          "IN_PROGRESS",
+        ])
+      ),
+      columns: { id: true },
+    });
+
+    if (activeBookings.length > 0) {
+      const { getIO } = await import("./realtime.service.js");
+      const io = getIO();
+      for (const b of activeBookings) {
+        io.to(`booking:${b.id}`).emit("pandit:location-update", {
+          bookingId: b.id,
+          panditId: pandit.id,
+          lat,
+          lng,
+          heading,
+          speed,
+          accuracy,
+          updatedAt: now.toISOString(),
+        });
+      }
+    }
+  } catch {
+    // Non-fatal if socket not running
+  }
+
+  return {
+    status: "RECORDED",
+    panditId: pandit.id,
+    lat,
+    lng,
+    updatedAt: now.toISOString(),
+  };
+}
+
+/**
+ * High-frequency location update processor for specific booking (backward compatible).
  */
 export async function processLocationUpdate(
   panditId: string,
@@ -23,28 +172,25 @@ export async function processLocationUpdate(
     const rateLimitKey = `tracking:rate_limit:${panditId}`;
     const acquired = await redis.set(rateLimitKey, "1", "EX", 1, "NX");
     if (!acquired) {
-      // Silently drop updates exceeding 1/sec
       return;
     }
 
-    // 2. Write-Through to Redis GEO (Source of Truth for live coords)
+    // 2. Write-Through to Redis GEO
     await redis.geoadd("pandits:live", lng, lat, panditId);
 
     // 3. Broadcast to WebSocket Room
-    // Dynamic import to avoid circular dependencies with Socket init
-    const { getIO } = await import("./realtime.service.js");
     try {
+      const { getIO } = await import("./realtime.service.js");
       getIO().to(`booking:${bookingId}`).emit("pandit:location-update", { bookingId, lat, lng });
-    } catch (err) {
-      // Ignore emit errors if socket isn't running (e.g. in REST tests)
+    } catch {
+      // Non-fatal if socket not running
     }
 
-    // 4. Batch Sync to Postgres (Debounced to once every 30 seconds)
+    // 4. Batch Sync to Postgres
     const syncKey = `tracking:last_pg_sync:${panditId}`;
     const lastSync = await redis.get(syncKey);
 
     if (!lastSync) {
-      // Update Postgres
       await db
         .update(pandits)
         .set({
@@ -52,12 +198,9 @@ export async function processLocationUpdate(
           updatedAt: new Date(),
         })
         .where(eq(pandits.id, panditId));
-      
-      // Set lock for 30 seconds
       await redis.setex(syncKey, 30, "1");
     }
   } else {
-    // Fallback if Redis is totally down (not ideal for high freq, but prevents complete failure)
     await db
       .update(pandits)
       .set({
@@ -69,8 +212,8 @@ export async function processLocationUpdate(
 }
 
 /**
- * Retrieves the live location of a Pandit for a specific booking.
- * Fallbacks to Postgres if Redis doesn't have it.
+ * Retrieves the live or last-known location of a Pandit for a specific booking.
+ * Fallbacks to Postgres if Redis does not have fresh coordinates.
  */
 export async function getLiveLocation(bookingId: string, userId: string, role: string) {
   const booking = await db.query.bookings.findFirst({
@@ -97,28 +240,41 @@ export async function getLiveLocation(bookingId: string, userId: string, role: s
   const redis = await getRedis();
   
   if (redis) {
-    // Fetch from Redis for sub-millisecond response
+    // 1. Try reading detailed metadata cache (includes timestamp, accuracy, heading, speed)
+    const cachedMeta = await redis.get(`pandit:location:${booking.panditId}`);
+    if (cachedMeta) {
+      try {
+        const parsed = JSON.parse(cachedMeta);
+        return { ...parsed, source: "redis" };
+      } catch (_) {}
+    }
+
+    // 2. Try Redis GEO position using booking.panditId
     const positions = await redis.geopos("pandits:live", booking.panditId);
-    
     if (positions && positions[0]) {
       const [lng, lat] = positions[0];
-      return { lat: parseFloat(lat), lng: parseFloat(lng), source: "redis" };
+      return {
+        lat: parseFloat(lat),
+        lng: parseFloat(lng),
+        source: "redis",
+      };
     }
   }
 
-  // Fallback to Postgres
-  const pandit = await db
-    .select({
-      lat: sql<number>`ST_Y(location::geometry)`,
-      lng: sql<number>`ST_X(location::geometry)`,
-    })
-    .from(pandits)
-    .where(eq(pandits.id, booking.panditId))
-    .limit(1);
-
-  if (!pandit || pandit.length === 0 || pandit[0].lat === null) {
-    return null; // Location unknown
+  // 3. Fallback to Postgres
+  if (db.query?.pandits?.findFirst) {
+    const panditProfile = await db.query.pandits.findFirst({
+      where: eq(pandits.userId, booking.panditId),
+    });
+    if (panditProfile && panditProfile.latitude !== null && panditProfile.longitude !== null) {
+      return {
+        lat: panditProfile.latitude,
+        lng: panditProfile.longitude,
+        updatedAt: panditProfile.updatedAt?.toISOString() || null,
+        source: "postgres",
+      };
+    }
   }
 
-  return { lat: pandit[0].lat, lng: pandit[0].lng, source: "postgres" };
+  return null;
 }

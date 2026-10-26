@@ -4,6 +4,10 @@ export interface JwtPayload {
   id: string;
   phone: string;
   role: UserRole;
+  email?: string;
+  jti?: string;
+  exp?: number;
+  iat?: number;
 }
 
 export interface ApiErrorBody {

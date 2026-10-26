@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/language_service.dart';
+import '../services/api_service.dart';
 
 class ConsultationFlowModal extends StatefulWidget {
   const ConsultationFlowModal({super.key});
@@ -15,6 +16,11 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
   // Step 2: Final direct consultation / confirmation
   int _currentView = 0; // 0 = main choice, 1 = online flow, 2 = offline flow, 3 = direct online active, 4 = offline confirmed
 
+  // --- PERSISTENCE STATE ---
+  bool _isSubmitting = false;
+  String? _submissionError;
+  Map<String, dynamic>? _persistedConsultation;
+
   // --- ONLINE STATE ---
   String _onlineTiming = 'immediate'; // 'immediate' or 'schedule'
   int _selectedDuration = 15; // 15, 30, 60 minutes
@@ -24,6 +30,7 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
   final _userNameController = TextEditingController(text: 'Yajman Devotee');
   final _userPhoneController = TextEditingController(text: '+91 98765 43210');
   String _selectedTopic = 'Marriage & Kundli Dosha';
+  final _customTopicController = TextEditingController();
 
   // --- OFFLINE STATE ---
   String _offlinePlaceChoice = 'office'; // 'office' or 'doorstep'
@@ -76,21 +83,38 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
     'Griha Vastu Dosha Remedy',
     'Child Education & Higher Studies',
     'Navagraha & Rahu-Ketu Shanti',
+    'Others',
   ];
 
   final List<String> _timeSlots = [
     '09:00 AM',
     '11:00 AM',
+    '11:30 AM',
     '02:00 PM',
     '04:30 PM',
     '06:30 PM',
     '08:00 PM',
   ];
 
+  String get _safeScheduledTimeSlot {
+    if (_timeSlots.contains(_scheduledTimeSlot)) {
+      return _scheduledTimeSlot;
+    }
+    return _timeSlots.isNotEmpty ? _timeSlots.first : '11:00 AM';
+  }
+
+  String get _safeOfflineTimeSlot {
+    if (_timeSlots.contains(_offlineTimeSlot)) {
+      return _offlineTimeSlot;
+    }
+    return _timeSlots.isNotEmpty ? _timeSlots.first : '11:00 AM';
+  }
+
   @override
   void dispose() {
     _userNameController.dispose();
     _userPhoneController.dispose();
+    _customTopicController.dispose();
     _addressController.dispose();
     _cityController.dispose();
     _pincodeController.dispose();
@@ -108,6 +132,125 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
     if (duration == 15) return 299;
     if (duration == 30) return 499;
     return 899;
+  }
+
+  Future<void> _submitOnlineConsultation() async {
+    if (_isSubmitting) return;
+    setState(() {
+      _isSubmitting = true;
+      _submissionError = null;
+    });
+
+    try {
+      final name = _userNameController.text.trim().isNotEmpty
+          ? _userNameController.text.trim()
+          : 'Devotee';
+      final phone = _userPhoneController.text.replaceAll(RegExp(r'\s+'), '').trim().isNotEmpty
+          ? _userPhoneController.text.replaceAll(RegExp(r'\s+'), '').trim()
+          : '+919876543210';
+
+      final customTopic = _customTopicController.text.trim();
+      final effectiveTopic = _selectedTopic == 'Others'
+          ? (customTopic.isNotEmpty ? 'Others: $customTopic' : 'Others')
+          : _selectedTopic;
+
+      final Map<String, dynamic> body = {
+        'type': 'ONLINE',
+        'timing': _onlineTiming == 'immediate' ? 'IMMEDIATE' : 'SCHEDULED',
+        'medium': _onlineMedium == 'meet' ? 'VIDEO' : 'PHONE',
+        'topic': effectiveTopic,
+        'durationMinutes': _selectedDuration,
+        'devoteeName': name,
+        'devoteePhone': phone.length >= 10 ? phone : '+919876543210',
+        'requestedDate': _onlineTiming == 'immediate'
+            ? DateTime.now().toUtc().toIso8601String()
+            : _scheduledDate.toUtc().toIso8601String(),
+        'requestedTimeSlot': _onlineTiming == 'immediate' ? 'Immediate' : _safeScheduledTimeSlot,
+      };
+
+      final res = await ApiService.createConsultation(body);
+      if (mounted) {
+        setState(() {
+          _persistedConsultation = res;
+          _isSubmitting = false;
+          _currentView = 3;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+          _submissionError = e.toString().replaceAll('Exception: ', '');
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_submissionError ?? 'Failed to submit consultation'),
+            backgroundColor: Colors.red.shade800,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _submitOfflineConsultation() async {
+    if (_isSubmitting) return;
+    setState(() {
+      _isSubmitting = true;
+      _submissionError = null;
+    });
+
+    try {
+      final name = _userNameController.text.trim().isNotEmpty
+          ? _userNameController.text.trim()
+          : 'Devotee';
+      final phone = _userPhoneController.text.replaceAll(RegExp(r'\s+'), '').trim().isNotEmpty
+          ? _userPhoneController.text.replaceAll(RegExp(r'\s+'), '').trim()
+          : '+919876543210';
+
+      final isOffice = _offlinePlaceChoice == 'office';
+      final office = _sarvMangalOffices[_selectedOfficeIndex];
+
+      final Map<String, dynamic> body = {
+        'type': 'OFFLINE',
+        'timing': 'SCHEDULED',
+        'medium': 'IN_PERSON',
+        'topic': _consultationReasonController.text.trim().isNotEmpty
+            ? _consultationReasonController.text.trim()
+            : 'Griha Vastu Dosha Remedy',
+        'durationMinutes': _offlineDuration,
+        'devoteeName': name,
+        'devoteePhone': phone.length >= 10 ? phone : '+919876543210',
+        'requestedDate': _offlineDate.toUtc().toIso8601String(),
+        'requestedTimeSlot': _safeOfflineTimeSlot,
+        'venueAddress': isOffice
+            ? null
+            : '${_addressController.text.trim()}, ${_cityController.text.trim()} - ${_pincodeController.text.trim()}',
+        'kendraName': isOffice ? office['name'] : null,
+        'notes': _consultationReasonController.text.trim(),
+      };
+
+      final res = await ApiService.createConsultation(body);
+      if (mounted) {
+        setState(() {
+          _persistedConsultation = res;
+          _isSubmitting = false;
+          _currentView = 4;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+          _submissionError = e.toString().replaceAll('Exception: ', '');
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_submissionError ?? 'Failed to submit offline consultation'),
+            backgroundColor: Colors.red.shade800,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -155,7 +298,7 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
 
   Widget _buildHeader(bool isHindi) {
     String title = isHindi ? 'ज्योतिष एवं वैदिक परामर्श' : 'Vedic Consultation';
-    String subtitle = 'SARV MANGALS • सर्व मंगल';
+    String subtitle = 'SARV MANGAL • सर्व मंगल';
 
     if (_currentView == 1) {
       title = isHindi ? 'ऑनलाइन परामर्श (Online)' : 'Online Consultation';
@@ -171,11 +314,16 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          if (_currentView != 0 && _currentView != 3 && _currentView != 4)
+          if (_currentView != 0 && _currentView != 3 && _currentView != 4) ...[
             IconButton(
-              icon: const Icon(Icons.arrow_back, color: Color(0xFF3D2200)),
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              icon: const Icon(Icons.arrow_back, color: Color(0xFF3D2200), size: 22),
               onPressed: () => setState(() => _currentView = 0),
             ),
+            const SizedBox(width: 6),
+          ],
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
@@ -188,21 +336,21 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 6,
+                  runSpacing: 2,
                   children: [
-                    Flexible(
-                      child: Text(
-                        title,
-                        style: GoogleFonts.lato(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF3D2200),
-                        ),
-                        overflow: TextOverflow.ellipsis,
+                    Text(
+                      title,
+                      style: GoogleFonts.lato(
+                        fontSize: 16.5,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF3D2200),
                       ),
                     ),
-                    const SizedBox(width: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
@@ -233,7 +381,10 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.close, color: Color(0xFF8A7060)),
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            icon: const Icon(Icons.close, color: Color(0xFF8A7060), size: 20),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ],
@@ -323,17 +474,19 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 6,
+                        runSpacing: 2,
                         children: [
                           Text(
-                            isHindi ? 'A. ऑनलाइन परामर्श' : 'A. ONLINE Consultation',
+                            isHindi ? 'ऑनलाइन परामर्श' : 'Online Consultation',
                             style: GoogleFonts.lato(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: const Color(0xFF3D2200),
                             ),
                           ),
-                          const SizedBox(width: 6),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
@@ -365,6 +518,7 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
                 const Icon(Icons.arrow_forward_ios, size: 16, color: Color(0xFFE65100)),
               ],
             ),
@@ -412,7 +566,7 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isHindi ? 'B. ऑफलाइन परामर्श' : 'B. OFFLINE Consultation',
+                        isHindi ? 'ऑफलाइन परामर्श' : 'Offline Consultation',
                         style: GoogleFonts.lato(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -433,6 +587,7 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
                 const Icon(Icons.arrow_forward_ios, size: 16, color: Color(0xFFB45309)),
               ],
             ),
@@ -743,7 +898,7 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
               const SizedBox(width: 10),
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  initialValue: _scheduledTimeSlot,
+                  initialValue: _safeScheduledTimeSlot,
                   decoration: InputDecoration(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -769,6 +924,7 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
+          isExpanded: true,
           initialValue: _selectedTopic,
           decoration: InputDecoration(
             filled: true,
@@ -780,43 +936,108 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
             ),
           ),
           items: _topics
-              .map((t) => DropdownMenuItem(value: t, child: Text(t, style: GoogleFonts.lato(fontSize: 13))))
+              .map((t) => DropdownMenuItem(
+                    value: t,
+                    child: Text(
+                      t,
+                      style: GoogleFonts.lato(fontSize: 13),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ))
               .toList(),
           onChanged: (val) {
             if (val != null) setState(() => _selectedTopic = val);
           },
         ),
 
+        if (_selectedTopic == 'Others') ...[
+          const SizedBox(height: 10),
+          TextFormField(
+            controller: _customTopicController,
+            decoration: InputDecoration(
+              hintText: isHindi
+                  ? 'कृपया अपना विषय बताएं (वैकल्पिक)...'
+                  : 'Specify your topic / concern (e.g. Ancestral peace, spiritual guidance)...',
+              labelText: isHindi ? 'विशिष्ट विषय' : 'Custom Topic Details',
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFFE65100), width: 1.5),
+              ),
+            ),
+            style: GoogleFonts.lato(fontSize: 13),
+            maxLines: 2,
+            minLines: 1,
+          ),
+        ],
+
         const SizedBox(height: 24),
 
         // Action CTA
+        if (_submissionError != null) ...[
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.red.shade50,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.red.shade200),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.red, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _submissionError!,
+                    style: const TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
         SizedBox(
           width: double.infinity,
           height: 50,
           child: ElevatedButton(
-            onPressed: () {
-              // Proceed to Direct Online Consultation / Allocation
-              setState(() => _currentView = 3);
-            },
+            onPressed: _isSubmitting ? null : _submitOnlineConsultation,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFE65100),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               elevation: 2,
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  _onlineTiming == 'immediate'
-                      ? (isHindi ? 'तत्काल पंडित जी से जुड़ें • ₹${_getPrice(_selectedDuration)}' : 'Connect to Pandit Ji • ₹${_getPrice(_selectedDuration)}')
-                      : (isHindi ? 'शेड्यूल कन्फर्म करें • ₹${_getPrice(_selectedDuration)}' : 'Confirm Schedule • ₹${_getPrice(_selectedDuration)}'),
-                  style: GoogleFonts.lato(fontSize: 15, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(width: 8),
-                const Icon(Icons.arrow_forward, size: 18),
-              ],
-            ),
+            child: _isSubmitting
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          _onlineTiming == 'immediate'
+                              ? (isHindi ? 'तत्काल पंडित जी से जुड़ें • ₹${_getPrice(_selectedDuration)}' : 'Connect to Pandit Ji • ₹${_getPrice(_selectedDuration)}')
+                              : (isHindi ? 'शेड्यूल कन्फर्म करें • ₹${_getPrice(_selectedDuration)}' : 'Confirm Schedule • ₹${_getPrice(_selectedDuration)}'),
+                          style: GoogleFonts.lato(fontSize: 14.5, fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.arrow_forward, size: 18),
+                    ],
+                  ),
           ),
         ),
       ],
@@ -912,7 +1133,7 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
             const SizedBox(width: 10),
             Expanded(
               child: DropdownButtonFormField<String>(
-                initialValue: _offlineTimeSlot,
+                initialValue: _safeOfflineTimeSlot,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -930,7 +1151,7 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
 
         const SizedBox(height: 20),
 
-        // 3. Place Selection: At SarvMangal Office vs At Your Place
+        // 3. Place Selection: At SARV MANGAL Office vs At Your Place
         Text(
           isHindi ? '3. परामर्श का स्थान चुनें' : '3. Choose Place for Consultation',
           style: GoogleFonts.lato(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF3D2200)),
@@ -1016,7 +1237,7 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
 
         // Dynamic Sub-sections based on Place Selection
         if (_offlinePlaceChoice == 'office') ...[
-          // LIST OF NEAREST SARVMANGAL OFFICES
+          // LIST OF NEAREST SARV MANGAL OFFICES
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1168,32 +1389,64 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
         const SizedBox(height: 24),
 
         // Action CTA
+        if (_submissionError != null) ...[
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.red.shade50,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.red.shade200),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.red, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _submissionError!,
+                    style: const TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
         SizedBox(
           width: double.infinity,
           height: 50,
           child: ElevatedButton(
-            onPressed: () {
-              setState(() => _currentView = 4);
-            },
+            onPressed: _isSubmitting ? null : _submitOfflineConsultation,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFE65100),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               elevation: 2,
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  isHindi
-                      ? 'ऑफलाइन परामर्श बुक करें • ₹${_getOfflinePrice(_offlineDuration)}'
-                      : 'Book Offline Consultation • ₹${_getOfflinePrice(_offlineDuration)}',
-                  style: GoogleFonts.lato(fontSize: 15, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(width: 8),
-                const Icon(Icons.arrow_forward, size: 18),
-              ],
-            ),
+            child: _isSubmitting
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          isHindi
+                              ? 'ऑफलाइन परामर्श बुक करें • ₹${_getOfflinePrice(_offlineDuration)}'
+                              : 'Book Offline Consultation • ₹${_getOfflinePrice(_offlineDuration)}',
+                          style: GoogleFonts.lato(fontSize: 14.5, fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.arrow_forward, size: 18),
+                    ],
+                  ),
           ),
         ),
       ],
@@ -1204,12 +1457,11 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
   Widget _buildDirectOnlineConsultationView(bool isHindi) {
     final bool isImmediate = _onlineTiming == 'immediate';
     final bool isMeet = _onlineMedium == 'meet';
-    const meetUrl = 'https://meet.google.com/smg-vedic-session-7842';
 
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        // Allocation Badge Card
+        // Consultation Request Status Card
         Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
@@ -1229,20 +1481,20 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5E9),
+                  color: const Color(0xFFFFF3E0),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.check_circle, color: Color(0xFF2E7D32), size: 14),
+                    const Icon(Icons.info_outline, color: Color(0xFFE65100), size: 14),
                     const SizedBox(width: 6),
                     Text(
-                      'PANDIT ASSIGNED FROM ADMIN PANEL',
+                      'CONSULTATION REQUEST SUBMITTED',
                       style: GoogleFonts.lato(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF2E7D32),
+                        color: const Color(0xFFE65100),
                         letterSpacing: 0.5,
                       ),
                     ),
@@ -1250,64 +1502,24 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
                 ),
               ),
               const SizedBox(height: 14),
-
-              // Pandit Avatar & Credentials
-              Row(
-                children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFE65100), width: 2),
-                    ),
-                    child: ClipOval(
-                      child: Image.asset(
-                        'assets/pandit_1.jpeg',
-                        fit: BoxFit.cover,
-                        errorBuilder: (c, e, s) => Container(
-                          color: const Color(0xFFFFF3E0),
-                          child: const Icon(Icons.person, color: Color(0xFFE65100), size: 36),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Acharya Devratna Shastri',
-                          style: GoogleFonts.lato(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF3D2200),
-                          ),
-                        ),
-                        Text(
-                          'Senior Jyotish & Kundli Specialist (18+ yrs)',
-                          style: GoogleFonts.lato(fontSize: 12, color: const Color(0xFF8A7060)),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const Icon(Icons.star, color: Colors.amber, size: 14),
-                            const SizedBox(width: 4),
-                            Text(
-                              '4.9 (1,420+ Consultations)',
-                              style: GoogleFonts.lato(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF5A4A3A),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              Text(
+                isHindi
+                    ? 'ऑनलाइन परामर्श अनुरोध पंजीकृत'
+                    : 'Online Consultation Request Logged',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.lato(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF3D2200),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                isHindi
+                    ? 'स्वचालित वीडियो एवं फ़ोन कॉल ब्रिज वर्तमान में बैकएंड एकीकरण के अधीन है। आपका अनुरोध केंद्रीय व्यवस्थापक को प्राप्त हो गया है। परामर्श समय से पूर्व हमारे प्रतिनिधि आपसे संपर्क करेंगे।'
+                    : 'Automated video call and phone routing are currently undergoing server-side bridge integration. Your appointment request has been recorded. Our central desk will contact you via phone prior to the slot.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.lato(fontSize: 12, color: const Color(0xFF6B5B52), height: 1.35),
               ),
             ],
           ),
@@ -1326,205 +1538,75 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDetailRow('Topic', _selectedTopic),
+              if (_persistedConsultation != null) ...[
+                _buildDetailRow('Consultation ID', _persistedConsultation!['consultationNumber']?.toString() ?? 'CNS-RECORDED'),
+                _buildDetailRow('Status', _persistedConsultation!['status']?.toString() ?? 'REQUESTED'),
+              ],
+              _buildDetailRow(
+                'Topic',
+                _selectedTopic == 'Others'
+                    ? (_customTopicController.text.trim().isNotEmpty
+                        ? 'Others: ${_customTopicController.text.trim()}'
+                        : 'Others')
+                    : _selectedTopic,
+              ),
               _buildDetailRow('Duration', '$_selectedDuration Minutes (₹${_getPrice(_selectedDuration)})'),
               _buildDetailRow(
                 'Schedule',
                 isImmediate
-                    ? 'Immediate (Connecting now)'
+                    ? 'Immediate (Coordination pending)'
                     : '${_scheduledDate.day}/${_scheduledDate.month}/${_scheduledDate.year} at $_scheduledTimeSlot',
               ),
               _buildDetailRow(
                 'Medium',
                 isMeet ? '📹 Google Meet (Video Call)' : '📞 Direct Phone Call (Audio)',
               ),
+              _buildDetailRow('Devotee Name', _userNameController.text),
+              _buildDetailRow('Contact Phone', _userPhoneController.text),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Central Helpdesk Card
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'SARV MANGAL Central Coordination Helpline',
+                style: GoogleFonts.lato(fontWeight: FontWeight.bold, fontSize: 13, color: const Color(0xFF3D2200)),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Phone: +91 734 2551234 • Email: desk@sarvmangal.org',
+                style: GoogleFonts.lato(fontSize: 12, color: const Color(0xFF6B5B52)),
+              ),
             ],
           ),
         ),
 
         const SizedBox(height: 20),
-
-        // SPECIFIC ACTION FOR PHONE VS MEET
-        if (isMeet) ...[
-          // GOOGLE MEET ACTIVE LINK CREATED BY ADMIN
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0xFF1976D2), width: 1.5),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE3F2FD),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.video_call, color: Color(0xFF1976D2), size: 24),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Google Meet Link Created by Admin',
-                            style: GoogleFonts.lato(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13.5,
-                              color: const Color(0xFF1565C0),
-                            ),
-                          ),
-                          Text(
-                            meetUrl,
-                            style: GoogleFonts.lato(
-                              fontSize: 12,
-                              color: const Color(0xFF1E88E5),
-                              decoration: TextDecoration.underline,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Joining SARV MANGAL Google Meet consultation room...'),
-                              backgroundColor: Color(0xFF1976D2),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.videocam, color: Colors.white, size: 18),
-                        label: Text(
-                          isImmediate ? 'Join Google Meet Now' : 'Open Scheduled Meet',
-                          style: GoogleFonts.lato(fontWeight: FontWeight.bold),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1976D2),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Meet link copied to clipboard!'),
-                            backgroundColor: Color(0xFFE65100),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.copy, size: 16, color: Color(0xFF1976D2)),
-                      label: const Text('Copy'),
-                      style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ] else ...[
-          // PHONE CALL OPTION
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0xFF2E7D32), width: 1.5),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFE8F5E9),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.phone_in_talk, color: Color(0xFF2E7D32), size: 24),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Direct Phone Consultation',
-                            style: GoogleFonts.lato(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13.5,
-                              color: const Color(0xFF2E7D32),
-                            ),
-                          ),
-                          Text(
-                            'Acharya is connected. Calling ${_userPhoneController.text}...',
-                            style: GoogleFonts.lato(fontSize: 12, color: const Color(0xFF6B5B52)),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Connecting phone call with Acharya Devratna Shastri...'),
-                          backgroundColor: Color(0xFF2E7D32),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.call, color: Colors.white, size: 18),
-                    label: Text(
-                      isImmediate ? 'Start Direct Call Now' : 'Confirm Phone Call',
-                      style: GoogleFonts.lato(fontWeight: FontWeight.bold),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2E7D32),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-
-        const SizedBox(height: 20),
         SizedBox(
           width: double.infinity,
-          height: 46,
-          child: OutlinedButton(
+          height: 48,
+          child: ElevatedButton(
             onPressed: () => Navigator.of(context).pop(),
-            style: OutlinedButton.styleFrom(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE65100),
+              foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             child: Text(
-              'Done & Close',
-              style: GoogleFonts.lato(fontWeight: FontWeight.bold, color: const Color(0xFF8A7060)),
+              isHindi ? 'पूर्ण एवं बंद करें' : 'Done & Close',
+              style: GoogleFonts.lato(fontWeight: FontWeight.bold, fontSize: 14),
             ),
           ),
         ),
@@ -1553,7 +1635,7 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
         ),
         const SizedBox(height: 16),
         Text(
-          isHindi ? 'ऑफलाइन परामर्श सफलतापूर्वक बुक हुआ!' : 'Offline Consultation Confirmed!',
+          isHindi ? 'ऑफलाइन परामर्श अनुरोध दर्ज!' : 'Offline Consultation Request Registered!',
           textAlign: TextAlign.center,
           style: GoogleFonts.lato(
             fontSize: 20,
@@ -1564,8 +1646,8 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
         const SizedBox(height: 6),
         Text(
           isHindi
-              ? 'प्रशासक द्वारा वरिष्ठ पंडित जी आवंटित कर दिए गए हैं।'
-              : 'Senior Acharya has been allotted from SARV MANGAL Admin Panel.',
+              ? 'आपका अनुरोध दर्ज कर लिया गया है। व्यवस्थापक द्वारा आचार्य उपलब्धता की पुष्टि हेतु संपर्क किया जाएगा।'
+              : 'Your request has been registered. Temple administration will verify Acharya schedule and confirm your appointment.',
           textAlign: TextAlign.center,
           style: GoogleFonts.lato(fontSize: 13, color: const Color(0xFF6B5B52)),
         ),
@@ -1588,7 +1670,12 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDetailRow('Booking ID', 'SMG-CNS-7709'),
+              if (_persistedConsultation != null) ...[
+                _buildDetailRow('Consultation ID', _persistedConsultation!['consultationNumber']?.toString() ?? 'CNS-RECORDED'),
+                _buildDetailRow('Request Status', _persistedConsultation!['status']?.toString() ?? 'REQUESTED'),
+              ] else ...[
+                _buildDetailRow('Request Status', 'Pending Desk Confirmation'),
+              ],
               _buildDetailRow(
                 'Date & Time',
                 '${_offlineDate.day}/${_offlineDate.month}/${_offlineDate.year} at $_offlineTimeSlot ($_offlineDuration mins)',
@@ -1606,7 +1693,7 @@ class _ConsultationFlowModalState extends State<ConsultationFlowModal> {
                 _buildDetailRow('Phone Number', _userPhoneController.text),
                 _buildDetailRow('Reason', _consultationReasonController.text),
               ],
-              _buildDetailRow('Assigned Pandit', 'Acharya Ramakant Shukla (Admin Allotted)'),
+              _buildDetailRow('Acharya Allotment', 'Coordinated by Kendra Desk'),
               _buildDetailRow('Consultation Fee', '₹${_getOfflinePrice(_offlineDuration)} (Payable at venue)'),
             ],
           ),

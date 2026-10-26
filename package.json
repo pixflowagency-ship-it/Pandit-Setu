@@ -11,6 +11,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
+    "db:provision-admin": "tsx --env-file=.env src/db/provision_admin.ts",
     "seed": "tsx src/db/seed.ts",
     "import:poojas": "tsx --env-file=.env src/db/import_pooja_excel.ts",
     "import:products": "tsx --env-file=.env src/db/import_store_products_excel.ts",

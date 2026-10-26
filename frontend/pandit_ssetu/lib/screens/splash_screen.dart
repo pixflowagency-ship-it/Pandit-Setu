@@ -104,7 +104,7 @@ class _SplashScreenState extends State<SplashScreen>
                   const SizedBox(height: 20),
                   Text(
                     'SARV MANGAL',
-                    style: GoogleFonts.cinzel(
+                    style: GoogleFonts.lato(
                       fontSize: 32,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 2.0,
@@ -115,9 +115,9 @@ class _SplashScreenState extends State<SplashScreen>
                   const SizedBox(height: 6),
                   Text(
                     'सर्व मंगल मांगल्ये शिवे सर्वार्थ साधिके',
-                    style: GoogleFonts.rozhaOne(
+                    style: GoogleFonts.lato(
                       fontSize: 15,
-                      fontWeight: FontWeight.w400,
+                      fontWeight: FontWeight.w500,
                       color: const Color(0xFFD97706),
                       letterSpacing: 0.5,
                     ),

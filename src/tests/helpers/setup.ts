@@ -16,10 +16,19 @@ vi.stubEnv("NODE_ENV", "test");
 vi.stubEnv("PORT", "0");
 vi.stubEnv("OTP_EXPIRY_SECONDS", "300");
 vi.stubEnv("GOOGLE_PLACES_API_KEY", "test-places-api-key");
+vi.stubEnv("RAZORPAY_KEY_ID", "rzp_test_key_123");
+vi.stubEnv("RAZORPAY_KEY_SECRET", "rzp_test_secret_123");
+process.env.RAZORPAY_KEY_ID = "rzp_test_key_123";
+process.env.RAZORPAY_KEY_SECRET = "rzp_test_secret_123";
 
 /** Generate a signed JWT for test requests. */
 export function signTestToken(payload: JwtPayload): string {
   return jwt.sign(payload, TEST_JWT_SECRET, { expiresIn: "1h" });
+}
+
+/** Generate an intentionally expired JWT for test assertions. */
+export function signExpiredToken(payload: JwtPayload): string {
+  return jwt.sign(payload, TEST_JWT_SECRET, { expiresIn: "-1s" });
 }
 
 /** A reusable Yajman (normal user) token. */

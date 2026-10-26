@@ -95,3 +95,55 @@ export const adminApprovePanditSchema = z
   })
   .strict();
 
+export const setVerificationMethodSchema = z
+  .object({
+    method: z.enum(["MANTRA_VIDEO", "MANTRA_RECORDING", "VIDEO_CALL"]),
+  })
+  .strict();
+
+export type SetVerificationMethodInput = z.infer<typeof setVerificationMethodSchema>;
+
+export const uploadMantraRecordingSchema = z
+  .object({
+    mantraId: z.string().min(1).max(64),
+    mantraTitle: z.string().min(1).max(255),
+    fileName: z.string().min(1).max(255),
+    mimeType: z.string().min(3).max(100),
+    fileDataBase64: z.string().min(10),
+    durationSeconds: z.number().int().min(1).max(600).optional().default(0),
+  })
+  .strict();
+
+export type UploadMantraRecordingInput = z.infer<typeof uploadMantraRecordingSchema>;
+
+export const adminReviewMantraRecordingSchema = z
+  .object({
+    status: z.enum(["APPROVED", "REJECTED", "RESUBMISSION_REQUIRED"]),
+    notes: z.string().max(1000).optional(),
+    rejectionReason: z.string().max(1000).optional(),
+  })
+  .strict();
+
+export type AdminReviewMantraRecordingInput = z.infer<typeof adminReviewMantraRecordingSchema>;
+
+export const createMantraSchema = z
+  .object({
+    id: z.string().min(2).max(64).optional(),
+    title: z.string().min(3).max(255),
+    sanskritText: z.string().min(5),
+    transliteration: z.string().optional(),
+    meaning: z.string().optional(),
+    pronunciationGuidance: z.string().optional(),
+    minDurationSeconds: z.number().int().min(5).max(180).optional().default(10),
+    maxDurationSeconds: z.number().int().min(15).max(300).optional().default(120),
+    isActive: z.boolean().optional().default(true),
+    displayOrder: z.number().int().optional().default(0),
+  })
+  .strict();
+
+export type CreateMantraInput = z.infer<typeof createMantraSchema>;
+
+export const updateMantraSchema = createMantraSchema.partial();
+export type UpdateMantraInput = z.infer<typeof updateMantraSchema>;
+
+

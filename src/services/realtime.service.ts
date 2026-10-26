@@ -169,3 +169,11 @@ export const getIO = () => {
   }
   return io;
 };
+
+export const closeSocket = async (): Promise<void> => {
+  if (io) {
+    await new Promise<void>((resolve) => {
+      io.close(() => resolve());
+    });
+  }
+};

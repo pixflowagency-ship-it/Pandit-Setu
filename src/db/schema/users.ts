@@ -18,9 +18,12 @@ export const users = pgTable("users", {
   gotra: varchar("gotra", { length: 255 }),
   zodiac: varchar("zodiac", { length: 255 }),
   city: varchar("city", { length: 255 }),
+  address: text("address"),
   email: varchar("email", { length: 255 }),
   profilePictureUrl: text("profile_picture_url"),
   fcmToken: varchar("fcm_token", { length: 255 }),
+  passwordHash: varchar("password_hash", { length: 255 }),
+  passwordSalt: varchar("password_salt", { length: 64 }),
   role: userRoleEnum("role").notNull().default("YAJMAN"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

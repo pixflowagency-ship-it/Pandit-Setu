@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../user_data.dart';
 import '../services/language_service.dart';
+import '../services/api_service.dart';
 
 class HandmadeKundliOrderModal extends StatefulWidget {
   const HandmadeKundliOrderModal({super.key});
@@ -11,7 +12,12 @@ class HandmadeKundliOrderModal extends StatefulWidget {
 }
 
 class _HandmadeKundliOrderModalState extends State<HandmadeKundliOrderModal> {
-  int _step = 0; // 0 = form filling, 1 = payment of booking charge, 2 = admin allotment confirmed
+  int _step = 0; // 0 = form filling, 1 = review & submit, 2 = confirmed order details
+
+  // Persistence State
+  bool _isSubmitting = false;
+  String? _submissionError;
+  Map<String, dynamic>? _persistedOrder;
 
   // Form Fields
   final _nameController = TextEditingController(text: UserData.name.isNotEmpty ? UserData.name : 'Rahul Sharma');
@@ -21,14 +27,24 @@ class _HandmadeKundliOrderModalState extends State<HandmadeKundliOrderModal> {
   final _pobController = TextEditingController(text: UserData.pob.isNotEmpty ? UserData.pob : 'Varanasi, Uttar Pradesh');
   final _gotraController = TextEditingController(text: UserData.gotra.isNotEmpty ? UserData.gotra : 'Kashyap');
   final _addressController = TextEditingController(text: 'House 42, Anand Nagar, Ring Road, Varanasi - 221005');
-  final _specialNotesController = TextEditingController(text: 'Focus on career growth, business hurdles, and favorable marriage timing.');
+  final _customConcernController = TextEditingController();
 
+  String _kundliType = 'Patrika'; // 'Patrika' or 'Online Kundli'
   String _gender = 'Male';
   String _birthAccuracy = 'accurate'; // 'accurate' or 'approximate'
   String _language = 'Hindi';
-  String _paymentOption = 'token'; // 'token' (₹251) or 'full' (₹1,501)
-  String _paymentMethod = 'upi';
-  bool _isSubmitting = false;
+
+  // Consultation concern categories reused
+  final List<String> _concernCategories = [
+    'Marriage & Kundli Dosha',
+    'Career, Job & Business Growth',
+    'Health, Family Peace & Prosperity',
+    'Griha Vastu Dosha Remedy',
+    'Child Education & Higher Studies',
+    'Navagraha & Rahu-Ketu Shanti',
+    'Others',
+  ];
+  String _selectedConcernCategory = 'Marriage & Kundli Dosha';
 
   @override
   void dispose() {
@@ -39,7 +55,7 @@ class _HandmadeKundliOrderModalState extends State<HandmadeKundliOrderModal> {
     _pobController.dispose();
     _gotraController.dispose();
     _addressController.dispose();
-    _specialNotesController.dispose();
+    _customConcernController.dispose();
     super.dispose();
   }
 
@@ -96,9 +112,7 @@ class _HandmadeKundliOrderModalState extends State<HandmadeKundliOrderModal> {
                         children: [
                           Flexible(
                             child: Text(
-                              _step == 2
-                                  ? (isHindi ? 'पंडित आवंटन पुष्टि' : 'Pandit Allotment Confirmed')
-                                  : (isHindi ? 'हस्तनिर्मित कुंडली आर्डर' : 'Order Handmade Kundali'),
+                              isHindi ? 'हस्तनिर्मित कुंडली विवरण' : 'Handmade Kundali Details',
                               style: GoogleFonts.lato(
                                 fontSize: 17,
                                 fontWeight: FontWeight.bold,
@@ -127,7 +141,7 @@ class _HandmadeKundliOrderModalState extends State<HandmadeKundliOrderModal> {
                         ],
                       ),
                       Text(
-                        'SARV MANGALS • सर्व मंगल',
+                        'SARV MANGAL • सर्व मंगल',
                         style: GoogleFonts.lato(
                           fontSize: 11,
                           color: const Color(0xFF8A7060),
@@ -159,14 +173,77 @@ class _HandmadeKundliOrderModalState extends State<HandmadeKundliOrderModal> {
     );
   }
 
+  Future<void> _submitKundliOrder() async {
+    if (_isSubmitting) return;
+    setState(() {
+      _isSubmitting = true;
+      _submissionError = null;
+    });
+
+    try {
+      final name = _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : 'Rahul Sharma';
+      final phone = _phoneController.text.replaceAll(RegExp(r'\s+'), '').trim().isNotEmpty
+          ? _phoneController.text.replaceAll(RegExp(r'\s+'), '').trim()
+          : '+919876543210';
+      final dob = _dobController.text.trim().isNotEmpty ? _dobController.text.trim() : '1995-05-24';
+      final tob = _tobController.text.trim().isNotEmpty ? _tobController.text.trim() : '09:30 AM';
+      final pob = _pobController.text.trim().isNotEmpty ? _pobController.text.trim() : 'Varanasi, UP';
+      final address = _addressController.text.trim().isNotEmpty
+          ? _addressController.text.trim()
+          : 'House 42, Anand Nagar, Varanasi - 221005';
+
+      final customNotes = _selectedConcernCategory == 'Others'
+          ? _customConcernController.text.trim()
+          : null;
+
+      final Map<String, dynamic> body = {
+        'devoteeName': name,
+        'devoteePhone': phone.length >= 10 ? phone : '+919876543210',
+        'gender': _gender,
+        'dob': dob,
+        'tob': tob,
+        'pob': pob,
+        'birthAccuracy': _birthAccuracy,
+        'gotra': _gotraController.text.trim().isNotEmpty ? _gotraController.text.trim() : null,
+        'language': _language,
+        'deliveryAddress': address,
+        'kundliType': _kundliType,
+        'concernCategory': _selectedConcernCategory,
+        'specialNotes': customNotes != null && customNotes.isNotEmpty ? customNotes : null,
+      };
+
+      final res = await ApiService.createKundliOrder(body);
+      if (mounted) {
+        setState(() {
+          _persistedOrder = res;
+          _isSubmitting = false;
+          _step = 2;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+          _submissionError = e.toString().replaceAll('Exception: ', '');
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_submissionError ?? 'Failed to submit Kundli order'),
+            backgroundColor: Colors.red.shade800,
+          ),
+        );
+      }
+    }
+  }
+
   Widget _buildStepView(bool isHindi) {
     switch (_step) {
       case 0:
         return _buildFormStep(isHindi);
       case 1:
-        return _buildPaymentStep(isHindi);
+        return _buildReviewStep(isHindi);
       case 2:
-        return _buildAllotmentConfirmedStep(isHindi);
+        return _buildConfirmationStep(isHindi);
       default:
         return _buildFormStep(isHindi);
     }
@@ -177,28 +254,112 @@ class _HandmadeKundliOrderModalState extends State<HandmadeKundliOrderModal> {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        // Intro Card
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFF8EE),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFF3E7D3)),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.menu_book, color: Color(0xFFE65100), size: 28),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  isHindi
-                      ? '32 पृष्ठों की प्रामाणिक हस्तलिखित जन्मपत्री। कृपया सटीक जन्म विवरण दर्ज करें।'
-                      : '32-Page traditional hand-drawn Janam Patri by senior Kashi astrologers. Please provide birth details.',
-                  style: GoogleFonts.lato(fontSize: 12, color: const Color(0xFF5A4A3A)),
+        // Select Your Kundli Type
+        Text(
+          isHindi ? 'कुंडली का प्रकार चुनें' : 'Select Your Kundli Type',
+          style: GoogleFonts.lato(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF3D2200)),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _kundliType = 'Patrika'),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: _kundliType == 'Patrika' ? const Color(0xFFFFF3E0) : Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: _kundliType == 'Patrika' ? const Color(0xFFE65100) : const Color(0xFFE5E7EB),
+                      width: _kundliType == 'Patrika' ? 2 : 1,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Patrika',
+                            style: GoogleFonts.lato(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: _kundliType == 'Patrika' ? const Color(0xFFE65100) : const Color(0xFF3D2200),
+                            ),
+                          ),
+                          Icon(
+                            _kundliType == 'Patrika' ? Icons.radio_button_checked : Icons.radio_button_off,
+                            size: 18,
+                            color: _kundliType == 'Patrika' ? const Color(0xFFE65100) : Colors.grey,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '(32 Page Kundli)',
+                        style: GoogleFonts.lato(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF8A7060),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _kundliType = 'Online Kundli'),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: _kundliType == 'Online Kundli' ? const Color(0xFFFFF3E0) : Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: _kundliType == 'Online Kundli' ? const Color(0xFFE65100) : const Color(0xFFE5E7EB),
+                      width: _kundliType == 'Online Kundli' ? 2 : 1,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Online Kundli',
+                            style: GoogleFonts.lato(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: _kundliType == 'Online Kundli' ? const Color(0xFFE65100) : const Color(0xFF3D2200),
+                            ),
+                          ),
+                          Icon(
+                            _kundliType == 'Online Kundli' ? Icons.radio_button_checked : Icons.radio_button_off,
+                            size: 18,
+                            color: _kundliType == 'Online Kundli' ? const Color(0xFFE65100) : Colors.grey,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        isHindi ? '(डिजिटल प्रारूप)' : '(Digital PDF Chart)',
+                        style: GoogleFonts.lato(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF8A7060),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
 
         const SizedBox(height: 18),
@@ -391,7 +552,49 @@ class _HandmadeKundliOrderModalState extends State<HandmadeKundliOrderModal> {
         const SizedBox(height: 12),
         _buildTextField('Delivery Address (डाक पता जहां जन्मपत्री भेजी जाएगी)', _addressController, icon: Icons.home),
         const SizedBox(height: 12),
-        _buildTextField('Specific Questions / Concerns for Jyotish Acharya', _specialNotesController, icon: Icons.help_outline),
+
+        // Select Your Concern
+        Text(
+          isHindi ? 'अपनी समस्या / विषय चुनें' : 'Select Your Concern',
+          style: GoogleFonts.lato(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF3D2200)),
+        ),
+        const SizedBox(height: 6),
+        DropdownButtonFormField<String>(
+          isExpanded: true,
+          initialValue: _selectedConcernCategory,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+            ),
+            prefixIcon: const Icon(Icons.help_outline, size: 18, color: Color(0xFFE65100)),
+          ),
+          items: _concernCategories
+              .map((c) => DropdownMenuItem(
+                    value: c,
+                    child: Text(c, style: GoogleFonts.lato(fontSize: 13), overflow: TextOverflow.ellipsis),
+                  ))
+              .toList(),
+          onChanged: (val) {
+            if (val != null) {
+              setState(() {
+                _selectedConcernCategory = val;
+              });
+            }
+          },
+        ),
+
+        if (_selectedConcernCategory == 'Others') ...[
+          const SizedBox(height: 10),
+          _buildTextField(
+            'Describe Your Specific Concern (विस्तार से लिखें) *',
+            _customConcernController,
+            icon: Icons.edit_note,
+          ),
+        ],
 
         const SizedBox(height: 24),
 
@@ -401,6 +604,19 @@ class _HandmadeKundliOrderModalState extends State<HandmadeKundliOrderModal> {
           height: 50,
           child: ElevatedButton(
             onPressed: () {
+              if (_selectedConcernCategory == 'Others' && _customConcernController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      isHindi ? 'कृपया अपनी समस्या का विवरण लिखें' : 'Please describe your specific concern before proceeding.',
+                      style: GoogleFonts.lato(color: Colors.white),
+                    ),
+                    backgroundColor: Colors.red.shade800,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+                return;
+              }
               setState(() => _step = 1);
             },
             style: ElevatedButton.styleFrom(
@@ -413,7 +629,7 @@ class _HandmadeKundliOrderModalState extends State<HandmadeKundliOrderModal> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  isHindi ? 'आगे बढ़ें • बुकिंग शुल्क भुगतान' : 'Proceed to Booking Charge Payment',
+                  isHindi ? 'आगे बढ़ें • विवरण समीक्षा' : 'Proceed to Review Details',
                   style: GoogleFonts.lato(fontSize: 15, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(width: 8),
@@ -426,107 +642,26 @@ class _HandmadeKundliOrderModalState extends State<HandmadeKundliOrderModal> {
     );
   }
 
-  // --- STEP 1: BOOKING CHARGE PAYMENT ---
-  Widget _buildPaymentStep(bool isHindi) {
-    final int amount = _paymentOption == 'token' ? 251 : 1501;
-
+  // --- STEP 1: REVIEW & SERVICE STATUS NOTICE ---
+  Widget _buildReviewStep(bool isHindi) {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
         Text(
-          isHindi ? 'बुकिंग शुल्क का भुगतान करें' : 'Pay Booking Charge',
+          isHindi ? 'जन्म विवरण समीक्षा' : 'Review Birth Details',
           style: GoogleFonts.lato(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF3D2200)),
         ),
         const SizedBox(height: 6),
         Text(
           isHindi
-              ? 'आर्डर डेटा व्यवस्थापक को भेजा जाएगा और वरिष्ठ पंडित जी को हस्तलेखन के लिए सौंपा जाएगा।'
-              : 'Your birth data will be sent to the admin, and a senior Acharya will be allotted.',
+              ? 'कृपया दर्ज किए गए विवरण की समीक्षा करें। प्रामाणिक हस्तलिखित जन्मपत्री वैदिक नियमों के अनुसार तैयार की जाती है।'
+              : 'Please verify the details below. Authentic handwritten Janam Patri manuscripts are prepared according to Vedic rules.',
           style: GoogleFonts.lato(fontSize: 13, color: const Color(0xFF6B5B52)),
         ),
 
-        const SizedBox(height: 20),
+        const SizedBox(height: 18),
 
-        // Payment Option Selector (Token ₹251 vs Full ₹1,501)
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFEADBCA)),
-          ),
-          child: Column(
-            children: [
-              GestureDetector(
-                onTap: () => setState(() => _paymentOption = 'token'),
-                child: Row(
-                  children: [
-                    Icon(
-                      _paymentOption == 'token' ? Icons.radio_button_checked : Icons.radio_button_off,
-                      color: const Color(0xFFE65100),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Pay Booking Token Charge (₹251)',
-                            style: GoogleFonts.lato(fontWeight: FontWeight.bold, fontSize: 13.5),
-                          ),
-                          Text(
-                            'Reserve Senior Pandit allotment. Balance ₹1,250 payable on delivery.',
-                            style: GoogleFonts.lato(fontSize: 11, color: const Color(0xFF8A7060)),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      '₹251',
-                      style: GoogleFonts.lato(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFFE65100)),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 24),
-              GestureDetector(
-                onTap: () => setState(() => _paymentOption = 'full'),
-                child: Row(
-                  children: [
-                    Icon(
-                      _paymentOption == 'full' ? Icons.radio_button_checked : Icons.radio_button_off,
-                      color: const Color(0xFFE65100),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Pay Full Janam Patri Fee (₹1,501)',
-                            style: GoogleFonts.lato(fontWeight: FontWeight.bold, fontSize: 13.5),
-                          ),
-                          Text(
-                            'Includes 32-page handwritten book, wooden box packaging & free postal courier.',
-                            style: GoogleFonts.lato(fontSize: 11, color: const Color(0xFF8A7060)),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      '₹1,501',
-                      style: GoogleFonts.lato(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFFE65100)),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 20),
-
-        // Summary of Birth Data sent to Admin
+        // Summary of Birth Data
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -538,155 +673,197 @@ class _HandmadeKundliOrderModalState extends State<HandmadeKundliOrderModal> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Summary Sent to Admin Panel',
+                isHindi ? 'दर्ज विवरण सारांश' : 'Entered Birth Profile',
                 style: GoogleFonts.lato(fontWeight: FontWeight.bold, fontSize: 13, color: const Color(0xFFE65100)),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               _buildMiniRow('Devotee Name', _nameController.text),
+              _buildMiniRow('Phone Number', _phoneController.text),
               _buildMiniRow('Date & Time', '${_dobController.text} at ${_tobController.text}'),
               _buildMiniRow('Accuracy', _birthAccuracy == 'accurate' ? 'Accurate (सटीक)' : 'Approximate (अनुमानित)'),
               _buildMiniRow('Place of Birth', _pobController.text),
               _buildMiniRow('Script & Gotra', '$_language • ${_gotraController.text}'),
+              _buildMiniRow('Delivery Address', _addressController.text),
+              _buildMiniRow('Kundli Type', _kundliType == 'Patrika' ? 'Patrika (32 Page Kundli)' : 'Online Kundli'),
+              _buildMiniRow('Concern Area', _selectedConcernCategory),
+              if (_selectedConcernCategory == 'Others' && _customConcernController.text.trim().isNotEmpty)
+                _buildMiniRow('Specific Concern', _customConcernController.text.trim()),
             ],
           ),
         ),
 
-        const SizedBox(height: 20),
+        const SizedBox(height: 18),
 
-        // Payment Method Selector
-        Text(
-          isHindi ? 'भुगतान विधि चुनें' : 'Select Payment Method',
-          style: GoogleFonts.lato(fontSize: 13.5, fontWeight: FontWeight.bold, color: const Color(0xFF3D2200)),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: _buildPayMethodTile('upi', 'UPI / GPay', Icons.account_balance_wallet),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _buildPayMethodTile('card', 'Cards', Icons.credit_card),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _buildPayMethodTile('netbanking', 'Net Banking', Icons.account_balance),
-            ),
-          ],
+        // Service Notice Banner
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFFBEB),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFFDE68A)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.info_outline, color: Color(0xFFD97706), size: 24),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isHindi ? 'ऑनलाइन चेकआउट सेवा सूचना' : 'Online Ordering Unavailable',
+                      style: GoogleFonts.lato(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF92400E),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      isHindi
+                          ? 'हस्तलिखित जन्मपत्री हेतु स्वचालित भुगतान गेटवे एवं वरिष्ठ ज्योतिषाचार्य आवंटन प्रणाली वर्तमान में बैकएंड एकीकरण के अधीन है। ऑनलाइन चेकआउट अभी उपलब्ध नहीं है। व्यक्तिगत हस्तलिखित जन्मपत्री तैयार करवाने हेतु कृपया सारव मंगल मंदिर डेस्क से संपर्क करें।'
+                          : 'Automated payment processing and senior astrologer allotment for physical handwritten Janam Patri are currently undergoing backend integration. Online orders are not accepted at this time. Please visit or contact the SARV MANGAL central temple desk for manual preparation.',
+                      style: GoogleFonts.lato(fontSize: 12, color: const Color(0xFF78350F), height: 1.4),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
 
         const SizedBox(height: 24),
 
-        // Pay & Submit Button
+        // Action Buttons
+        if (_submissionError != null) ...[
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.red.shade50,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.red.shade200),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.red, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _submissionError!,
+                    style: const TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+
         SizedBox(
           width: double.infinity,
-          height: 50,
+          height: 48,
           child: ElevatedButton(
-            onPressed: _isSubmitting
-                ? null
-                : () async {
-                    setState(() => _isSubmitting = true);
-                    await Future.delayed(const Duration(milliseconds: 900));
-                    if (mounted) {
-                      setState(() {
-                        _isSubmitting = false;
-                        _step = 2; // Jump to Pandit Allotment Confirmed step!
-                      });
-                    }
-                  },
+            onPressed: _isSubmitting ? null : _submitKundliOrder,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFE65100),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              elevation: 2,
             ),
             child: _isSubmitting
                 ? const SizedBox(
                     width: 22,
                     height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
                 : Text(
-                    isHindi ? '₹$amount भुगतान करें एवं आर्डर भेजें' : 'Pay ₹$amount & Send to Admin',
-                    style: GoogleFonts.lato(fontSize: 15, fontWeight: FontWeight.bold),
+                    isHindi ? 'जन्मपत्री अनुरोध प्रस्तुत करें • ₹1,501' : 'Submit Kundli Request • ₹1,501',
+                    style: GoogleFonts.lato(fontSize: 14, fontWeight: FontWeight.bold),
                   ),
+          ),
+        ),
+
+        const SizedBox(height: 10),
+
+        SizedBox(
+          width: double.infinity,
+          height: 46,
+          child: OutlinedButton(
+            onPressed: () => setState(() => _step = 0),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Color(0xFFE65100)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            ),
+            child: Text(
+              isHindi ? 'विवरण संशोधित करें' : 'Edit Birth Details',
+              style: GoogleFonts.lato(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFFE65100)),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        SizedBox(
+          width: double.infinity,
+          height: 44,
+          child: TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              isHindi ? 'बंद करें (Close)' : 'Close',
+              style: GoogleFonts.lato(fontSize: 13, color: const Color(0xFF6B5B52)),
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildPayMethodTile(String id, String label, IconData icon) {
-    final isSel = _paymentMethod == id;
-    return GestureDetector(
-      onTap: () => setState(() => _paymentMethod = id),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-        decoration: BoxDecoration(
-          color: isSel ? const Color(0xFFFFF3E0) : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSel ? const Color(0xFFE65100) : const Color(0xFFE5E7EB),
-            width: isSel ? 1.8 : 1,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: isSel ? const Color(0xFFE65100) : const Color(0xFF8A7060), size: 20),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: GoogleFonts.lato(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: isSel ? const Color(0xFFE65100) : const Color(0xFF3D2200),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget _buildConfirmationStep(bool isHindi) {
+    final orderNum = _persistedOrder?['orderNumber']?.toString() ?? 'KND-RECORDED';
+    final status = _persistedOrder?['status']?.toString() ?? 'REQUESTED';
+    final amount = _persistedOrder?['amount']?.toString() ?? '1501.00';
 
-  // --- STEP 2: ADMIN PANDIT ALLOTMENT CONFIRMED ---
-  Widget _buildAllotmentConfirmedStep(bool isHindi) {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
         Center(
           child: Container(
-            width: 72,
-            height: 72,
+            width: 70,
+            height: 70,
             decoration: const BoxDecoration(
               color: Color(0xFFE8F5E9),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.check, color: Color(0xFF2E7D32), size: 42),
+            child: const Icon(Icons.check, color: Color(0xFF2E7D32), size: 40),
           ),
         ),
         const SizedBox(height: 16),
         Text(
-          isHindi ? 'हस्तनिर्मित कुंडली आर्डर स्वीकृत!' : 'Handmade Kundali Order Placed!',
+          isHindi ? 'हस्तनिर्मित जन्मपत्री अनुरोध पंजीकृत!' : 'Handmade Kundli Request Registered!',
           textAlign: TextAlign.center,
-          style: GoogleFonts.lato(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF3D2200)),
+          style: GoogleFonts.lato(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF3D2200),
+          ),
         ),
         const SizedBox(height: 6),
         Text(
           isHindi
-              ? 'जन्म विवरण व्यवस्थापक को प्राप्त हो गया है एवं वरिष्ठ पंडित जी आवंटित कर दिए गए हैं।'
-              : 'User birth data received by admin. Senior Vedic Pandit has been alloted.',
+              ? 'आपका अनुरोध डेटाबेस में सुरक्षित दर्ज हो चुका है। वरिष्ठ ज्योतिषाचार्यों द्वारा जन्म विवरण की समीक्षा की जाएगी।'
+              : 'Your request is recorded in the SARV MANGAL database. Senior Vedic Acharyas will review the birth chart calculations.',
           textAlign: TextAlign.center,
           style: GoogleFonts.lato(fontSize: 13, color: const Color(0xFF6B5B52)),
         ),
-
         const SizedBox(height: 20),
 
-        // ALLOTTED PANDIT CARD
         Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFE65100).withValues(alpha: 0.3)),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFFEADBCA)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.04),
@@ -697,96 +874,12 @@ class _HandmadeKundliOrderModalState extends State<HandmadeKundliOrderModal> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE8F5E9),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'PANDIT ALLOTTED BY ADMIN',
-                      style: GoogleFonts.lato(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF2E7D32),
-                      ),
-                    ),
-                  ),
-                  Text(
-                    'Order #SMG-HK-8842',
-                    style: GoogleFonts.lato(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFFE65100)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Container(
-                    width: 58,
-                    height: 58,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFE65100), width: 1.8),
-                    ),
-                    child: ClipOval(
-                      child: Image.asset(
-                        'assets/pandit_2.jpeg',
-                        fit: BoxFit.cover,
-                        errorBuilder: (c, e, s) => Container(
-                          color: const Color(0xFFFFF3E0),
-                          child: const Icon(Icons.person, color: Color(0xFFE65100), size: 30),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Pt. Rameshwar Sharma Shastri',
-                          style: GoogleFonts.lato(fontWeight: FontWeight.bold, fontSize: 15, color: const Color(0xFF3D2200)),
-                        ),
-                        Text(
-                          'Senior Jyotish Ratna • Sampurnanand Sanskrit University',
-                          style: GoogleFonts.lato(fontSize: 11.5, color: const Color(0xFF8A7060)),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Status: Preparing Handwritten Janam Patri Manuscript',
-                          style: GoogleFonts.lato(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF2E7D32)),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 16),
-
-        // Order Timeline Summary
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFF8EE),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFF3E7D3)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+              _buildMiniRow('Order Reference', orderNum),
+              _buildMiniRow('Status', '$status (Under Astrologer Review)'),
               _buildMiniRow('Devotee Name', _nameController.text),
-              _buildMiniRow('Birth Accuracy', _birthAccuracy == 'accurate' ? 'Accurate (सटीक)' : 'Approximate (अनुमानित)'),
-              _buildMiniRow('Booking Paid', '₹${_paymentOption == 'token' ? 251 : 1501}'),
+              _buildMiniRow('Language', _language),
+              _buildMiniRow('Amount Due', '₹$amount (Payable after desk approval)'),
               _buildMiniRow('Delivery Address', _addressController.text),
-              _buildMiniRow('Expected Dispatch', 'Within 5-7 business days via Speed Post'),
             ],
           ),
         ),
@@ -804,7 +897,7 @@ class _HandmadeKundliOrderModalState extends State<HandmadeKundliOrderModal> {
             ),
             child: Text(
               isHindi ? 'पूर्ण (Done)' : 'Done & Return',
-              style: GoogleFonts.lato(fontWeight: FontWeight.bold, fontSize: 15),
+              style: GoogleFonts.lato(fontSize: 14, fontWeight: FontWeight.bold),
             ),
           ),
         ),

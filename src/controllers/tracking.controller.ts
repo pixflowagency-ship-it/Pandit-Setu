@@ -10,7 +10,7 @@ export const updateLocationHandler: RequestHandler = async (req, res) => {
   }
 
   const { lat, lng } = req.body as UpdateLocationInput;
-  const { bookingId } = req.validatedParams as { bookingId: string };
+  const bookingId = ((req as any).validatedParams?.bookingId || req.params.bookingId) as string;
 
   await processLocationUpdate(req.user.id, bookingId, lat, lng);
 
@@ -22,7 +22,7 @@ export const getLocationHandler: RequestHandler = async (req, res) => {
     throw new AppError(401, "UNAUTHORIZED", "Authentication required");
   }
 
-  const { bookingId } = req.validatedParams as { bookingId: string };
+  const bookingId = ((req as any).validatedParams?.bookingId || req.params.bookingId) as string;
 
   const location = await getLiveLocation(bookingId, req.user.id, req.user.role);
 

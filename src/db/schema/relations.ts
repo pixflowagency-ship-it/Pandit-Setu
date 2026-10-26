@@ -2,11 +2,13 @@ import { relations } from "drizzle-orm";
 import { bookings } from "./bookings.js";
 import { poojas } from "./poojas.js";
 import { users } from "./users.js";
-import { pandits } from "./pandits.js";
+import { pandits, panditDocuments, panditMantraRecordings } from "./pandits.js";
 import { bookingDeclines } from "./booking_declines.js";
 import { dakshinaCollections } from "./dakshina_collections.js";
 import { productOrders, productOrderItems } from "./product_orders.js";
 import { products } from "./products.js";
+import { consultations } from "./consultations.js";
+import { kundliOrders } from "./kundli_orders.js";
 
 export const bookingsRelations = relations(bookings, ({ one, many }) => ({
   yajman: one(users, {
@@ -36,12 +38,25 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   }),
   bookingDeclines: many(bookingDeclines),
   productOrders: many(productOrders),
+  consultations: many(consultations),
+  kundliOrders: many(kundliOrders),
 }));
 
-export const panditsRelations = relations(pandits, ({ one }) => ({
+export const panditsRelations = relations(pandits, ({ one, many }) => ({
   user: one(users, {
     fields: [pandits.userId],
     references: [users.id],
+  }),
+  documents: many(panditDocuments),
+  mantraRecordings: many(panditMantraRecordings),
+  assignedConsultations: many(consultations),
+  assignedKundliOrders: many(kundliOrders),
+}));
+
+export const panditMantraRecordingsRelations = relations(panditMantraRecordings, ({ one }) => ({
+  pandit: one(pandits, {
+    fields: [panditMantraRecordings.panditId],
+    references: [pandits.id],
   }),
 }));
 
@@ -92,5 +107,27 @@ export const productOrderItemsRelations = relations(productOrderItems, ({ one })
 
 export const productsRelations = relations(products, ({ many }) => ({
   orderItems: many(productOrderItems),
+}));
+
+export const consultationsRelations = relations(consultations, ({ one }) => ({
+  user: one(users, {
+    fields: [consultations.userId],
+    references: [users.id],
+  }),
+  assignedPandit: one(pandits, {
+    fields: [consultations.assignedPanditId],
+    references: [pandits.id],
+  }),
+}));
+
+export const kundliOrdersRelations = relations(kundliOrders, ({ one }) => ({
+  user: one(users, {
+    fields: [kundliOrders.userId],
+    references: [users.id],
+  }),
+  assignedPandit: one(pandits, {
+    fields: [kundliOrders.assignedPanditId],
+    references: [pandits.id],
+  }),
 }));
 

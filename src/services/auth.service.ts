@@ -191,11 +191,12 @@ export async function verifyOtpAndLogin(
     };
   }
 
-  // Yajman Portal Login Context (Case C & E)
+  // Yajman / Admin Portal Login Context (Case C & E)
+  const roleToIssue = user.role === "ADMIN" ? "ADMIN" : "YAJMAN";
   const token = signToken({
     id: user.id,
     phone: user.phone,
-    role: "YAJMAN",
+    role: roleToIssue,
   });
 
   return {
@@ -206,7 +207,7 @@ export async function verifyOtpAndLogin(
       phone: user.phone,
       name: user.name,
       fullName: user.name,
-      role: "YAJMAN",
+      role: roleToIssue,
       dob: user.dob,
       tob: user.tob,
       pob: user.pob,

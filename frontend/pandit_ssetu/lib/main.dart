@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'screens/splash_screen.dart';
 import 'screens/role_select_screen.dart';
 import 'screens/yajman_register_screen.dart';
+import 'screens/yajman_login_screen.dart';
 import 'screens/yajman_otp_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/book_screen.dart';
@@ -25,6 +26,7 @@ import 'screens/pandit_onboarding_screen.dart';
 import 'screens/pandit_dashboard_screen.dart';
 import 'screens/cart_screen.dart';
 import 'screens/checkout_screen.dart';
+import 'theme/app_theme.dart';
 import 'constants/branding.dart';
 import 'user_data.dart';
 
@@ -49,9 +51,7 @@ final _router = GoRouter(
     ),
     GoRoute(
       path: '/yajman-login',
-      builder: (context, state) => const Scaffold(
-        body: Center(child: Text('Yajman Login — Coming Soon')),
-      ),
+      builder: (context, state) => const YajmanLoginScreen(),
     ),
     GoRoute(
       path: '/pandit-login',
@@ -192,10 +192,7 @@ class PanditSetuApp extends StatelessWidget {
       title: AppBranding.appDisplayName,
       debugShowCheckedModeBanner: false,
       routerConfig: _router,
-      theme: ThemeData(
-        colorSchemeSeed: const Color(0xFFE65100),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.lightTheme,
     );
   }
 }

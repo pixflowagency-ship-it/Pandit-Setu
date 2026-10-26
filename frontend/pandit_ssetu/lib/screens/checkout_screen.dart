@@ -718,7 +718,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             const SizedBox(height: 14),
             Text(
               'Har Har Mahadev!',
-              style: GoogleFonts.cinzel(
+              style: GoogleFonts.lato(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: const Color(0xFF3D2200),

@@ -1,0 +1,90 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sarvmangal-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=development
+      - PORT=5000
+      - HOST=0.0.0.0
+      # Database Configuration:
+      # Defaults to local isolated containerized PostGIS (defined below in this compose file).
+      # To target a remote managed PostgreSQL database instead, supply DATABASE_URL in your environment or .env.
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/poojapaath_db}
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET:-dev_super_secret_jwt_key_minimum_32_characters_long}
+      - JWT_EXPIRES_IN=7d
+      - ADMIN_JWT_EXPIRES_IN=4h
+      - OTP_EXPIRY_SECONDS=300
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000,http://localhost:5173}
+      # External provider sandbox keys (Optional / Injected via environment or .env)
+      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID:-}
+      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET:-}
+      - RAZORPAY_WEBHOOK_SECRET=${RAZORPAY_WEBHOOK_SECRET:-}
+      - FAST2SMS_API_KEY=${FAST2SMS_API_KEY:-}
+      - GOOGLE_PLACES_API_KEY=${GOOGLE_PLACES_API_KEY:-}
+      - AGORA_APP_ID=${AGORA_APP_ID:-}
+      - AGORA_APP_CERTIFICATE=${AGORA_APP_CERTIFICATE:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - local_storage:/app/storage
+
+  admin-portal:
+    build:
+      context: ./admin-portal
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:5000/api/v1}
+    container_name: sarvmangal-admin-portal
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  postgres:
+    image: postgis/postgis:16-3.4-alpine
+    container_name: sarvmangal-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: poojapaath_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - local_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d poojapaath_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: sarvmangal-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - local_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  local_db_data:
+  local_redis_data:
+  local_storage:

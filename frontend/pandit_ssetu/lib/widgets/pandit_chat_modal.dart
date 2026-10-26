@@ -27,7 +27,7 @@ class _PanditChatModalState extends State<PanditChatModal> {
 
   final List<PanditChatMessage> _messages = [
     PanditChatMessage(
-      text: 'Hari Om 🙏 I am Acharya Pandit Shastri. What life problems or spiritual questions are troubling you today?',
+      text: 'Hari Om 🙏 Welcome to the SARV MANGAL Vedic Guidance Guide. Select a topic or ask common questions regarding Marriage, Career, Health, or Muhurat remedies.',
       isUser: false,
       time: 'Just now',
     ),
@@ -142,41 +142,19 @@ class _PanditChatModalState extends State<PanditChatModal> {
               ),
               child: Row(
                 children: [
-                  Stack(
-                    children: [
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: const Color(0xFFE8920A), width: 1.5),
-                        ),
-                        child: ClipOval(
-                          child: Image.network(
-                            'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&q=80',
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => const Icon(
-                              Icons.person_pin,
-                              color: Color(0xFFE8920A),
-                              size: 32,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        right: 0,
-                        bottom: 0,
-                        child: Container(
-                          width: 13,
-                          height: 13,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF22C55E),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
-                          ),
-                        ),
-                      ),
-                    ],
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFFFFF3E0),
+                      border: Border.all(color: const Color(0xFFE8920A), width: 1.5),
+                    ),
+                    child: const Icon(
+                      Icons.auto_stories,
+                      color: Color(0xFFE8920A),
+                      size: 26,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -186,7 +164,7 @@ class _PanditChatModalState extends State<PanditChatModal> {
                         Row(
                           children: [
                             Text(
-                              'Acharya Pandit Shastri',
+                              'Vedic Guidance Assistant',
                               style: GoogleFonts.lato(
                                 fontSize: 15,
                                 fontWeight: FontWeight.bold,
@@ -203,7 +181,7 @@ class _PanditChatModalState extends State<PanditChatModal> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Senior Vedic Astrologer • 15+ Yrs Exp',
+                          'Scriptural FAQs & Traditional Remedies',
                           style: GoogleFonts.lato(
                             fontSize: 11,
                             color: const Color(0xFF8A7060),
@@ -215,16 +193,16 @@ class _PanditChatModalState extends State<PanditChatModal> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFDCFCE7),
+                      color: const Color(0xFFFEF3C7),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFF86EFAC)),
+                      border: Border.all(color: const Color(0xFFFDE68A)),
                     ),
                     child: Text(
-                      'FREE CHAT',
+                      'AUTOMATED',
                       style: GoogleFonts.lato(
                         fontSize: 9.5,
                         fontWeight: FontWeight.w900,
-                        color: const Color(0xFF15803D),
+                        color: const Color(0xFFB45309),
                       ),
                     ),
                   ),

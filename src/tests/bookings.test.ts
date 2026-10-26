@@ -125,6 +125,10 @@ vi.mock("../services/notification.service.js", () => ({
   sendPush: (...args: any[]) => mockSendPush(...args),
 }));
 
+vi.mock("../services/dispatch.service.js", () => ({
+  dispatchBooking: vi.fn().mockResolvedValue({ success: true }),
+}));
+
 import app from "../app.js";
 
 describe("POST /api/v1/bookings", () => {

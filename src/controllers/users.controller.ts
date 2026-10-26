@@ -29,6 +29,7 @@ export const getProfileHandler: RequestHandler = async (req, res) => {
     gotra: user.gotra,
     zodiac: user.zodiac,
     city: user.city,
+    address: user.address,
     email: user.email,
   });
 };
@@ -38,10 +39,10 @@ export const updateProfileHandler: RequestHandler = async (req, res) => {
     throw new AppError(401, "UNAUTHORIZED", "User not authenticated");
   }
 
-  const { fullName, email, dob, tob, pob, gotra, zodiac, city } =
+  const { fullName, email, dob, tob, pob, gotra, zodiac, city, address } =
     req.body as UpdateProfileInput;
 
-  const updateObj: Partial<Record<string, string>> = {};
+  const updateObj: Partial<Record<string, string | null>> = {};
   if (fullName) updateObj.name = fullName.trim();
   if (email) updateObj.email = email.trim();
   if (dob) updateObj.dob = dob;
@@ -50,6 +51,7 @@ export const updateProfileHandler: RequestHandler = async (req, res) => {
   if (gotra) updateObj.gotra = gotra;
   if (zodiac) updateObj.zodiac = zodiac;
   if (city) updateObj.city = city;
+  if (address !== undefined) updateObj.address = address?.trim() || null;
 
   if (Object.keys(updateObj).length === 0) {
     throw new AppError(400, "NO_FIELDS", "No updatable fields provided");

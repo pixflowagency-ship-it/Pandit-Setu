@@ -42,6 +42,10 @@ export const pandits = pgTable("pandits", {
   videoCallRoomId: text("video_call_room_id"),
   videoVerifierId: uuid("video_verifier_id"),
   videoVerifierNotes: text("video_verifier_notes"),
+  verificationMethod: varchar("verification_method", { length: 50 })
+    .default("MANTRA_VIDEO"),
+  mantraRecordingStatus: varchar("mantra_recording_status", { length: 50 })
+    .default("NOT_SUBMITTED"),
   approvedAt: timestamp("approved_at", { withTimezone: true }),
   approvedBy: uuid("approved_by"),
   serviceRadiusKm: integer("service_radius_km").notNull().default(15),
@@ -95,6 +99,35 @@ export const panditDocuments = pgTable("pandit_documents", {
 export type BanditDocument = typeof panditDocuments.$inferSelect;
 export type NewPanditDocument = typeof panditDocuments.$inferInsert;
 
+export const panditMantraRecordings = pgTable("pandit_mantra_recordings", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  panditId: uuid("pandit_id")
+    .notNull()
+    .references(() => pandits.id, { onDelete: "cascade" }),
+  mantraId: varchar("mantra_id", { length: 50 }).notNull(),
+  mantraTitle: varchar("mantra_title", { length: 255 }).notNull(),
+  mediaUrl: text("media_url").notNull(),
+  fileName: varchar("file_name", { length: 255 }),
+  fileSize: integer("file_size"),
+  mimeType: varchar("mime_type", { length: 100 }),
+  durationSeconds: integer("duration_seconds").default(0),
+  status: varchar("status", { length: 50 }).notNull().default("PENDING"),
+  rejectionReason: text("rejection_reason"),
+  reviewerId: uuid("reviewer_id"),
+  reviewerNotes: text("reviewer_notes"),
+  reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+export type PanditMantraRecording = typeof panditMantraRecordings.$inferSelect;
+export type NewPanditMantraRecording = typeof panditMantraRecordings.$inferInsert;
+
 export const panditServices = pgTable("pandit_services", {
   panditId: uuid("pandit_id")
     .notNull()
@@ -145,3 +178,26 @@ export const panditProfiles = pgTable("pandit_profiles", {
 
 export type PanditProfile = typeof panditProfiles.$inferSelect;
 export type NewPanditProfile = typeof panditProfiles.$inferInsert;
+
+export const approvedMantras = pgTable("approved_mantras", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  sanskritText: text("sanskrit_text").notNull(),
+  transliteration: text("transliteration"),
+  meaning: text("meaning"),
+  pronunciationGuidance: text("pronunciation_guidance"),
+  minDurationSeconds: integer("min_duration_seconds").notNull().default(10),
+  maxDurationSeconds: integer("max_duration_seconds").notNull().default(120),
+  isActive: boolean("is_active").notNull().default(true),
+  displayOrder: integer("display_order").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+export type ApprovedMantra = typeof approvedMantras.$inferSelect;
+export type NewApprovedMantra = typeof approvedMantras.$inferInsert;

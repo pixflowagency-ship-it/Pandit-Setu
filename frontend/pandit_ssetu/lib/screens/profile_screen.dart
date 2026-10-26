@@ -27,7 +27,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _isEditMode = false;
 
-  late String _name, _phone, _email, _dob, _tob, _pob, _gotra, _zodiac;
+  late String _name, _phone, _email, _dob, _tob, _pob, _gotra, _zodiac, _address;
 
   late String _savedName = UserData.name;
   late String _savedPhone = UserData.phone;
@@ -37,6 +37,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late String _savedPob = UserData.pob;
   late String _savedGotra = UserData.gotra;
   late String _savedZodiac = UserData.zodiac;
+  late String _savedAddress = UserData.address;
 
   @override
   void initState() {
@@ -46,7 +47,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _resetBuffers() {
-
     _savedName = UserData.name;
     _savedPhone = UserData.phone;
     _savedEmail = UserData.email;
@@ -55,6 +55,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _savedPob = UserData.pob;
     _savedGotra = UserData.gotra;
     _savedZodiac = UserData.zodiac;
+    _savedAddress = UserData.address;
     _name = _savedName;
     _phone = _savedPhone;
     _email = _savedEmail;
@@ -63,6 +64,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _pob = _savedPob;
     _gotra = _savedGotra;
     _zodiac = _savedZodiac;
+    _address = _savedAddress;
   }
 
   Future<void> _loadUserProfile() async {
@@ -85,6 +87,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           final fetchedGotra = user['gotra']?.toString();
           final fetchedZodiac = user['zodiac']?.toString();
           final fetchedCity = user['city']?.toString();
+          final fetchedAddress = user['address']?.toString();
 
           UserData.save(
             name: (fetchedName != null && fetchedName.trim().isNotEmpty) ? fetchedName : UserData.name,
@@ -96,6 +99,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             gotra: (fetchedGotra != null && fetchedGotra.trim().isNotEmpty) ? fetchedGotra : UserData.gotra,
             zodiac: (fetchedZodiac != null && fetchedZodiac.trim().isNotEmpty) ? fetchedZodiac : UserData.zodiac,
             city: (fetchedCity != null && fetchedCity.trim().isNotEmpty) ? fetchedCity : UserData.city,
+            address: (fetchedAddress != null && fetchedAddress.trim().isNotEmpty) ? fetchedAddress : UserData.address,
           );
           if (mounted) {
             setState(() {
@@ -727,9 +731,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           _buildAddressTile(
             title: 'Home (Primary)',
-            address: 'Flat 402, Shivam Apts, MG Road, $city - 400001',
+            address: _address.isNotEmpty
+                ? _address
+                : 'Flat 402, Shivam Apts, MG Road, $city - 400001',
             icon: Icons.home_outlined,
             isPrimary: true,
+            onEdit: () => _showEditAddressDialog(
+              _address.isNotEmpty
+                  ? _address
+                  : 'Flat 402, Shivam Apts, MG Road, $city - 400001',
+            ),
           ),
           const SizedBox(height: 8),
 
@@ -738,6 +749,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             address: 'Plot 12, Sector 14, Near Hanuman Mandir',
             icon: Icons.temple_hindu_outlined,
             isPrimary: false,
+            onEdit: () => _showEditAddressDialog(
+              'Plot 12, Sector 14, Near Hanuman Mandir',
+            ),
           ),
           const SizedBox(height: 14),
           SizedBox(
@@ -776,6 +790,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String address,
     required IconData icon,
     required bool isPrimary,
+    VoidCallback? onEdit,
   }) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -853,7 +868,128 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: _C.mediumAmber,
               size: 18,
             ),
-            onPressed: () {},
+            onPressed: onEdit,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _saveAddress(String newAddress) async {
+    final trimmed = newAddress.trim();
+    if (trimmed.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Address cannot be empty',
+            style: GoogleFonts.lato(color: Colors.white),
+          ),
+          backgroundColor: Colors.red.shade800,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final res = await ApiService.updateProfile({'address': trimmed});
+      if (res['success'] == true) {
+        UserData.save(
+          name: UserData.name,
+          phone: UserData.phone,
+          email: UserData.email,
+          dob: UserData.dob,
+          tob: UserData.tob,
+          pob: UserData.pob,
+          gotra: UserData.gotra,
+          zodiac: UserData.zodiac,
+          city: UserData.city,
+          address: trimmed,
+        );
+        if (mounted) {
+          setState(() {
+            _savedAddress = trimmed;
+            _address = trimmed;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Address updated successfully on server!',
+                style: GoogleFonts.lato(color: Colors.white),
+              ),
+              backgroundColor: _C.saffronGold,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } else {
+        throw Exception(res['error']?['message'] ?? 'Failed to update address');
+      }
+    } catch (e) {
+      if (mounted) {
+        final cleanMsg = e.toString().replaceAll('Exception: ', '');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Address update failed: $cleanMsg',
+              style: GoogleFonts.lato(color: Colors.white),
+            ),
+            backgroundColor: Colors.red.shade800,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showEditAddressDialog(String currentAddress) {
+    final addrCtrl = TextEditingController(text: currentAddress);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: _C.parchmentBg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Edit Address',
+          style: GoogleFonts.lato(
+            fontWeight: FontWeight.bold,
+            color: _C.richAmber,
+          ),
+        ),
+        content: TextField(
+          controller: addrCtrl,
+          maxLines: 2,
+          decoration: InputDecoration(
+            labelText: 'Full Address',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child:
+                Text('Cancel', style: GoogleFonts.lato(color: _C.mediumAmber)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await _saveAddress(addrCtrl.text);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _C.saffronGold,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: Text(
+              'Save',
+              style: GoogleFonts.lato(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -876,6 +1012,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         content: TextField(
           controller: addrCtrl,
+          maxLines: 2,
           decoration: InputDecoration(
             labelText: 'Full Address',
             border: OutlineInputBorder(
@@ -890,18 +1027,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Text('Cancel', style: GoogleFonts.lato(color: _C.mediumAmber)),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'New address saved!',
-                    style: GoogleFonts.lato(color: Colors.white),
-                  ),
-                  backgroundColor: _C.saffronGold,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
+              await _saveAddress(addrCtrl.text);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: _C.saffronGold,

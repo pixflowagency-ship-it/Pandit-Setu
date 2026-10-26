@@ -188,7 +188,7 @@ class _IncomingPoojaRequestModalState extends State<IncomingPoojaRequestModal> {
               const SizedBox(width: 8),
               Text(
                 'Decline Request',
-                style: GoogleFonts.cinzel(fontWeight: FontWeight.bold, fontSize: 18),
+                style: GoogleFonts.lato(fontWeight: FontWeight.bold, fontSize: 18),
               ),
             ],
           ),

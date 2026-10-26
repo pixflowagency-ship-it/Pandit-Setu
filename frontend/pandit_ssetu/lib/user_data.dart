@@ -10,6 +10,7 @@ class UserData {
   static String gotra  = '';
   static String zodiac = '';
   static String city   = '';
+  static String address = '';
 
   static void save({
     required String name,
@@ -21,6 +22,7 @@ class UserData {
     String gotra  = '',
     String zodiac = '',
     String city   = '',
+    String address = '',
   }) {
     UserData.name   = name;
     UserData.phone  = phone;
@@ -31,6 +33,7 @@ class UserData {
     UserData.gotra  = gotra;
     UserData.zodiac = zodiac;
     UserData.city   = city;
+    UserData.address = address;
 
     _persistToPrefs();
   }
@@ -47,6 +50,7 @@ class UserData {
       await prefs.setString('user_gotra', gotra);
       await prefs.setString('user_zodiac', zodiac);
       await prefs.setString('user_city', city);
+      await prefs.setString('user_address', address);
     } catch (_) {}
   }
 
@@ -62,11 +66,12 @@ class UserData {
       gotra  = prefs.getString('user_gotra') ?? gotra;
       zodiac = prefs.getString('user_zodiac') ?? zodiac;
       city   = prefs.getString('user_city') ?? city;
+      address = prefs.getString('user_address') ?? address;
     } catch (_) {}
   }
 
   static Future<void> clear() async {
-    name = phone = email = dob = tob = pob = gotra = zodiac = city = '';
+    name = phone = email = dob = tob = pob = gotra = zodiac = city = address = '';
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('user_name');
@@ -78,6 +83,7 @@ class UserData {
       await prefs.remove('user_gotra');
       await prefs.remove('user_zodiac');
       await prefs.remove('user_city');
+      await prefs.remove('user_address');
     } catch (_) {}
   }
 

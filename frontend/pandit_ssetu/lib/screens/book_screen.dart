@@ -215,9 +215,7 @@ class _BookScreenState extends State<BookScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildTopBar(),
-                    const SizedBox(height: 12),
-                    _buildBookingModeBanner(),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     _buildSelectRitualTitle(),
                     const SizedBox(height: 10),
                     _buildSearchBar(),
@@ -242,168 +240,86 @@ class _BookScreenState extends State<BookScreen> {
   }
 
   Widget _buildTopBar() {
-    return Stack(
-      alignment: Alignment.center,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Builder(
-            builder: (ctx) => GestureDetector(
-              onTap: () => Scaffold.of(ctx).openDrawer(),
-              child: const Icon(Icons.menu, size: 26, color: Color(0xFF5A4A3A)),
+        Builder(
+          builder: (ctx) => GestureDetector(
+            onTap: () => Scaffold.of(ctx).openDrawer(),
+            child: const Icon(Icons.menu, size: 26, color: Color(0xFF5A4A3A)),
+          ),
+        ),
+        Flexible(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/images/sarvmangal_logo.png',
+                      fit: BoxFit.cover,
+                      errorBuilder: (c, e, s) => const Icon(
+                        Icons.self_improvement,
+                        color: Color(0xFFE65100),
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    'SARV MANGAL',
+                    style: GoogleFonts.lato(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.8,
+                      color: const Color(0xFF3D2200),
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: const BoxDecoration(
-                color: Color(0xFFE65100),
-                shape: BoxShape.circle,
-              ),
-              child: ClipOval(
-                child: Image.asset(
-                  'assets/images/sarvmangal_logo.png',
-                  fit: BoxFit.cover,
-                  errorBuilder: (c, e, s) => const Icon(
-                    Icons.self_improvement,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'SARV MANGALS',
-              style: GoogleFonts.lato(
-                fontSize: 19,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.8,
-                color: const Color(0xFF3D2200),
-              ),
-            ),
-          ],
-        ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: GestureDetector(
-            onTap: () => context.push('/notifications'),
-            child: const Icon(
-              Icons.notifications_outlined,
-              size: 26,
-              color: Color(0xFFE65100),
-            ),
+        GestureDetector(
+          onTap: () => context.push('/notifications'),
+          child: const Icon(
+            Icons.notifications_outlined,
+            size: 26,
+            color: Color(0xFFE65100),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildBookingModeBanner() {
-    final bool isOnline = currentMode == 'online';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: isOnline ? const Color(0xFFE3F2FD) : const Color(0xFFFFF3E0),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isOnline ? const Color(0xFF1976D2) : const Color(0xFFE65100),
-          width: 1.2,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            isOnline ? Icons.videocam_rounded : Icons.home_work_rounded,
-            color: isOnline ? const Color(0xFF1976D2) : const Color(0xFFE65100),
-            size: 22,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      isOnline ? 'Online Ritual Mode' : 'Offline Ritual Mode',
-                      style: GoogleFonts.lato(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13.5,
-                        color: isOnline ? const Color(0xFF0D47A1) : const Color(0xFF3D2200),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                      decoration: BoxDecoration(
-                        color: isOnline ? const Color(0xFF1976D2) : const Color(0xFFE65100),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        isOnline ? 'LIVE VIDEO' : 'AT YOUR PLACE',
-                        style: const TextStyle(
-                          fontSize: 8.5,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                Text(
-                  isOnline
-                      ? 'Live consecrated video puja with digital Sankalp'
-                      : 'Acharya visits your home for sacred rituals & havan',
-                  style: GoogleFonts.lato(fontSize: 11, color: const Color(0xFF6B5B52)),
-                ),
-              ],
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                currentMode = isOnline ? 'offline' : 'online';
-              });
-            },
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: Text(
-              isOnline ? 'Switch to Offline' : 'Switch to Online',
-              style: GoogleFonts.lato(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: isOnline ? const Color(0xFF1976D2) : const Color(0xFFE65100),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildSelectRitualTitle() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 8,
+      runSpacing: 4,
       children: [
-        Row(
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 8,
+          runSpacing: 4,
           children: [
             Text(
               'Select Ritual',
               style: GoogleFonts.lato(
-                fontSize: 20,
+                fontSize: 19,
                 fontWeight: FontWeight.bold,
                 color: const Color(0xFF3D2200),
               ),
             ),
-            const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
@@ -588,8 +504,11 @@ class _BookScreenState extends State<BookScreen> {
   }
 
   Widget _buildTrendingRitualsHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 8,
+      runSpacing: 4,
       children: [
         Text(
           'Available Rituals',

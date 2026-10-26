@@ -24,6 +24,7 @@ class _PanditDashboardScreenState extends State<PanditDashboardScreen>
   final Set<String> _dismissedBookingIds = {};
   Map<String, dynamic>? _incomingRequestPayload;
   socket_io.Socket? _socket;
+  Timer? _telemetryTimer;
 
   // Duty Execution Flow States: none, confirmed, heading_to_venue, arrived, pooja_in_progress, completed
   String _dutyState = 'none';
@@ -98,8 +99,10 @@ class _PanditDashboardScreenState extends State<PanditDashboardScreen>
 
       if (_isOnline) {
         _connectSocket();
+        _startContinuousTelemetry();
       } else {
         _disconnectSocket();
+        _stopContinuousTelemetry();
       }
 
       await _fetchActiveDuty();
@@ -257,8 +260,49 @@ class _PanditDashboardScreenState extends State<PanditDashboardScreen>
     }
   }
 
+  void _startContinuousTelemetry() {
+    _stopContinuousTelemetry();
+    if (!_isOnline) return;
+
+    // Send immediate ping
+    _sendTelemetryPing();
+
+    // 25-second periodic telemetry loop while online
+    _telemetryTimer = Timer.periodic(const Duration(seconds: 25), (_) {
+      if (mounted && _isOnline) {
+        _sendTelemetryPing();
+      } else {
+        _stopContinuousTelemetry();
+      }
+    });
+  }
+
+  void _stopContinuousTelemetry() {
+    _telemetryTimer?.cancel();
+    _telemetryTimer = null;
+  }
+
+  Future<void> _sendTelemetryPing() async {
+    if (!mounted || !_isOnline) return;
+    try {
+      final pos = await _determinePosition();
+      if (pos == null || !mounted || !_isOnline) return;
+
+      await ApiService.sendPanditTelemetry(
+        lat: pos.latitude,
+        lng: pos.longitude,
+        accuracy: pos.accuracy,
+        heading: pos.heading,
+        speed: pos.speed,
+      );
+    } catch (e) {
+      debugPrint('Pandit GPS telemetry transmission error: $e');
+    }
+  }
+
   @override
   void dispose() {
+    _stopContinuousTelemetry();
     _pulseController.dispose();
     _disconnectSocket();
     _dakshinaRazorpay.clear();
@@ -303,8 +347,10 @@ class _PanditDashboardScreenState extends State<PanditDashboardScreen>
           _hasIncomingRequest = false;
           _incomingRequestPayload = null;
           _disconnectSocket();
+          _stopContinuousTelemetry();
         } else {
           _connectSocket();
+          _startContinuousTelemetry();
         }
       });
 

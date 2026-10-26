@@ -193,7 +193,8 @@ class _PanditLoginScreenState extends State<PanditLoginScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           'Apply for Pandit Role',
-          style: GoogleFonts.cinzel(
+          style: GoogleFonts.lato(
+            fontSize: 18,
             fontWeight: FontWeight.bold,
             color: const Color(0xFF3D2200),
           ),
@@ -263,7 +264,7 @@ class _PanditLoginScreenState extends State<PanditLoginScreen> {
         ),
         title: Text(
           'SARV MANGAL • Acharya Portal',
-          style: GoogleFonts.cinzel(
+          style: GoogleFonts.lato(
             fontSize: 18,
             fontWeight: FontWeight.bold,
             color: const Color(0xFF3D2200),

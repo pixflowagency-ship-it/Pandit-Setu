@@ -69,6 +69,17 @@ describe("POST /api/v1/auth/send-otp", () => {
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe("VALIDATION_ERROR");
   });
+
+  it("200 – returns mockOtp in non-production without requiring live SMS provider confirmation", async () => {
+    const res = await request(app)
+      .post("/api/v1/auth/send-otp")
+      .send({ phone: "9876543210" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toHaveProperty("mockOtp");
+    expect(res.body.data.message).toBe("OTP sent successfully");
+  });
 });
 
 describe("POST /api/v1/auth/verify-otp", () => {

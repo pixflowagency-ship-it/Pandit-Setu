@@ -56,3 +56,15 @@ export async function getRedis(): Promise<Redis | null> {
     return null;
   }
 }
+
+export async function closeRedis(): Promise<void> {
+  if (redis) {
+    try {
+      await redis.quit();
+    } catch {
+      redis.disconnect();
+    } finally {
+      redis = null;
+    }
+  }
+}

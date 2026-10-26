@@ -1,0 +1,12 @@
+node_modules
+frontend
+.git
+.github
+dist
+.env
+.env.local
+*.log
+*.dump
+coverage
+storage/documents/*
+.gemini
