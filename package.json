@@ -5,6 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch --env-file=.env src/server.ts",
+    "dev:backend": "tsx watch --env-file=.env src/server.ts",
+    "dev:app": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/dev-app.ps1",
+    "dev:admin": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/dev-admin.ps1",
+    "dev:all": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/dev-all.ps1",
     "start": "node dist/server.js",
     "build": "tsc",
     "db:generate": "drizzle-kit generate",
