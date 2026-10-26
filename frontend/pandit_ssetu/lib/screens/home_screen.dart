@@ -10,6 +10,7 @@ import '../widgets/app_side_drawer.dart';
 import '../widgets/neumorphic_button.dart';
 import '../services/api_service.dart';
 import '../services/language_service.dart';
+import '../services/app_config_service.dart';
 import '../utils/carousel_pooja_mapper.dart';
 
 class ArcClipShape extends CustomClipper<Path> {
@@ -90,10 +91,16 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) setState(() {});
   }
 
+  void _onConfigChange() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
     languageService.addListener(_onLanguageChange);
+    appConfigService.addListener(_onConfigChange);
+    appConfigService.fetchRemoteConfig();
     _loadBookings();
     _startTimer();
     _startCarouselTimer();
@@ -143,6 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     languageService.removeListener(_onLanguageChange);
+    appConfigService.removeListener(_onConfigChange);
     _countdownTimer?.cancel();
     _carouselTimer?.cancel();
     _rarestTimer?.cancel();
@@ -150,6 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _rarestPageController.dispose();
     super.dispose();
   }
+
 
   String _getCountdownString() {
     final hours = _secondsRemaining ~/ 3600;
@@ -323,27 +332,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    _buildHeroSlideshowBanner(),
-                    const SizedBox(height: 14),
-                    _buildSixBoxServiceGrid(),
-                    const SizedBox(height: 8),
-                    _buildLifeProblemsBanner(),
-                    const SizedBox(height: 10),
-                    _buildUpcomingBookingBanner(
-                      _bookings.isNotEmpty ? _bookings.first : null,
-                    ),
-                    const SizedBox(height: 20),
-                    _buildCategoryMenuSection(),
-                    const SizedBox(height: 20),
-                    _buildEnhancedPanchangSection(),
-                    const SizedBox(height: 20),
-                    _buildRarestItemsSection(),
-                    const SizedBox(height: 20),
-                    _buildTrendingRitualsSection(),
-                    const SizedBox(height: 20),
-                    _buildBlogSection(),
-                    const SizedBox(height: 20),
-                    _buildTrustBadgesSection(),
+                    ..._buildConfiguredSections(),
                     const SizedBox(height: 100),
                   ],
                 ),
@@ -355,6 +344,95 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: const AppBottomNavBar(currentPath: '/home'),
     );
   }
+
+  List<Widget> _buildConfiguredSections() {
+    final sections = appConfigService.enabledSections;
+    if (sections.isEmpty) {
+      return [
+        _buildHeroSlideshowBanner(),
+        const SizedBox(height: 14),
+        _buildSixBoxServiceGrid(),
+        const SizedBox(height: 8),
+        _buildLifeProblemsBanner(),
+        const SizedBox(height: 10),
+        _buildUpcomingBookingBanner(
+          _bookings.isNotEmpty ? _bookings.first : null,
+        ),
+        const SizedBox(height: 20),
+        _buildCategoryMenuSection(),
+        const SizedBox(height: 20),
+        _buildEnhancedPanchangSection(),
+        const SizedBox(height: 20),
+        _buildRarestItemsSection(),
+        const SizedBox(height: 20),
+        _buildTrendingRitualsSection(),
+        const SizedBox(height: 20),
+        _buildBlogSection(),
+        const SizedBox(height: 20),
+        _buildTrustBadgesSection(),
+      ];
+    }
+
+    final widgets = <Widget>[];
+    for (final s in sections) {
+      Widget? secWidget;
+      double bottomSpacing = 20;
+
+      switch (s.id) {
+        case 'hero_slideshow':
+          secWidget = _buildHeroSlideshowBanner();
+          bottomSpacing = 14;
+          break;
+        case 'six_box_grid':
+          secWidget = _buildSixBoxServiceGrid();
+          bottomSpacing = 8;
+          break;
+        case 'life_problems':
+          if (appConfigService.config.lifeProblemsBanner.enabled) {
+            secWidget = _buildLifeProblemsBanner();
+            bottomSpacing = 10;
+          }
+          break;
+        case 'upcoming_booking':
+          secWidget = _buildUpcomingBookingBanner(
+            _bookings.isNotEmpty ? _bookings.first : null,
+          );
+          bottomSpacing = 20;
+          break;
+        case 'category_menu':
+          secWidget = _buildCategoryMenuSection();
+          bottomSpacing = 20;
+          break;
+        case 'panchang':
+          secWidget = _buildEnhancedPanchangSection();
+          bottomSpacing = 20;
+          break;
+        case 'rarest_items':
+          secWidget = _buildRarestItemsSection();
+          bottomSpacing = 20;
+          break;
+        case 'trending_rituals':
+          secWidget = _buildTrendingRitualsSection();
+          bottomSpacing = 20;
+          break;
+        case 'blog':
+          secWidget = _buildBlogSection();
+          bottomSpacing = 20;
+          break;
+        case 'trust_badges':
+          secWidget = _buildTrustBadgesSection();
+          bottomSpacing = 20;
+          break;
+      }
+
+      if (secWidget != null) {
+        widgets.add(secWidget);
+        widgets.add(SizedBox(height: bottomSpacing));
+      }
+    }
+    return widgets;
+  }
+
 
   Widget _buildTopBar() {
     final isHindi = languageService.isHindi;

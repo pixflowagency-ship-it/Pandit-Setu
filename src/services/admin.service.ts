@@ -1,8 +1,9 @@
-import { eq, desc, count, inArray } from "drizzle-orm";
+import { eq, desc, count, inArray, ilike, or, and } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { pandits, panditDocuments, panditMantraRecordings } from "../db/schema/pandits.js";
 import { users } from "../db/schema/users.js";
 import { bookings } from "../db/schema/bookings.js";
+import { poojas } from "../db/schema/poojas.js";
 import { subscriptions } from "../db/schema/subscriptions.js";
 import { productOrders } from "../db/schema/product_orders.js";
 import { AppError } from "../utils/api-error.js";
@@ -346,6 +347,351 @@ export async function getAdminSubscriptions(params: {
   };
 }
 
+/**
+ * Admin: List users with role filter and search
+ */
+export async function getAdminUsers(params: {
+  search?: string;
+  role?: "YAJMAN" | "PANDIT" | "ADMIN" | "ALL";
+  page: number;
+  limit: number;
+}) {
+  const { search, role = "ALL", page = 1, limit = 20 } = params;
+  const offset = (page - 1) * limit;
+
+  const conditions = [];
+
+  if (role && role !== "ALL") {
+    conditions.push(eq(users.role, role as any));
+  }
+
+  if (search && search.trim()) {
+    const term = `%${search.trim()}%`;
+    conditions.push(
+      or(ilike(users.name, term), ilike(users.phone, term), ilike(users.email, term))
+    );
+  }
+
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const [totalRes, rows] = await Promise.all([
+    db.select({ count: count() }).from(users).where(whereClause),
+    db
+      .select({
+        id: users.id,
+        name: users.name,
+        phone: users.phone,
+        email: users.email,
+        city: users.city,
+        address: users.address,
+        role: users.role,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .where(whereClause)
+      .orderBy(desc(users.createdAt))
+      .limit(limit)
+      .offset(offset),
+  ]);
+
+  const total = totalRes[0]?.count ?? 0;
+
+  return {
+    items: rows,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit) || 1,
+    },
+  };
+}
+
+/**
+ * Admin: Get detailed user profile with activity
+ */
+export async function getAdminUserDetail(userId: string) {
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, userId),
+  });
+
+  if (!user) {
+    throw new AppError(404, "USER_NOT_FOUND", "User not found");
+  }
+
+  let panditProfile = null;
+  if (user.role === "PANDIT") {
+    panditProfile = await db.query.pandits.findFirst({
+      where: eq(pandits.userId, userId),
+    });
+  }
+
+  const [recentBookings, recentConsultations, recentKundliOrders] = await Promise.all([
+    db
+      .select({
+        id: bookings.id,
+        mode: bookings.mode,
+        bookingTime: bookings.bookingTime,
+        status: bookings.status,
+        totalAmount: bookings.totalAmount,
+        poojaTitle: poojas.title,
+        createdAt: bookings.createdAt,
+      })
+      .from(bookings)
+      .leftJoin(poojas, eq(bookings.poojaId, poojas.id))
+      .where(eq(bookings.yajmanId, userId))
+      .orderBy(desc(bookings.createdAt))
+      .limit(5),
+    db
+      .select()
+      .from(consultations)
+      .where(eq(consultations.userId, userId))
+      .orderBy(desc(consultations.createdAt))
+      .limit(5),
+    db
+      .select()
+      .from(kundliOrders)
+      .where(eq(kundliOrders.userId, userId))
+      .orderBy(desc(kundliOrders.createdAt))
+      .limit(5),
+  ]);
+
+  return {
+    user: {
+      id: user.id,
+      name: user.name,
+      phone: user.phone,
+      email: user.email,
+      dob: user.dob,
+      tob: user.tob,
+      pob: user.pob,
+      gotra: user.gotra,
+      zodiac: user.zodiac,
+      city: user.city,
+      address: user.address,
+      role: user.role,
+      createdAt: user.createdAt,
+    },
+    panditProfile,
+    recentBookings,
+    recentConsultations,
+    recentKundliOrders,
+  };
+}
+
+/**
+ * Admin: List pooja bookings with filters
+ */
+export async function getAdminBookings(params: {
+  status?: string;
+  page: number;
+  limit: number;
+}) {
+  const { status = "ALL", page = 1, limit = 20 } = params;
+  const offset = (page - 1) * limit;
+
+  const whereClause =
+    status && status !== "ALL" ? eq(bookings.status, status as any) : undefined;
+
+  const [totalRes, rows] = await Promise.all([
+    db.select({ count: count() }).from(bookings).where(whereClause),
+    db
+      .select({
+        id: bookings.id,
+        yajmanId: bookings.yajmanId,
+        panditId: bookings.panditId,
+        poojaId: bookings.poojaId,
+        mode: bookings.mode,
+        bookingTime: bookings.bookingTime,
+        venueAddress: bookings.venueAddress,
+        totalAmount: bookings.totalAmount,
+        status: bookings.status,
+        paymentStatus: bookings.paymentStatus,
+        createdAt: bookings.createdAt,
+        poojaTitle: poojas.title,
+        yajmanName: users.name,
+        yajmanPhone: users.phone,
+      })
+      .from(bookings)
+      .leftJoin(poojas, eq(bookings.poojaId, poojas.id))
+      .leftJoin(users, eq(bookings.yajmanId, users.id))
+      .where(whereClause)
+      .orderBy(desc(bookings.createdAt))
+      .limit(limit)
+      .offset(offset),
+  ]);
+
+  const total = totalRes[0]?.count ?? 0;
+
+  return {
+    items: rows,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit) || 1,
+    },
+  };
+}
+
+/**
+ * Admin: Get detailed booking information
+ */
+export async function getAdminBookingDetail(bookingId: string) {
+  const [booking] = await db
+    .select({
+      id: bookings.id,
+      yajmanId: bookings.yajmanId,
+      panditId: bookings.panditId,
+      poojaId: bookings.poojaId,
+      mode: bookings.mode,
+      bookingTime: bookings.bookingTime,
+      venueAddress: bookings.venueAddress,
+      totalAmount: bookings.totalAmount,
+      status: bookings.status,
+      paymentStatus: bookings.paymentStatus,
+      customNotes: bookings.customNotes,
+      createdAt: bookings.createdAt,
+      poojaTitle: poojas.title,
+      yajmanName: users.name,
+      yajmanPhone: users.phone,
+    })
+    .from(bookings)
+    .leftJoin(poojas, eq(bookings.poojaId, poojas.id))
+    .leftJoin(users, eq(bookings.yajmanId, users.id))
+    .where(eq(bookings.id, bookingId));
+
+  if (!booking) {
+    throw new AppError(404, "BOOKING_NOT_FOUND", "Booking not found");
+  }
+
+  return booking;
+}
+
+/**
+ * Admin: Update booking status with audit logging
+ */
+export async function updateAdminBookingStatus(
+  adminId: string,
+  bookingId: string,
+  status: any,
+  notes?: string
+) {
+  const existing = await db.query.bookings.findFirst({
+    where: eq(bookings.id, bookingId),
+  });
+
+  if (!existing) {
+    throw new AppError(404, "BOOKING_NOT_FOUND", "Booking not found");
+  }
+
+  const [updated] = await db
+    .update(bookings)
+    .set({
+      status,
+      customNotes: notes ? `${existing.customNotes || ""}\n[Admin]: ${notes}`.trim() : existing.customNotes,
+      updatedAt: new Date(),
+    })
+    .where(eq(bookings.id, bookingId))
+    .returning();
+
+  logger.info({ bookingId, previousStatus: existing.status, newStatus: status, adminId }, "Admin updated booking status");
+
+  return { success: true, booking: updated };
+}
+
+/**
+ * Admin: List poojas catalogue
+ */
+export async function getAdminPoojas(params: {
+  category?: string;
+  page: number;
+  limit: number;
+}) {
+  const { category, page = 1, limit = 20 } = params;
+  const offset = (page - 1) * limit;
+
+  const whereClause = category ? eq(poojas.category, category) : undefined;
+
+  const [totalRes, rows] = await Promise.all([
+    db.select({ count: count() }).from(poojas).where(whereClause),
+    db
+      .select()
+      .from(poojas)
+      .where(whereClause)
+      .orderBy(desc(poojas.createdAt))
+      .limit(limit)
+      .offset(offset),
+  ]);
+
+  const total = totalRes[0]?.count ?? 0;
+
+  return {
+    items: rows,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit) || 1,
+    },
+  };
+}
+
+/**
+ * Admin: Create a new pooja
+ */
+export async function createAdminPooja(data: any) {
+  const [created] = await db
+    .insert(poojas)
+    .values({
+      title: data.title,
+      slug: data.slug,
+      description: data.description,
+      category: data.category,
+      duration: data.duration,
+      requiredPandits: data.requiredPandits || "1",
+      basePrice: String(data.basePrice),
+      samagriPrice: String(data.samagriPrice || 0),
+      durationMinutes: data.durationMinutes,
+      imageUrl: data.imageUrl,
+      isActive: data.isActive ?? true,
+    })
+    .returning();
+
+  return created;
+}
+
+/**
+ * Admin: Update an existing pooja
+ */
+export async function updateAdminPooja(poojaId: string, data: any) {
+  const updatePayload: Record<string, any> = { updatedAt: new Date() };
+
+  if (data.title !== undefined) updatePayload.title = data.title;
+  if (data.slug !== undefined) updatePayload.slug = data.slug;
+  if (data.description !== undefined) updatePayload.description = data.description;
+  if (data.category !== undefined) updatePayload.category = data.category;
+  if (data.duration !== undefined) updatePayload.duration = data.duration;
+  if (data.requiredPandits !== undefined) updatePayload.requiredPandits = data.requiredPandits;
+  if (data.basePrice !== undefined) updatePayload.basePrice = String(data.basePrice);
+  if (data.samagriPrice !== undefined) updatePayload.samagriPrice = String(data.samagriPrice);
+  if (data.durationMinutes !== undefined) updatePayload.durationMinutes = data.durationMinutes;
+  if (data.imageUrl !== undefined) updatePayload.imageUrl = data.imageUrl;
+  if (data.isActive !== undefined) updatePayload.isActive = data.isActive;
+
+  const [updated] = await db
+    .update(poojas)
+    .set(updatePayload)
+    .where(eq(poojas.id, poojaId))
+    .returning();
+
+  if (!updated) {
+    throw new AppError(404, "POOJA_NOT_FOUND", "Pooja not found");
+  }
+
+  return updated;
+}
+
 export {
   adminApprovePandit,
   adminVerifyDocument,
@@ -358,3 +704,4 @@ export {
   adminUpdateMantra,
   adminDeleteMantra,
 };
+

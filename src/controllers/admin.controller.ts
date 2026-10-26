@@ -17,10 +17,24 @@ import {
   adminCreateMantra,
   adminUpdateMantra,
   adminDeleteMantra,
+  getAdminUsers,
+  getAdminUserDetail,
+  getAdminBookings,
+  getAdminBookingDetail,
+  updateAdminBookingStatus,
+  getAdminPoojas,
+  createAdminPooja,
+  updateAdminPooja,
 } from "../services/admin.service.js";
 import {
   adminListPanditsQuerySchema,
   adminListSubscriptionsQuerySchema,
+  adminListUsersQuerySchema,
+  adminListBookingsQuerySchema,
+  adminUpdateBookingStatusSchema,
+  adminListPoojasQuerySchema,
+  adminCreatePoojaSchema,
+  adminUpdatePoojaSchema,
 } from "../validators/admin.validator.js";
 import {
   createMantraSchema,
@@ -202,3 +216,64 @@ export const deleteAdminMantraHandler: RequestHandler = async (req, res) => {
   const result = await adminDeleteMantra(mantraId);
   sendSuccess(res, result);
 };
+
+// Users Administration Handlers
+export const getAdminUsersHandler: RequestHandler = async (req, res) => {
+  const query = adminListUsersQuerySchema.parse(req.query);
+  const result = await getAdminUsers(query);
+  sendSuccess(res, result);
+};
+
+export const getAdminUserDetailHandler: RequestHandler = async (req, res) => {
+  const userId = req.params.userId as string;
+  const result = await getAdminUserDetail(userId);
+  sendSuccess(res, result);
+};
+
+// Bookings Administration Handlers
+export const getAdminBookingsHandler: RequestHandler = async (req, res) => {
+  const query = adminListBookingsQuerySchema.parse(req.query);
+  const result = await getAdminBookings(query);
+  sendSuccess(res, result);
+};
+
+export const getAdminBookingDetailHandler: RequestHandler = async (req, res) => {
+  const bookingId = req.params.bookingId as string;
+  const result = await getAdminBookings({ status: "ALL", page: 1, limit: 1 });
+  const item = result.items.find((b) => b.id === bookingId);
+  if (!item) {
+    throw new AppError(404, "BOOKING_NOT_FOUND", "Booking not found");
+  }
+  sendSuccess(res, { booking: item });
+};
+
+export const updateAdminBookingStatusHandler: RequestHandler = async (req, res) => {
+  if (!req.user) {
+    throw new AppError(401, "UNAUTHORIZED", "Authentication required");
+  }
+  const bookingId = req.params.bookingId as string;
+  const { status, notes } = adminUpdateBookingStatusSchema.parse(req.body);
+  const result = await updateAdminBookingStatus(req.user.id, bookingId, status, notes);
+  sendSuccess(res, result);
+};
+
+// Poojas Catalogue Administration Handlers
+export const getAdminPoojasHandler: RequestHandler = async (req, res) => {
+  const query = adminListPoojasQuerySchema.parse(req.query);
+  const result = await getAdminPoojas(query);
+  sendSuccess(res, result);
+};
+
+export const createAdminPoojaHandler: RequestHandler = async (req, res) => {
+  const parsed = adminCreatePoojaSchema.parse(req.body);
+  const result = await createAdminPooja(parsed);
+  sendSuccess(res, result, 201);
+};
+
+export const updateAdminPoojaHandler: RequestHandler = async (req, res) => {
+  const poojaId = req.params.poojaId as string;
+  const parsed = adminUpdatePoojaSchema.parse(req.body);
+  const result = await updateAdminPooja(poojaId, parsed);
+  sendSuccess(res, result);
+};
+

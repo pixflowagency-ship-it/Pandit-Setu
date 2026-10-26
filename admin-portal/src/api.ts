@@ -7,6 +7,11 @@ import type {
   KundliOrderRecord,
   SubscriptionRecord,
   ApprovedMantra,
+  AppUiConfigPayload,
+  AppConfigVersionRecord,
+  AdminUserRecord,
+  AdminBookingRecord,
+  AdminPoojaRecord,
 } from "./types.ts";
 
 export const API_BASE = (import.meta as any).env?.VITE_API_URL || "http://localhost:5000/api/v1";
@@ -217,4 +222,109 @@ export const adminApi = {
   async getSubscriptions(status: string = "ALL", page: number = 1, limit: number = 50): Promise<{ subscriptions: SubscriptionRecord[]; total: number }> {
     return request<{ subscriptions: SubscriptionRecord[]; total: number }>(`/admin/subscriptions?status=${status}&page=${page}&limit=${limit}`);
   },
+
+  // App UI Editor / Remote Configuration Desk
+  async getAppConfigDraft(): Promise<{
+    id: string | null;
+    version: number;
+    isNewDraft: boolean;
+    config: AppUiConfigPayload;
+    updatedAt: string | null;
+  }> {
+    return request<{
+      id: string | null;
+      version: number;
+      isNewDraft: boolean;
+      config: AppUiConfigPayload;
+      updatedAt: string | null;
+    }>("/admin/app-config/draft");
+  },
+
+  async saveAppConfigDraft(config: AppUiConfigPayload, changeSummary?: string): Promise<{ success: boolean; id: string; version: number }> {
+    return request<{ success: boolean; id: string; version: number }>("/admin/app-config/draft", {
+      method: "PUT",
+      body: JSON.stringify({ config, changeSummary }),
+    });
+  },
+
+  async publishAppConfig(changeSummary?: string): Promise<{ success: boolean; version: number; publishedAt: string }> {
+    return request<{ success: boolean; version: number; publishedAt: string }>("/admin/app-config/publish", {
+      method: "POST",
+      body: JSON.stringify({ changeSummary }),
+    });
+  },
+
+  async getAppConfigVersions(): Promise<{ versions: AppConfigVersionRecord[] }> {
+    return request<{ versions: AppConfigVersionRecord[] }>("/admin/app-config/versions");
+  },
+
+  async rollbackAppConfig(versionId: string): Promise<{ success: boolean; version: number; rolledBackFromVersion: number }> {
+    return request<{ success: boolean; version: number; rolledBackFromVersion: number }>(`/admin/app-config/rollback/${versionId}`, {
+      method: "POST",
+    });
+  },
+
+  // Users Administration Desk
+  async getUsers(search?: string, role: string = "ALL", page: number = 1, limit: number = 20): Promise<{ items: AdminUserRecord[]; pagination: any }> {
+    const q = new URLSearchParams({
+      role,
+      page: String(page),
+      limit: String(limit),
+    });
+    if (search) q.append("search", search);
+    return request<{ items: AdminUserRecord[]; pagination: any }>(`/admin/users?${q.toString()}`);
+  },
+
+  async getUserDetail(userId: string): Promise<{
+    user: AdminUserRecord;
+    panditProfile: any;
+    recentBookings: any[];
+    recentConsultations: any[];
+    recentKundliOrders: any[];
+  }> {
+    return request<{
+      user: AdminUserRecord;
+      panditProfile: any;
+      recentBookings: any[];
+      recentConsultations: any[];
+      recentKundliOrders: any[];
+    }>(`/admin/users/${userId}`);
+  },
+
+  // Bookings Administration Desk
+  async getBookings(status: string = "ALL", page: number = 1, limit: number = 20): Promise<{ items: AdminBookingRecord[]; pagination: any }> {
+    return request<{ items: AdminBookingRecord[]; pagination: any }>(`/admin/bookings?status=${status}&page=${page}&limit=${limit}`);
+  },
+
+  async updateBookingStatus(bookingId: string, status: string, notes?: string): Promise<{ success: boolean; booking: AdminBookingRecord }> {
+    return request<{ success: boolean; booking: AdminBookingRecord }>(`/admin/bookings/${bookingId}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status, notes }),
+    });
+  },
+
+  // Poojas Catalogue Administration Desk
+  async getPoojas(category?: string, page: number = 1, limit: number = 20): Promise<{ items: AdminPoojaRecord[]; pagination: any }> {
+    const q = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
+    if (category) q.append("category", category);
+    return request<{ items: AdminPoojaRecord[]; pagination: any }>(`/admin/poojas?${q.toString()}`);
+  },
+
+  async createPooja(data: Partial<AdminPoojaRecord>): Promise<AdminPoojaRecord> {
+    return request<AdminPoojaRecord>("/admin/poojas", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  async updatePooja(poojaId: string, data: Partial<AdminPoojaRecord>): Promise<AdminPoojaRecord> {
+    return request<AdminPoojaRecord>(`/admin/poojas/${poojaId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  },
 };
+

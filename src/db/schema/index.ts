@@ -11,6 +11,7 @@ export * from "./dakshina_collections.js";
 export * from "./product_orders.js";
 export * from "./consultations.js";
 export * from "./kundli_orders.js";
+export * from "./app_ui_configs.js";
 export * from "./relations.js";
 
 export { geometryPoint, type GeoPoint } from "../custom-types/point.js";

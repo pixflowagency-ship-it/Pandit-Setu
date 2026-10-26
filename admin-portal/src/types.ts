@@ -150,3 +150,119 @@ export interface SubscriptionRecord {
   userName?: string;
   userPhone?: string;
 }
+
+export interface AppUiConfigPayload {
+  schemaVersion: number;
+  theme: {
+    primaryColor: string;
+    accentColor: string;
+    backgroundColor: string;
+    surfaceColor: string;
+  };
+  sections: Array<{
+    id: string;
+    enabled: boolean;
+    order: number;
+    title: string;
+    titleHi: string;
+    subtitle?: string;
+    subtitleHi?: string;
+  }>;
+  heroSlides: Array<{
+    id: string;
+    title: string;
+    titleHi: string;
+    subtitle: string;
+    subtitleHi: string;
+    tag: string;
+    tagHi: string;
+    imageUrl: string;
+    actionType: "POOJA" | "SCREEN" | "EXTERNAL";
+    actionTarget: string;
+    slug?: string;
+  }>;
+  serviceGrid: Array<{
+    id: string;
+    title: string;
+    titleHi: string;
+    subtitle: string;
+    subtitleHi: string;
+    badge?: string;
+    badgeHi?: string;
+    icon: string;
+    target: string;
+    enabled: boolean;
+    order: number;
+  }>;
+  lifeProblemsBanner: {
+    enabled: boolean;
+    title: string;
+    titleHi: string;
+    subtitle: string;
+    subtitleHi: string;
+    buttonText: string;
+    buttonTextHi: string;
+    target: string;
+  };
+}
+
+export interface AppConfigVersionRecord {
+  id: string;
+  version: number;
+  status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+  changeSummary: string | null;
+  publishedAt: string | null;
+  publishedBy: string | null;
+  createdAt: string;
+}
+
+export interface AdminUserRecord {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  city?: string;
+  address?: string;
+  gotra?: string;
+  zodiac?: string;
+  dob?: string;
+  tob?: string;
+  pob?: string;
+  role: "YAJMAN" | "PANDIT" | "ADMIN";
+  createdAt: string;
+}
+
+
+export interface AdminBookingRecord {
+  id: string;
+  yajmanId: string;
+  panditId?: string;
+  poojaId: string;
+  mode: "ONLINE" | "OFFLINE";
+  bookingTime: string;
+  venueAddress?: string;
+  totalAmount: string;
+  status: "PENDING" | "ACCEPTED" | "CONFIRMED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+  paymentStatus: "PENDING" | "PAID" | "FAILED" | "REFUNDED";
+  createdAt: string;
+  poojaTitle: string;
+  yajmanName: string;
+  yajmanPhone: string;
+}
+
+export interface AdminPoojaRecord {
+  id: string;
+  title: string;
+  slug: string;
+  description?: string;
+  category?: string;
+  duration?: string;
+  requiredPandits?: string;
+  basePrice: string;
+  samagriPrice: string;
+  durationMinutes: number;
+  imageUrl?: string;
+  isActive: boolean;
+  createdAt?: string;
+}
+

@@ -17,11 +17,15 @@ import productOrdersRouter from "./product-orders.routes.js";
 import adminRouter from "./admin.routes.js";
 import consultationsRouter from "./consultations.routes.js";
 import kundliOrdersRouter from "./kundli_orders.routes.js";
+import { getActiveAppConfigHandler } from "../controllers/app-config.controller.js";
 import { apiLimiter } from "../middleware/rate-limit.js";
 
 const apiRouter = Router();
 
 apiRouter.use(apiLimiter);
+
+// Public Remote App UI Configuration
+apiRouter.get("/app-config", asyncHandler(getActiveAppConfigHandler));
 
 apiRouter.use("/auth", authRouter);
 

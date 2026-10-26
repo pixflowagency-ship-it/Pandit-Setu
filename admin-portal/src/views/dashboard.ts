@@ -5,8 +5,21 @@ import { renderPanditsTab } from "./tabs/pandits.ts";
 import { renderConsultationsTab } from "./tabs/consultations.ts";
 import { renderKundliTab } from "./tabs/kundli.ts";
 import { renderSubscriptionsTab } from "./tabs/subscriptions.ts";
+import { renderUiEditorTab } from "./tabs/ui_editor.ts";
+import { renderUsersTab } from "./tabs/users.ts";
+import { renderBookingsTab } from "./tabs/bookings.ts";
+import { renderPoojasTab } from "./tabs/poojas.ts";
 
-export type TabKey = "overview" | "pandits" | "consultations" | "kundli" | "subscriptions";
+export type TabKey =
+  | "overview"
+  | "ui_editor"
+  | "pandits"
+  | "bookings"
+  | "poojas"
+  | "users"
+  | "consultations"
+  | "kundli"
+  | "subscriptions";
 
 export function renderDashboardView(container: HTMLElement, onLogout: () => void): void {
   const user = getCurrentUser();
@@ -36,13 +49,25 @@ export function renderDashboardView(container: HTMLElement, onLogout: () => void
       </div>
     </header>
 
-    <!-- 5-Tab Navigation Bar -->
-    <nav class="portal-nav-bar">
+    <!-- Navigation Bar -->
+    <nav class="portal-nav-bar flex-wrap">
       <button class="nav-tab active" data-tab="overview">
         <span>📊 System Overview</span>
       </button>
+      <button class="nav-tab" data-tab="ui_editor">
+        <span>🎨 App UI Editor & CMS</span>
+      </button>
       <button class="nav-tab" data-tab="pandits">
         <span>🙏 Pandit KYC Queue</span>
+      </button>
+      <button class="nav-tab" data-tab="bookings">
+        <span>🪔 Pooja Bookings</span>
+      </button>
+      <button class="nav-tab" data-tab="poojas">
+        <span>🕉️ Pooja Catalogue</span>
+      </button>
+      <button class="nav-tab" data-tab="users">
+        <span>👥 Users & Devotees</span>
       </button>
       <button class="nav-tab" data-tab="consultations">
         <span>📹 Consultations Desk</span>
@@ -51,7 +76,7 @@ export function renderDashboardView(container: HTMLElement, onLogout: () => void
         <span>📜 Kundli Orders</span>
       </button>
       <button class="nav-tab" data-tab="subscriptions">
-        <span>⭐ Subscriptions Oversight</span>
+        <span>⭐ Subscriptions</span>
       </button>
     </nav>
 
@@ -87,8 +112,20 @@ export function renderDashboardView(container: HTMLElement, onLogout: () => void
       case "overview":
         renderOverviewTab(tabViewport);
         break;
+      case "ui_editor":
+        renderUiEditorTab(tabViewport);
+        break;
       case "pandits":
         renderPanditsTab(tabViewport);
+        break;
+      case "bookings":
+        renderBookingsTab(tabViewport);
+        break;
+      case "poojas":
+        renderPoojasTab(tabViewport);
+        break;
+      case "users":
+        renderUsersTab(tabViewport);
         break;
       case "consultations":
         renderConsultationsTab(tabViewport);
@@ -101,6 +138,7 @@ export function renderDashboardView(container: HTMLElement, onLogout: () => void
         break;
     }
   }
+
 
   navTabs.forEach((btn) => {
     btn.addEventListener("click", () => {

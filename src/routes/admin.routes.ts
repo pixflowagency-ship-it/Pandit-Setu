@@ -34,7 +34,22 @@ import {
   createAdminMantraHandler,
   updateAdminMantraHandler,
   deleteAdminMantraHandler,
+  getAdminUsersHandler,
+  getAdminUserDetailHandler,
+  getAdminBookingsHandler,
+  getAdminBookingDetailHandler,
+  updateAdminBookingStatusHandler,
+  getAdminPoojasHandler,
+  createAdminPoojaHandler,
+  updateAdminPoojaHandler,
 } from "../controllers/admin.controller.js";
+import {
+  getDraftAppConfigHandler,
+  saveDraftAppConfigHandler,
+  publishAppConfigHandler,
+  getAppConfigVersionsHandler,
+  rollbackAppConfigHandler,
+} from "../controllers/app-config.controller.js";
 import {
   adminGetConsultationsHandler,
   adminScheduleConsultationHandler,
@@ -185,4 +200,34 @@ adminRouter.patch(
   asyncHandler(adminUpdateKundliStatusHandler)
 );
 
+// Admin Users Management Desk
+adminRouter.get("/users", apiLimiter, asyncHandler(getAdminUsersHandler));
+adminRouter.get("/users/:userId", apiLimiter, asyncHandler(getAdminUserDetailHandler));
+
+// Admin Bookings Management Desk
+adminRouter.get("/bookings", apiLimiter, asyncHandler(getAdminBookingsHandler));
+adminRouter.get("/bookings/:bookingId", apiLimiter, asyncHandler(getAdminBookingDetailHandler));
+adminRouter.patch(
+  "/bookings/:bookingId/status",
+  strictLimiter,
+  asyncHandler(updateAdminBookingStatusHandler)
+);
+
+// Admin Poojas Catalogue Management Desk
+adminRouter.get("/poojas", apiLimiter, asyncHandler(getAdminPoojasHandler));
+adminRouter.post("/poojas", strictLimiter, asyncHandler(createAdminPoojaHandler));
+adminRouter.patch("/poojas/:poojaId", strictLimiter, asyncHandler(updateAdminPoojaHandler));
+
+// Admin App UI Editor / Remote Configuration Desk
+adminRouter.get("/app-config/draft", apiLimiter, asyncHandler(getDraftAppConfigHandler));
+adminRouter.put("/app-config/draft", strictLimiter, asyncHandler(saveDraftAppConfigHandler));
+adminRouter.post("/app-config/publish", strictLimiter, asyncHandler(publishAppConfigHandler));
+adminRouter.get("/app-config/versions", apiLimiter, asyncHandler(getAppConfigVersionsHandler));
+adminRouter.post(
+  "/app-config/rollback/:versionId",
+  strictLimiter,
+  asyncHandler(rollbackAppConfigHandler)
+);
+
 export default adminRouter;
+
